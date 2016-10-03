@@ -15,7 +15,7 @@ BOWTIEIDX="$2"
 
 echo "Processing reads..."
 
-$BASEDIR/process-4c-reads.pl $SAMPLETABLE new
+$BASEDIR/process-4c-reads.pl $SAMPLETABLE new $BOWTIEIDX
 
 if [ $? -ne 0 ];
 then
@@ -24,7 +24,7 @@ then
 fi
 
 
-### Align reads
+
 ### identify fragments
 ### map to fragments
 

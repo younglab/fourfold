@@ -3,11 +3,11 @@
 use strict;
 use Spreadsheet::Read;
 
-if( scalar(@ARGV) < 2 ) {
-  die "Need sample table and format type!";
+if( scalar(@ARGV) < 3 ) {
+  die "Need sample table and format type and index!";
 }
 
-my ($sampletable,$format) = @ARGV;
+my ($sampletable,$format,$bowtieidx) = @ARGV;
 
 die "Cannot find file $sampletable!" unless -e $sampletable;
 
@@ -29,6 +29,8 @@ for( my $i = 1; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
   my @arr = Spreadsheet::Read::cellrow($sheet,$i+1);
   
   my($name,$chr,$start,$end,$fastq,$barcode,$primer,$e1,$e2) = @arr;
+  
+  print "\tProcessing sample $name...\n";
   
   print S "$name\t$chr\t$start\t$end\t$e1\t$e2\n";
   
@@ -68,8 +70,6 @@ for( my $i = 1; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
     $trimlength = length($primer);
   }
   
-  print "DEBUG: $test\n";
-  
   while(<D>) {
       my $line1 = $_;
       my $line2 = <D>;
@@ -81,7 +81,6 @@ for( my $i = 1; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
       chomp $line3;
       chomp $line4;
       
-      print "DEBUG: $line2\n";
       next unless $line2 =~ $test;
       
       my $np2 = substr($line2,$trimlength);
@@ -94,6 +93,12 @@ for( my $i = 1; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
   close(D);
   
   rename(".tmp.primer.fq","$name.trimmed.fq");
+  
+  `bowtie -n 1 $bowtieidx -k 1 -m 1 -S --chunkmbs 256 --best --strata $name.trimmed.fq > $name.sam`;
+  `samtools view -Sb $name.sam > $name.bam`;
+  `samtools sort -@ 6 -Ttmp $name.bam > $name.sorted.bam`;
+  unlink("$name.sam");
+  unlink("$name.bam");
 }
 
 close(S);
