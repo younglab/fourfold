@@ -1,15 +1,17 @@
 #!/usr/bin/perl
 
 use strict;
+use Spreadsheet::Read;
+
 
 ### this all assumes the REs are symmetric!
 
 
-if(scalar(@ARGV) < 4) {
-  die "arguments <XSLX> <whole genome FA> <RE 1 seq> <RE 2 seq>";
+if(scalar(@ARGV) < 2) {
+  die "arguments <XSLX> <whole genome FA>";
 }
 
-my ($sampletable,$fasta,$r1,$r2) = @ARGV;
+my ($sampletable,$fasta) = @ARGV;
 
 die "Cannot find file $sampletable!" unless -e $sampletable;
 
@@ -66,15 +68,15 @@ while(<F>) {
       
       $lastpos = 1;
       while( $seq =~ /$m1/ig ) {
-        my $end = $-[0]-1;
-        push @{$$enzymecuts{$pair}[0]},"$chr\t$lastpos\t$end\n";
+        my ($start,$end) = ($-[0],$+[0]);
+        push @{${$enzymecuts{$seqpair}}[0]},"$chr\t$start\t$end\n";
         $lastpos = $-[0];
       }
     
       $lastpos = 1;
       while( $seq =~ /$m2/ig ) {
-        my $end = $-[0]-1;
-        push @{$$enzymecuts{$pair}[1]},"$chr\t$lastpos\t$end\n";
+        my ($start,$end) = ($-[0],$+[0]);
+        push @{${$enzymecuts{$seqpair}}[1]},"$chr\t$start\t$end\n";
         $lastpos = $-[0];
       }
     
@@ -83,7 +85,7 @@ while(<F>) {
     
     $chr = $nextchr;
     $seq ="";
-    $lastpos = 1;
+    $lastpos = 0;
 
     next;
   }
@@ -99,12 +101,12 @@ for my $pair (keys(%enzymecuts)) {
   my ($re1,$re2) = split /-/, $pair;
   
   open(A,">","$pair/$re1.txt") or die "Cannot write to $pair/$re1.txt: $!";
-  my @arr = @{$$enzymecuts{$pair}[0]};
+  my @arr = @{${$enzymecuts{$pair}}[0]};
   print A for(@arr);
   close(A);
   
   open(B,">","$pair/$re2.txt") or die "Cannot write to $pair/$re2.txt: $!";
-  @arr = @{$$enzymecuts{$pair}[0]};
+  @arr = @{${$enzymecuts{$pair}}[1]};
   print B for(@arr);
   close(B);
 }
