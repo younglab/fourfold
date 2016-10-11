@@ -2,14 +2,15 @@
 
 BASEDIR=$(dirname $0)
 
-if [ $# -lt 2 ];
+if [ $# -lt 3 ];
 then
-  echo "process-4c.sh <sample XSLX table> <bowtie index>"
+  echo "process-4c.sh <sample XSLX table> <bowtie index> <genome FASTA>"
   exit 1
 fi
 
 SAMPLETABLE="$1"
 BOWTIEIDX="$2"
+GENOMEFA="$3"
 
 ### process reads
 

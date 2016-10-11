@@ -2,11 +2,43 @@
 
 use strict;
 
-if(scalar(@ARGV)<3) {
-  die "arguments <whole genome FA> <RE 1 seq> <RE 2 seq>";
+### this all assumes the REs are symmetric!
+
+
+if(scalar(@ARGV) < 4) {
+  die "arguments <XSLX> <whole genome FA> <RE 1 seq> <RE 2 seq>";
 }
 
-my ($fasta,$r1,$r2) = @ARGV;
+my ($sampletable,$fasta,$r1,$r2) = @ARGV;
+
+die "Cannot find file $sampletable!" unless -e $sampletable;
+
+my $database = ReadData($sampletable);
+my $sheet = $database->[1]; ## get first spreadsheet
+my $nr = ${$sheet}{"maxrow"};
+
+my %enzymepairs;
+my %enzymecuts;
+
+for( my $i = 0; $i < $nr; $i++ ) { 
+
+  my @arr = Spreadsheet::Read::cellrow($sheet,$i+1);
+  
+  next if $arr[0] =~ /^#/;
+  
+  my ($samplename,undef,undef,undef,undef,undef,undef,$re1,$re2,$re1seq,$re2seq) = @arr;
+  
+  my $pair = "$re1-$re2";
+  
+  if(defined($enzymepairs{$pair})) {
+    my @seqs = @{$enzymepairs{$pair}};
+    die "$pair sequence changed for $samplename!" unless ($seqs[0] eq $re1seq && $seqs[1] eq $re2seq);
+  }
+  else {
+    $enzymepairs{$pair} = [$re1seq,$re2seq];
+  }
+}
+
 
 open(F,"<",$fasta) or die "Cannot read $fasta: $!";
 
@@ -14,8 +46,7 @@ my $chr = "";
 my $seq = "";
 my $lastpos = 1;
 
-my $m1 = qr/$r1/;
-my $m2 = qr/$r2/;
+
 
 while(<F>) {
   chomp;
@@ -23,20 +54,37 @@ while(<F>) {
   if(/^>(\w+)/) {
     my $nextchr = $1;
     
-    while( $seq =~ /$m1/ig ) {
-      my $end = $-[0]-1;
-      print "$chr\t$lastpos\t$end\n";
-      $lastpos = $-[0];
-    }
-    
-    $lastpos = 1;
-    while( $seq =~ /$m2/ig ) {
+    for my $seqpair (keys(%enzymepairs)) {
+      my ($r1,$r2) = @{$enzymepairs{$seqpair}};
       
-    }
+      my $m1 = qr/$r1/;
+      my $m2 = qr/$r2/;
+      
+      unless(defined($enzymecuts{$seqpair})) {
+        $enzymecuts{$seqpair} = [];
+      }
+      
+      $lastpos = 1;
+      while( $seq =~ /$m1/ig ) {
+        my $end = $-[0]-1;
+        push @{$$enzymecuts{$pair}[0]},"$chr\t$lastpos\t$end\n";
+        $lastpos = $-[0];
+      }
+    
+      $lastpos = 1;
+      while( $seq =~ /$m2/ig ) {
+        my $end = $-[0]-1;
+        push @{$$enzymecuts{$pair}[1]},"$chr\t$lastpos\t$end\n";
+        $lastpos = $-[0];
+      }
+    
+
+    }   
     
     $chr = $nextchr;
     $seq ="";
     $lastpos = 1;
+
     next;
   }
   
@@ -44,3 +92,21 @@ while(<F>) {
 }
 
 close(F);
+
+for my $pair (keys(%enzymecuts)) {
+  mkdir($pair);
+  
+  my ($re1,$re2) = split /-/, $pair;
+  
+  open(A,">","$pair/$re1.txt") or die "Cannot write to $pair/$re1.txt: $!";
+  my @arr = @{$$enzymecuts{$pair}[0]};
+  print A for(@arr);
+  close(A);
+  
+  open(B,">","$pair/$re2.txt") or die "Cannot write to $pair/$re2.txt: $!";
+  @arr = @{$$enzymecuts{$pair}[0]};
+  print B for(@arr);
+  close(B);
+}
+
+
