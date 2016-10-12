@@ -57,6 +57,7 @@ while(<F>) {
     my $nextchr = $1;
     
     for my $seqpair (keys(%enzymepairs)) {
+      my ($re1,$re2) = split /-/, $seqpair;
       my ($r1,$r2) = @{$enzymepairs{$seqpair}};
       
       my $m1 = qr/$r1/;
@@ -69,14 +70,14 @@ while(<F>) {
       $lastpos = 1;
       while( $seq =~ /$m1/ig ) {
         my ($start,$end) = ($-[0],$+[0]);
-        push @{${$enzymecuts{$seqpair}}[0]},"$chr\t$start\t$end\n";
+        push @{${$enzymecuts{$seqpair}}[0]},"$chr\t$start\t$end\t$re1\n";
         $lastpos = $-[0];
       }
     
       $lastpos = 1;
       while( $seq =~ /$m2/ig ) {
         my ($start,$end) = ($-[0],$+[0]);
-        push @{${$enzymecuts{$seqpair}}[1]},"$chr\t$start\t$end\n";
+        push @{${$enzymecuts{$seqpair}}[1]},"$chr\t$start\t$end\t$re2\n";
         $lastpos = $-[0];
       }
     
@@ -100,15 +101,71 @@ for my $pair (keys(%enzymecuts)) {
   
   my ($re1,$re2) = split /-/, $pair;
   
-  open(A,">","$pair/$re1.txt") or die "Cannot write to $pair/$re1.txt: $!";
+  open(C,">","$pair/tmp.bed") or die "Cannot write to $pair/tmp.bed: $!";
+  open(A,">","$pair/$re1.bed") or die "Cannot write to $pair/$re1.bed: $!";
+  print A "track name=\"$re1\" description=\"$re1\"\n";
   my @arr = @{${$enzymecuts{$pair}}[0]};
   print A for(@arr);
+  print C for(@arr);
   close(A);
   
-  open(B,">","$pair/$re2.txt") or die "Cannot write to $pair/$re2.txt: $!";
+  open(B,">","$pair/$re2.bed") or die "Cannot write to $pair/$re2.bed: $!";
+  print B "track name=\"$re2\" description=\"$re2\"\n";
   @arr = @{${$enzymecuts{$pair}}[1]};
   print B for(@arr);
+  print C for(@arr);
   close(B);
+  close(C);
+  
+  open(J,">","$pair/joint-re.bed") or die "Cannot write to $pair/joint-re.bed: $!";
+  print J "track name=\"$re1-$re2\" description=\"$re1-$re2\"\n";
+  close(J);
+
+  `sort -k1,1 -k2,2n $pair/tmp.bed >> $pair/joint-re.bed`;
+  unlink("$pair/tmp.bed");
+  
+  my @fragmentset;
+  my $chr = "DEADBEEF";
+  my $lastre = "";
+  my $laststart = 0;
+  my $lastend = 0;
+  
+  open(O,"<","$pair/joint-re.bed") or die "Cannot read $pair/joint-re.bed: $!";
+  <O>; ## skip header line
+  
+  while(<O>) {
+    chomp;
+    
+    my ($c,$s,$e,$r) = split /\t/;
+    my $frag;
+    
+    if( $c ne $chr ) {
+      $frag = "$c\t0\t$e\tfalse\n";
+      $laststart = $s;
+      $lastend =$e;
+      $chr = $c;
+      $lastre = $r;
+    } else {
+      $frag = "$c\t$laststart\t$e\t";
+      $laststart = $s;
+      $lastend = $e;
+      
+      if($lastre ne $r) {
+        $frag .= "true";
+      } else {
+        $frag .= "false";
+      }
+      $frag .= "\n";
+      $lastre = $r;
+    }
+    
+    push @fragmentset, $frag;
+  }
+  close(O);
+  
+  open(F,">","$pair/fragments.txt") or die "Cannot write to $pair/fragments.txt: $!";
+  print F for(@fragmentset);
+  close(F);
 }
 
 
