@@ -2,6 +2,8 @@
 
 use strict;
 use Spreadsheet::Read;
+use File::Basename;
+
 
 if( scalar(@ARGV) < 3 ) {
   die "Need sample table and format type and index!";
@@ -28,7 +30,7 @@ for( my $i = 1; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
 
   my @arr = Spreadsheet::Read::cellrow($sheet,$i+1);
   
-  my($name,$chr,$start,$end,$fastq,$barcode,$primer,$e1,$e2) = @arr;
+  my($name,$type,$cond,$replicate,$chr,$start,$end,$fastq,$barcode,$primer,$e1,$e2) = @arr;
   
   print "\tProcessing sample $name...\n";
   
@@ -37,9 +39,17 @@ for( my $i = 1; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
   next if $name =~ /^$/;
   
   my $origfastq = $fastq;
-  $fastq =~ s/\\\\WI-FILES/\/nfs/;
-  $fastq =~ s/\\\\WI-HTDATA/\/lab/;
-  $fastq =~ s/\\/\//g;
+  if( $fastq =~ /^ftp:\/\// ) {
+    #ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX117/SRX1175151/SRR2220261/SRR2220261.sra
+    `wget $fastq`;
+    $fastq = basename($fastq);
+    `fastq-dump --gzip $fastq`;
+    $fastq =~ s/[.]sra/.fastq.gz/;
+  } else {
+    $fastq =~ s/\\\\WI-FILES/\/nfs/;
+    $fastq =~ s/\\\\WI-HTDATA/\/lab/;
+    $fastq =~ s/\\/\//g;
+  }
 
   
   die "Cannot find file $fastq (original name $origfastq)!" unless -e $fastq;

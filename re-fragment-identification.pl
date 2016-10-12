@@ -14,6 +14,7 @@ if(scalar(@ARGV) < 2) {
 my ($sampletable,$fasta) = @ARGV;
 
 die "Cannot find file $sampletable!" unless -e $sampletable;
+die "Cannot fine FASTA file $fasta!" unless -e $fasta;
 
 my $database = ReadData($sampletable);
 my $sheet = $database->[1]; ## get first spreadsheet
@@ -28,7 +29,7 @@ for( my $i = 0; $i < $nr; $i++ ) {
   
   next if $arr[0] =~ /^#/;
   
-  my ($samplename,undef,undef,undef,undef,undef,undef,$re1,$re2,$re1seq,$re2seq) = @arr;
+  my ($samplename,undef,undef,undef,undef,undef,undef,undef,undef,undef,$re1,$re2,$re1seq,$re2seq) = @arr;
   
   my $pair = "$re1-$re2";
   
@@ -60,22 +61,22 @@ while(<F>) {
       my ($re1,$re2) = split /-/, $seqpair;
       my ($r1,$r2) = @{$enzymepairs{$seqpair}};
       
-      my $m1 = qr/$r1/;
-      my $m2 = qr/$r2/;
+      my $m1 = qr/$r1/i;
+      my $m2 = qr/$r2/i;
       
       unless(defined($enzymecuts{$seqpair})) {
         $enzymecuts{$seqpair} = [];
       }
       
       $lastpos = 1;
-      while( $seq =~ /$m1/ig ) {
+      while( $seq =~ /$m1/g ) {
         my ($start,$end) = ($-[0],$+[0]);
         push @{${$enzymecuts{$seqpair}}[0]},"$chr\t$start\t$end\t$re1\n";
         $lastpos = $-[0];
       }
     
       $lastpos = 1;
-      while( $seq =~ /$m2/ig ) {
+      while( $seq =~ /$m2/g ) {
         my ($start,$end) = ($-[0],$+[0]);
         push @{${$enzymecuts{$seqpair}}[1]},"$chr\t$start\t$end\t$re2\n";
         $lastpos = $-[0];

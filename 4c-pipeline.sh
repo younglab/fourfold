@@ -21,12 +21,19 @@ $BASEDIR/process-4c-reads.pl $SAMPLETABLE new $BOWTIEIDX
 if [ $? -ne 0 ];
 then
   echo "Errors in processing the reads, see error messages"
-  exit $?
+  exit 1
 fi
 
-
-
 ### identify fragments
+
+$BASEDIR/re-fragment-identification.pl $SAMPLETABLE $GENOMEFA
+
+if [ $? -ne 0 ];
+then
+  echo "Errors in identifying the restriction fragments, see error messages"
+  exit 1
+fi
+
 ### map to fragments
 
 echo "Done"
