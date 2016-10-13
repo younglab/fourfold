@@ -12,6 +12,24 @@ SAMPLETABLE="$1"
 BOWTIEIDX="$2"
 GENOMEFA="$3"
 
+if [ ! -e "$SAMPLETABLE" ];
+then
+  echo "Error: $SAMPLETABLE does not exist!"
+  exit 1
+fi
+
+if [ ! -e "$BOWTIEIDX" ];
+then
+  echo "Error: $BOWTIEIDX does not exist!"
+  exit 1
+fi
+
+if [ ! -e "$GENOMEFA" ];
+then
+  echo "Error: $GENOMEFA does not exist!"
+  exit 1
+fi
+
 ### process reads
 
 echo "Processing reads..."

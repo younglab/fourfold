@@ -7,11 +7,11 @@ use Spreadsheet::Read;
 ### this all assumes the REs are symmetric!
 
 
-if(scalar(@ARGV) < 2) {
-  die "arguments <XSLX> <whole genome FA>";
+if(scalar(@ARGV) < 3) {
+  die "arguments <XSLX> <whole genome FA> <min distance>";
 }
 
-my ($sampletable,$fasta) = @ARGV;
+my ($sampletable,$fasta,$mindistance) = @ARGV;
 
 die "Cannot find file $sampletable!" unless -e $sampletable;
 die "Cannot fine FASTA file $fasta!" unless -e $fasta;
@@ -126,10 +126,11 @@ for my $pair (keys(%enzymecuts)) {
   unlink("$pair/tmp.bed");
   
   my @fragmentset;
-  my $chr = "DEADBEEF";
-  my $lastre = "";
-  my $laststart = 0;
-  my $lastend = 0;
+  my @leftsecondre = ();
+  my @rightsecondre = ();
+  my $lastchr = "DEADBEEF";
+  my $curstart = 0;
+  my $curend = 0;
   
   open(O,"<","$pair/joint-re.bed") or die "Cannot read $pair/joint-re.bed: $!";
   <O>; ## skip header line
@@ -138,29 +139,50 @@ for my $pair (keys(%enzymecuts)) {
     chomp;
     
     my ($c,$s,$e,$r) = split /\t/;
-    my $frag;
     
-    if( $c ne $chr ) {
-      $frag = "$c\t0\t$e\tfalse\n";
-      $laststart = $s;
-      $lastend =$e;
-      $chr = $c;
-      $lastre = $r;
-    } else {
-      $frag = "$c\t$laststart\t$e\t";
-      $laststart = $s;
-      $lastend = $e;
-      
-      if($lastre ne $r) {
-        $frag .= "true";
-      } else {
-        $frag .= "false";
-      }
-      $frag .= "\n";
-      $lastre = $r;
+    if( $c ne $lastchr ) {
+      @leftsecondre = (); ## dump second RE digests on last chromosome
+      @rightsecondre = ();
+      $lastchr = $c;
     }
     
-    push @fragmentset, $frag;
+    ### if hit RE2
+    if( $r eq $re2 ) {
+      unshift @rightsecondre, [$c,$s,$e];
+    } else {  ## otherwise we hit a RE1
+      if($curstart == 0 ) { ## the first one we've seen on the chromosome
+        @leftsecondre = @rightsecondre;
+        @rightsecondre = ();
+        
+        $curstart = $s;
+        $curend = $e;
+      } else {
+        my $cut = "$lastchr\t$curstart\t$curend";
+        
+        my $left = "NA";
+        for(@leftsecondre) {
+          my @a = @{$_};
+          if(($curstart-$a[1])>=$mindistance) {
+            $left = $curstart-$a[1];
+            last;
+          }
+        }
+        my $right = "NA";
+        for(@rightsecondre) {
+          my @a = @{$_};
+          if(($a[1]-$curstart)>=$mindistance) {
+            $right = $curstart-$a[1];
+            last;
+          }
+        }
+        
+        @leftsecondre = reverse @rightsecondre;
+        push @fragmentset, "$cut\t$left\t$right\n";
+        
+        $curstart = $s;
+        $curend = $e;
+      }
+    }
   }
   close(O);
   
