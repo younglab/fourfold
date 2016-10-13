@@ -4,6 +4,32 @@ use strict;
 use Spreadsheet::Read;
 
 
+sub findresites {
+  my ($epairs,$chr,$seq,$ecuts) = @_;
+  
+  for my $seqpair (keys(%{$epairs})) {
+    my ($re1,$re2) = split /-/, $seqpair;
+    my ($r1,$r2) = @{$epairs->{$seqpair}};
+    
+    my $m1 = qr/$r1/i;
+    my $m2 = qr/$r2/i;
+      
+    unless(defined($ecuts->{$seqpair})) {
+      $ecuts->{$seqpair} = [];
+    }
+      
+    while( $seq =~ /$m1/g ) {
+      my ($start,$end) = ($-[0],$+[0]);
+      push @{$ecuts->{$seqpair}->[0]}, [$chr,$start,$end,$re1];
+    }
+    
+    while( $seq =~ /$m2/g ) {
+      my ($start,$end) = ($-[0],$+[0]);
+      push @{$ecuts->{$seqpair}->[1]},[$chr,$start,$end,$re2];
+    }
+  }   
+}
+
 ### this all assumes the REs are symmetric!
 
 
@@ -47,9 +73,6 @@ open(F,"<",$fasta) or die "Cannot read $fasta: $!";
 
 my $chr = "";
 my $seq = "";
-my $lastpos = 1;
-
-
 
 while(<F>) {
   chomp;
@@ -57,37 +80,12 @@ while(<F>) {
   if(/^>(\w+)/) {
     my $nextchr = $1;
     
-    for my $seqpair (keys(%enzymepairs)) {
-      my ($re1,$re2) = split /-/, $seqpair;
-      my ($r1,$r2) = @{$enzymepairs{$seqpair}};
-      
-      my $m1 = qr/$r1/i;
-      my $m2 = qr/$r2/i;
-      
-      unless(defined($enzymecuts{$seqpair})) {
-        $enzymecuts{$seqpair} = [];
-      }
-      
-      $lastpos = 1;
-      while( $seq =~ /$m1/g ) {
-        my ($start,$end) = ($-[0],$+[0]);
-        push @{${$enzymecuts{$seqpair}}[0]},"$chr\t$start\t$end\t$re1\n";
-        $lastpos = $-[0];
-      }
-    
-      $lastpos = 1;
-      while( $seq =~ /$m2/g ) {
-        my ($start,$end) = ($-[0],$+[0]);
-        push @{${$enzymecuts{$seqpair}}[1]},"$chr\t$start\t$end\t$re2\n";
-        $lastpos = $-[0];
-      }
-    
-
-    }   
+    unless($seq eq "") {
+      findresites(\%enzymepairs,$chr,$seq,\%enzymecuts);
+    }
     
     $chr = $nextchr;
     $seq ="";
-    $lastpos = 0;
 
     next;
   }
@@ -97,98 +95,82 @@ while(<F>) {
 
 close(F);
 
+unless($seq eq "") {
+  findresites(\%enzymepairs,$chr,$seq,\%enzymecuts);
+}
+
 for my $pair (keys(%enzymecuts)) {
   mkdir($pair);
   
   my ($re1,$re2) = split /-/, $pair;
   
-  open(C,">","$pair/tmp.bed") or die "Cannot write to $pair/tmp.bed: $!";
   open(A,">","$pair/$re1.bed") or die "Cannot write to $pair/$re1.bed: $!";
   print A "track name=\"$re1\" description=\"$re1\"\n";
-  my @arr = @{${$enzymecuts{$pair}}[0]};
-  print A for(@arr);
-  print C for(@arr);
+  my @first = @{${$enzymecuts{$pair}}[0]};
+  print A join("\t",@{$_}) . "\n" for(@first);
   close(A);
   
   open(B,">","$pair/$re2.bed") or die "Cannot write to $pair/$re2.bed: $!";
   print B "track name=\"$re2\" description=\"$re2\"\n";
-  @arr = @{${$enzymecuts{$pair}}[1]};
-  print B for(@arr);
-  print C for(@arr);
+  my @second = @{${$enzymecuts{$pair}}[1]};
+  print B join("\t",@{$_}) . "\n" for(@second);
   close(B);
-  close(C);
-  
-  open(J,">","$pair/joint-re.bed") or die "Cannot write to $pair/joint-re.bed: $!";
-  print J "track name=\"$re1-$re2\" description=\"$re1-$re2\"\n";
-  close(J);
 
-  `sort -k1,1 -k2,2n $pair/tmp.bed >> $pair/joint-re.bed`;
-  unlink("$pair/tmp.bed");
+  `tail -n +2 $pair/$re1.bed > $pair/.re1.bed`;
+  `tail -n +2 $pair/$re2.bed > $pair/.re2.bed`;
+  `cat $pair/.re1.bed $pair/.re2.bed | sort -k1,1 -k2,2n > $pair/.tmp.bed`;
+  `rm $pair/.re1.bed $pair/.re2.bed`;
   
-  my @fragmentset;
-  my @leftsecondre = ();
-  my @rightsecondre = ();
-  my $lastchr = "DEADBEEF";
-  my $curstart = 0;
-  my $curend = 0;
+  open(T,"<","$pair/.tmp.bed") or die "Cannot read $pair/.tmp.bed: $!";
+
   
-  open(O,"<","$pair/joint-re.bed") or die "Cannot read $pair/joint-re.bed: $!";
-  <O>; ## skip header line
+  my %fragmentset;
+  my @cuts;
+  my @sites;
+  my @past;
   
-  while(<O>) {
-    chomp;
-    
-    my ($c,$s,$e,$r) = split /\t/;
-    
-    if( $c ne $lastchr ) {
-      @leftsecondre = (); ## dump second RE digests on last chromosome
-      @rightsecondre = ();
-      $lastchr = $c;
-    }
-    
-    ### if hit RE2
-    if( $r eq $re2 ) {
-      unshift @rightsecondre, [$c,$s,$e];
-    } else {  ## otherwise we hit a RE1
-      if($curstart == 0 ) { ## the first one we've seen on the chromosome
-        @leftsecondre = @rightsecondre;
-        @rightsecondre = ();
-        
-        $curstart = $s;
-        $curend = $e;
-      } else {
-        my $cut = "$lastchr\t$curstart\t$curend";
-        
-        my $left = "NA";
-        for(@leftsecondre) {
-          my @a = @{$_};
-          if(($curstart-$a[1])>=$mindistance) {
-            $left = $curstart-$a[1];
-            last;
-          }
-        }
-        my $right = "NA";
-        for(@rightsecondre) {
-          my @a = @{$_};
-          if(($a[1]-$curstart)>=$mindistance) {
-            $right = $curstart-$a[1];
-            last;
-          }
-        }
-        
-        @leftsecondre = reverse @rightsecondre;
-        push @fragmentset, "$cut\t$left\t$right\n";
-        
-        $curstart = $s;
-        $curend = $e;
+  @cuts = <T>;
+  
+  close(T);
+
+  chomp @cuts;
+  push @sites, [split( /\t/,$_)] for(@cuts);
+
+  for(@sites) {
+    my @cur = @{$_};
+    my @l = ("NA",-1,-1);
+    @l = @{$past[$#past]} if scalar(@past)>0;
+
+    if($cur[3] eq $re2) {
+      if($l[3] eq $re1 && $cur[0] eq $l[0] && $l[1] > 0 && ($cur[1]-$l[1]>=$mindistance) ) {
+        my $site = join("\t",@l[0..2]);
+
+        $fragmentset{$site}->[1] = $cur[1]-$l[1];
+      }
+    } else {
+      my $site = join("\t",@cur[0..2]);
+
+      $fragmentset{$site} = ["NA","NA"];
+      
+      if($l[3] eq $re2 && $cur[0] eq $l[0] && $l[1] > 0 && ($cur[1]-$l[1]>=$mindistance)) {
+        $fragmentset{$site}->[0] = $cur[1]-$l[1];
       }
     }
+    
+    push @past, $_;
   }
-  close(O);
   
-  open(F,">","$pair/fragments.txt") or die "Cannot write to $pair/fragments.txt: $!";
-  print F for(@fragmentset);
+  open(F,">","$pair/.fragments.txt") or die "Cannot write to $pair/.fragments.txt: $!";
+  
+  for my $site (keys(%fragmentset)) {
+    my @dists = @{$fragmentset{$site}};
+    
+    print F "$site\t$dists[0]\t$dists[1]\n";
+  }
+  
   close(F);
+  
+  `sort -k1,1 -k2,2n $pair/.fragments.txt > $pair/fragments.txt`;
 }
 
 
