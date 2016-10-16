@@ -54,4 +54,17 @@ fi
 
 ### map to fragments
 
+mkdir wigfiles
+$BASEDIR/map-to-fragments.pl $SAMPLETABLE
+
+if [ $? -ne 0 ];
+then
+  echo "Errors in mapping the reads to restriction digest fragments, see error messages"
+  exit 1
+fi
+
+### smooth profiles
+
+### comparisons
+
 echo "Done"

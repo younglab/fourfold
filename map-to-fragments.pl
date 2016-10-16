@@ -137,16 +137,28 @@ for( my $i = 0; $i < $nr; $i++ ) {
   open(F,">","wigfiles/$samplename.filtered.wig") or die "Cannot write filetered: $!";
 
   for my $chr (keys(%fragments)) {
-    print R "variableStep chrom=$chr\n";
-    print F "variableStep chrom=$chr\n";
+    my @rawstrings;
+    my @filteredstrings;
+    
+    
+    push @rawstrings, "variableStep chrom=$chr\n";
+    push @filteredstrings, "variableStep chrom=$chr\n";
 
     for my $arrref (@{$fragments{$chr}}) {
       my @arr = @{$arrref};
-      print R "$arr[0]\t$arr[4]\n" unless $arr[4] == 0;
-      print R "$arr[1]\t$arr[5]\n" unless $arr[5] == 0;
+      push @rawstrings, "$arr[0]\t$arr[4]\n" unless $arr[4] == 0;
+      push @rawstrings, "$arr[1]\t$arr[5]\n" unless $arr[5] == 0;
       
-      print F "$arr[0]\t$arr[4]\n" unless ( $arr[4] == 0 && $arr[2] eq "NA" );
-      print F "$arr[1]\t$arr[5]\n" unless ( $arr[5] == 0 && $arr[3] eq "NA" );
+      push @filteredstrings, "$arr[0]\t$arr[4]\n" unless ( $arr[4] == 0 && $arr[2] eq "NA" );
+      push @filteredstrings, "$arr[1]\t$arr[5]\n" unless ( $arr[5] == 0 && $arr[3] eq "NA" );
+    }
+    
+    if(scalar(@rawstrings)>1) {
+      print R for(@rawstrings);
+    }
+    
+    if(scalar(@filteredstrings)) {
+      print F for(@filteredstrings);
     }
   }
   
