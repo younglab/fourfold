@@ -157,7 +157,7 @@ for( my $i = 0; $i < $nr; $i++ ) {
       print R for(@rawstrings);
     }
     
-    if(scalar(@filteredstrings)) {
+    if(scalar(@filteredstrings)>1) {
       print F for(@filteredstrings);
     }
   }
