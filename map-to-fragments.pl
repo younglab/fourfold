@@ -21,7 +21,7 @@ for( my $i = 0; $i < $nr; $i++ ) {
 
   my @arr = Spreadsheet::Read::cellrow($sheet,$i+1);
   
-  my ($samplename,undef,undef,undef,undef,undef,undef,undef,undef,undef,$re1,$re2,$re1seq,$re2seq) = @arr;
+  my ($samplename,undef,undef,undef,undef,undef,undef,undef,undef,$primer,$re1,$re2,$re1seq,$re2seq) = @arr;
 
   next if $samplename =~ /^#/;
   
@@ -30,7 +30,7 @@ for( my $i = 0; $i < $nr; $i++ ) {
   
   my %fragments;
   
-  print "DEBUG: reading fragments\n";
+  print "$samplename: reading fragments...\n";
   open(F,"<",$fragmentfile) or die "Cannot read $fragmentfile: $!";
   while(<F>) {
     chomp;
@@ -53,7 +53,7 @@ for( my $i = 0; $i < $nr; $i++ ) {
   my $previdx;
   my $possize = 0;
   
-  print "DEBUG: reading positive mapped reads\n";
+  print "$samplename: mapping reads on the positive strand...\n";
   open(S,"samtools view -F 0x14 $samplename.sorted.bam |") or die "Cannot read $samplename.sorted.bam! $!";
   while(<S>) { ### all mapped in the positive direction
     chomp;
@@ -91,29 +91,47 @@ for( my $i = 0; $i < $nr; $i++ ) {
   }
   close(S);
   
-  print "DEBUG: reading negative mapped reads\n";
-  open(S,"samtools view -F 0x4 -f 0x1 $samplename.sorted.bam |") or die "Cannot read $samplename.sorted.bam! $!";
-  while(<S>) { ### mapped in the negative direction
+  $lastchr = "NA";
+  
+  print "$samplename: mapping reads on the negative strand...\n";
+  open(S,"samtools view -F 0x4 -f 0x10 $samplename.sorted.bam |") or die "Cannot read $samplename.sorted.bam! $!";
+  while(<S>) { ### all mapped in the negative direction
     chomp;
     
     my (undef,undef,$chr,$mpos,undef,undef,undef,undef,undef,$sequence) = split /\t/;
+    
     unless(defined($fragments{$chr})) {
       warn "$chr appeared in the mapping but not in the fragments directory";
       next; ## ignore for now
     }
-    my $positions = $fragments{$chr};
-     my $l = $mpos+length($sequence)-1;
+    
+    if($lastchr ne $chr) {
+      $lastchr = $chr;
+      $posref = $fragments{$chr};
+      $posidx = 0;
+      $previdx= 0;
+      $possize = scalar(@{$posref});
+    }
+    
+    my $l = $mpos+length($sequence)-1; ### !!! SAM has a 1-offset hence the subtraction ADJUST IF CHANGING
 
-    for(keys(%{$positions})) { ## assumes the positions are sorted
-      if($positions->{$_}->[0] == $l || $positions->{$_}->[1] == $l) {
-        $positions->{$_}->[4]++;
+    $previdx = $posidx;
+    my $found = 0;
+    while( $posidx < $possize) { ## assumes the positions are sorted
+      #print "DEBUG: $posref->[$posidx]->[0] $posref->[$posidx]->[1] $l\n";
+      if($posref->[$posidx]->[0] == $l || $posref->[$posidx]->[1] == $l) {
+        $posref->[$posidx]->[4]++;
+        $found = 1;
         last;
       }
-    } 
+      
+      $posidx++;
+    }
+    $posidx = $previdx if $found == 0; ### sanity check, in case there is a bad read in the file, don't throw everything away
   }
   close(S);
   
-  print "DEBUG: writing output\n";
+  print "$samplename: writing output...\n";
   
   open(R,">","wigfiles/$samplename.raw.wig") or die "Cannot write raw: $!";
   open(F,">","wigfiles/$samplename.filtered.wig") or die "Cannot write filetered: $!";
