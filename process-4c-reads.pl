@@ -24,6 +24,28 @@ if( !defined($sheet) || !defined($nr) ) {
 
 die "Old format not implemented yet" if $format eq "old";
 
+for( my $i = 0; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
+
+  my @arr = Spreadsheet::Read::cellrow($sheet,$i+1);
+  
+  my($name,undef,undef,undef,undef,undef,undef,$fastq) = @arr;
+  
+  next if $name =~ /^#/;
+  next if $name =~ /^$/;
+  
+  my $origfastq = $fastq;
+  if( $fastq =~ /^ftp:\/\// ) {
+    `wget --spider $fastq`;
+    die "$name does not seem to exist at $fastq" unless $? == 0;
+  } else {
+    $fastq =~ s/\\\\WI-FILES/\/nfs/;
+    $fastq =~ s/\\\\WI-HTDATA/\/lab/;
+    $fastq =~ s/\\/\//g;
+    die "Cannot find file $fastq (original name $origfastq)!" unless -e $fastq;
+  }
+}
+
+
 open(S,">",".tmp.sampletable") or die "Cannot write to .tmp.sampletable: $!";
 
 for( my $i = 1; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
