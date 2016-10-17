@@ -15,13 +15,13 @@ my $database = ReadData($sampletable);
 my $sheet = $database->[1]; ## get first spreadsheet
 my $nr = ${$sheet}{"maxrow"};
 
-
+my %stats;
 
 for( my $i = 0; $i < $nr; $i++ ) { 
 
   my @arr = Spreadsheet::Read::cellrow($sheet,$i+1);
   
-  my ($samplename,undef,undef,undef,undef,undef,undef,undef,undef,$primer,$re1,$re2,$re1seq,$re2seq) = @arr;
+  my ($samplename,undef,undef,undef,$vchr,$vstart,$vend,undef,undef,$primer,$re1,$re2,$re1seq,$re2seq) = @arr;
 
   next if $samplename =~ /^#/;
   
@@ -164,5 +164,46 @@ for( my $i = 0; $i < $nr; $i++ ) {
   
   close(R);
   close(F);
+  
+  ### find information about the viewpoint
+
+  $vchr = "chr$vchr" unless $vchr =~ /^chr/;
+  
+  my @positions = @{$fragments{$vchr}};
+  my @left;
+  my @viewpoint;
+  my @right;
+  my $idx;
+  
+  for( $idx = 0; $idx < $#positions; $idx++ ) {
+    my @d = @{$positions[$idx]};
+    
+    last if($d[0] == $vstart || $d[1] == $vend);
+  }
+  
+  if($idx == $#positions) {
+    warn "The provided viewpoint was not found for $samplename!";
+    $stats{$samplename} = ["NA","NA"];
+  } else {
+    #my @left = @{$positions[$idx-1]};
+    #my @right = @{$positions[$idx+1]};
+    my @d = @{$positions[$idx]};
+    
+    if($vstart == $viewpoint[0]) {
+      $stats{$samplename} = [$d[4],$d[5]];
+    } else {
+      $stats{$samplename} = [$d[5],$d[4]];
+
+    }
+  }
 }
+
+open(S,">","stats/self-and-noncut-freq.txt") or die "Cannot write to stats file: $!";
+print S "Sample\t$Non-cut\tSelf-ligation\n";
+for(keys(%stats)) {
+  my @a = @{$stats{$_}};
+  
+  print S "$_\t$a[0]\t$a[1]\n";
+}
+close(S);
 

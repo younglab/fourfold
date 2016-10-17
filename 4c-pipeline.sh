@@ -55,6 +55,7 @@ fi
 ### map to fragments
 
 mkdir wigfiles
+mkdir stats
 $BASEDIR/map-to-fragments.pl $SAMPLETABLE
 
 if [ $? -ne 0 ];
@@ -66,5 +67,9 @@ fi
 ### smooth profiles
 
 ### comparisons
+
+### generate reports
+
+#mkdir reports
 
 echo "Done"
