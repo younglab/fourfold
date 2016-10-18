@@ -199,7 +199,7 @@ for( my $i = 0; $i < $nr; $i++ ) {
 }
 
 open(S,">","stats/self-and-noncut-freq.txt") or die "Cannot write to stats file: $!";
-print S "Sample\t$Non-cut\tSelf-ligation\n";
+print S "Sample\tNon-cut\tSelf-ligation\n";
 for(keys(%stats)) {
   my @a = @{$stats{$_}};
   
