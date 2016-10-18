@@ -52,7 +52,7 @@ for( my $i = 1; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
 
   my @arr = Spreadsheet::Read::cellrow($sheet,$i+1);
   
-  my($name,$type,$cond,$replicate,$chr,$start,$end,$fastq,$barcode,$primer,$e1,$e2) = @arr;
+  my($name,$type,$cond,$replicate,$chr,$start,$end,$fastq,$barcode,$primer,$e1,$e2,$s1,$s2) = @arr;
   
   print "\tProcessing sample $name...\n";
   
@@ -77,11 +77,11 @@ for( my $i = 1; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
   die "Cannot find file $fastq (original name $origfastq)!" unless -e $fastq;
   
   ### extract sequence
-  if( $fastq =~ /[.]gz$/ && $fastq !~ /[.]tar[.]gz$/ ) {
+  if( $fastq =~ /[.]gz$/i && $fastq !~ /[.]tar[.]gz$/i ) {
     `zcat $fastq > .tmp.seq.fq`;
-  } elsif( $fastq =~ /[.]bz2$/ ) {
+  } elsif( $fastq =~ /[.]bz2$/i ) {
     `bzcat $fastq > .tmp.seq.fq`;
-  } elsif( $fastq =~ /[.]tar[.]gz$/ ) {
+  } elsif( $fastq =~ /[.]tar[.]gz$/i ) {
     `tar --strip-components=5 -xzOf $fastq > .tmp.seq.fq`;
   } else {
     `cat $fastq > .tmp.seq.fq`;
@@ -95,11 +95,13 @@ for( my $i = 1; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
   my $trimlength;
   
   if($barcode ne "NA") {
-    $test = qr/^$barcode$primer/;
-    $trimlength = length($barcode) + length($primer);
+    $test = qr/^$barcode$primer/i;
+    print "DEBUG: $barcode$primer\n";
+    print "DEBUG: $test\n";
+    $trimlength = length($barcode) + length($primer) - length($s1);
   } else {
-    $test = qr/^$primer/;
-    $trimlength = length($primer);
+    $test = qr/^$primer/i;
+    $trimlength = length($primer) - length($s1);
   }
   
   while(<D>) {
@@ -127,6 +129,7 @@ for( my $i = 1; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
   rename(".tmp.primer.fq","$name.trimmed.fq");
   
   `bowtie -n 1 $bowtieidx -k 1 -m 1 -S --chunkmbs 256 --best --strata $name.trimmed.fq > $name.sam`;
+  `gzip $name.trimmed.fq`;
   `samtools view -Sb $name.sam > $name.bam`;
   `samtools sort -@ 6 -Ttmp $name.bam > $name.sorted.bam`;
   unlink("$name.sam");
