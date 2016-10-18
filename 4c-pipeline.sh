@@ -42,6 +42,16 @@ then
   exit 1
 fi
 
+for F in *trimmed.fq
+do
+  bsub -K -J 4calign "bowtie -n 1 $bowtieidx -p 8 -k 1 -m 1 -S --chunkmbs 256 --best --strata $name.trimmed.fq > $name.sam; \
+  gzip $name.trimmed.fq; \
+  samtools view -Sb $name.sam > $name.bam; \
+  samtools sort -@ 6 -Ttmp $name.bam > $name.sorted.bam";
+done
+
+wait
+
 ### identify fragments
 
 $BASEDIR/re-fragment-identification.pl $SAMPLETABLE $GENOMEFA

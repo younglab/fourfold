@@ -185,14 +185,14 @@ for( my $i = 0; $i < $nr; $i++ ) {
     warn "The provided viewpoint was not found for $samplename!";
     $stats{$samplename} = ["NA","NA"];
   } else {
-    #my @left = @{$positions[$idx-1]};
-    #my @right = @{$positions[$idx+1]};
+    my @left = @{$positions[$idx-1]};
+    my @right = @{$positions[$idx+1]};
     my @d = @{$positions[$idx]};
     
     if($vstart == $viewpoint[0]) {
-      $stats{$samplename} = [$d[4],$d[5]];
+      $stats{$samplename} = [$d[4],$right[4]];
     } else {
-      $stats{$samplename} = [$d[5],$d[4]];
+      $stats{$samplename} = [$d[5],$left[5]];
 
     }
   }

@@ -61,6 +61,8 @@ for( my $i = 1; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
   next if $name =~ /^$/;
   
   my $origfastq = $fastq;
+  my $basefastqname = basename($fastq);
+  my $tmpseqfile = ".tmp.$basefastqname.seq.fq";
   if( $fastq =~ /^ftp:\/\// ) {
     #ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX117/SRX1175151/SRR2220261/SRR2220261.sra
     `wget $fastq`;
@@ -77,18 +79,20 @@ for( my $i = 1; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
   die "Cannot find file $fastq (original name $origfastq)!" unless -e $fastq;
   
   ### extract sequence
-  if( $fastq =~ /[.]gz$/i && $fastq !~ /[.]tar[.]gz$/i ) {
-    `zcat $fastq > .tmp.seq.fq`;
-  } elsif( $fastq =~ /[.]bz2$/i ) {
-    `bzcat $fastq > .tmp.seq.fq`;
-  } elsif( $fastq =~ /[.]tar[.]gz$/i ) {
-    `tar --strip-components=5 -xzOf $fastq > .tmp.seq.fq`;
-  } else {
-    `cat $fastq > .tmp.seq.fq`;
+  unless( -e $tmpseqfile ) {
+    if( $fastq =~ /[.]gz$/i && $fastq !~ /[.]tar[.]gz$/i ) {
+      `zcat $fastq > $tmpseqfile`;
+    } elsif( $fastq =~ /[.]bz2$/i ) {
+      `bzcat $fastq > $tmpseqfile`;
+    } elsif( $fastq =~ /[.]tar[.]gz$/i ) {
+      `tar --strip-components=5 -xzOf $fastq > $tmpseqfile`;
+    } else {
+      `cat $fastq > $tmpseqfile`;
+    }
   }
   
   
-  open(D,"<",".tmp.seq.fq") or die "Cannot read .tmp.seq.fq: $!";
+  open(D,"<","$tmpseqfile") or die "Cannot read $tmpseqfile: $!";
   open(P,">",".tmp.primer.fq") or die "Cannot write .tmp.primer.fq: $!";
   
   my $test;
@@ -96,8 +100,6 @@ for( my $i = 1; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
   
   if($barcode ne "NA") {
     $test = qr/^$barcode$primer/i;
-    print "DEBUG: $barcode$primer\n";
-    print "DEBUG: $test\n";
     $trimlength = length($barcode) + length($primer) - length($s1);
   } else {
     $test = qr/^$primer/i;
@@ -128,12 +130,12 @@ for( my $i = 1; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
   
   rename(".tmp.primer.fq","$name.trimmed.fq");
   
-  `bowtie -n 1 $bowtieidx -k 1 -m 1 -S --chunkmbs 256 --best --strata $name.trimmed.fq > $name.sam`;
-  `gzip $name.trimmed.fq`;
-  `samtools view -Sb $name.sam > $name.bam`;
-  `samtools sort -@ 6 -Ttmp $name.bam > $name.sorted.bam`;
-  unlink("$name.sam");
-  unlink("$name.bam");
+  #`bowtie -n 1 $bowtieidx -p 8 -k 1 -m 1 -S --chunkmbs 256 --best --strata $name.trimmed.fq > $name.sam`;
+  #`gzip $name.trimmed.fq`;
+  #`samtools view -Sb $name.sam > $name.bam`;
+  #`samtools sort -@ 6 -Ttmp $name.bam > $name.sorted.bam`;
+  #unlink("$name.sam");
+  #unlink("$name.bam");
 }
 
 close(S);
