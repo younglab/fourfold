@@ -18,7 +18,7 @@ then
   exit 1
 fi
 
-if [ ! -e "$BOWTIEIDX" ];
+if [ ! -e "$BOWTIEIDX.1.ebwt" ];
 then
   echo "Error: $BOWTIEIDX does not exist!"
   exit 1
