@@ -11,6 +11,7 @@ fi
 SAMPLETABLE="$1"
 BOWTIEIDX="$2"
 GENOMEFA="$3"
+MINFRAGMENTLENGTH=20
 
 if [ ! -e "$SAMPLETABLE" ];
 then
@@ -44,17 +45,19 @@ fi
 
 for F in *trimmed.fq
 do
-  bsub -K -J 4calign "bowtie -n 1 $bowtieidx -p 8 -k 1 -m 1 -S --chunkmbs 256 --best --strata $name.trimmed.fq > $name.sam; \
-  gzip $name.trimmed.fq; \
-  samtools view -Sb $name.sam > $name.bam; \
-  samtools sort -@ 6 -Ttmp $name.bam > $name.sorted.bam";
+  PREFIX=${F%.trimmed.fq}
+  bsub -J 4calign "bowtie -n 1 -p 8 -k 1 -m 1 -S --chunkmbs 256 --best --strata $BOWTIEIDX $F > $PREFIX.sam; \
+  gzip $PREFIX.trimmed.fq; \
+  samtools view -Sb $PREFIX.sam > $PREFIX.bam; \
+  samtools sort -@ 6 -Ttmp $PREFIX.bam > $PREFIX.sorted.bam; \
+  rm $PREFIX.sam $PREFIX.bam;";
 done
 
 wait
 
 ### identify fragments
 
-$BASEDIR/re-fragment-identification.pl $SAMPLETABLE $GENOMEFA
+$BASEDIR/re-fragment-identification.pl $SAMPLETABLE $GENOMEFA $MINFRAGMENTLENGTH
 
 if [ $? -ne 0 ];
 then
