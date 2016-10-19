@@ -21,6 +21,18 @@ struct cut_site {
 };
 
 int main(int argv,char **argc) {
+  std::stringstream coords;
+  coords << argc[6] << " " << argc[7] << " " << argc[8];
+  
+  std::string primerchr;
+  int primers, primere;
+  
+  coords >> primerchr;
+  coords >> primers;
+  coords >> primere;
+  
+  std::cerr << "test: " << primerchr << " " << primers << " " << primere << std::endl;
+  
   // Read fragments
   std::ifstream fragments(argc[1]);
   std::map<std::string,std::vector<cut_site*> > cuts;
@@ -93,11 +105,18 @@ int main(int argv,char **argc) {
   int curidx = 0;
   int cutlen = -1;
   int readlen = -1;
+  int totalreads = 0;
+  int mappedreads = 0;
+  int transreads = 0;
+  int cisreads = 0;
+  int abnormalreads = 0;
   std::vector<cut_site*> vec;
   
   while(bam.GetNextAlignment(align)) {
+    totalreads++;
     
     if(!align.IsMapped()) continue;
+    mappedreads++;
     
     if(readlen == -1) {
       readlen = align.QueryBases.length();
@@ -149,7 +168,16 @@ int main(int argv,char **argc) {
       curidx++;
     }
 
-    if(!found) curidx = previdx; // somehow a non-RE read got into the system
+    if(!found) {
+      curidx = previdx; // somehow a non-RE read got into the system
+      abnormalreads++;
+    } else {
+      if(curchrs == primerchr) {
+        cisreads++;
+      } else {
+        transreads++;
+      }
+    }
   }
   
   std::cout << "Writing output" << std::endl;
@@ -166,6 +194,9 @@ int main(int argv,char **argc) {
     std::cerr << "Cannot write!" << std::endl;
     return EXIT_FAILURE;
   }
+  
+  int filteredcis = 0;
+  int filteredtrans = 0;
   
   raw << "track type=wiggle_0" << std::endl;
   filtered << "track type=wiggle_0" << std::endl;
@@ -188,6 +219,9 @@ int main(int argv,char **argc) {
             foundf = true;
           }
           filtered << s->start << "\t" << s->lcounts << std::endl;
+          if( chr == primerchr ) filteredcis += s->lcounts;
+          else filteredtrans += s->lcounts;
+          
         }
       }
       
@@ -204,6 +238,8 @@ int main(int argv,char **argc) {
             foundf = true;
           }
           filtered << s->end << "\t" << s->rcounts << std::endl;
+          if( chr == primerchr ) filteredcis += s->rcounts;
+          else filteredtrans += s->rcounts;
         }
       }
     }
@@ -211,6 +247,52 @@ int main(int argv,char **argc) {
   
   raw.close();
   filtered.close();
+  
+  std::ofstream stats(argc[5]);
+  
+  if(!stats) {
+    std::cerr << "Not a valid stats file" << std::endl;
+    return EXIT_FAILURE;
+  }
+  
+  stats << "Total Reads: " << totalreads << std::endl;
+  stats << "Mapped Reads: " << mappedreads << std::endl;
+  stats << "Cis Reads: " << cisreads << std::endl;
+  stats << "Trans Reads: " << transreads << std::endl;
+  stats << "Abnormal Reads: " << abnormalreads << std::endl;
+  stats << "Filtered Cis Reads: " << filteredcis << std::endl;
+  stats << "Filtered Trans Reads: "  << filteredtrans << std::endl;
+  
+  std::vector<cut_site*> sites_in_cis = cuts[primerchr];
+  int i;
+  
+  for( i = 0; i < sites_in_cis.size(); i++ ) {
+    cut_site *r = sites_in_cis[i];
+    if(r->start == primers || r->end == primere) break;
+  }
+  
+  if( i == sites_in_cis.size()) {
+    stats << "Self-ligation Reads: NA" << std::endl;
+    stats << "Non-cut Reads: NA" << std::endl;
+  } else {
+    int l = i-1;
+    int r = i+1;
+    
+    cut_site *pl = sites_in_cis[l];
+    cut_site *p = sites_in_cis[i];
+    cut_site *pr = sites_in_cis[r];
+    
+    if(p->start == primers) {
+      stats << "Self-ligation Reads: " << pr->lcounts << std::endl;
+      stats << "Non-cut Reads: " << p->lcounts << std::endl;
+    } else {
+      stats << "Self-ligation Reads: " << pl->rcounts << std::endl;
+      stats << "Non-cut Reads: " << p->rcounts << std::endl;
+    }
+  }
+  
+  
+  stats.close();
   
   return 0;
 }
