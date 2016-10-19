@@ -93,6 +93,7 @@ int main(int argv,char **argc) {
   int curidx = 0;
   int cutlen = -1;
   int readlen = -1;
+  std::vector<cut_site*> vec;
   
   while(bam.GetNextAlignment(align)) {
     
@@ -125,7 +126,8 @@ int main(int argv,char **argc) {
       }
       
       curidx = 0;
-      cutlen = cuts[curchrs].size();
+      vec = cuts[curchrs];
+      cutlen = vec.size();
     }
     
     cut_site *s;
@@ -133,20 +135,20 @@ int main(int argv,char **argc) {
     bool found = false;
     
     while( curidx < cutlen ) {
-      if( cuts[curchrs][curidx]->start == align.Position) {
-        cuts[curchrs][curidx]->rcounts++;
+      if( vec[curidx]->start == align.Position) {
+        vec[curidx]->rcounts++;
         found = true;
         break;
       }
-      if(cuts[curchrs][curidx]->end == (align.Position+readlen)) {
-        cuts[curchrs][curidx]->lcounts++;
+      if(vec[curidx]->end == (align.Position+readlen)) {
+        vec[curidx]->lcounts++;
         found = true;
         break;
       }
       
       curidx++;
     }
-    
+
     if(!found) curidx = previdx; // somehow a non-RE read got into the system
   }
   
