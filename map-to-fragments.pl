@@ -149,8 +149,8 @@ for( my $i = 0; $i < $nr; $i++ ) {
       push @rawstrings, "$arr[0]\t$arr[4]\n" unless $arr[4] == 0;
       push @rawstrings, "$arr[1]\t$arr[5]\n" unless $arr[5] == 0;
       
-      push @filteredstrings, "$arr[0]\t$arr[4]\n" unless ( $arr[4] == 0 && $arr[2] eq "NA" );
-      push @filteredstrings, "$arr[1]\t$arr[5]\n" unless ( $arr[5] == 0 && $arr[3] eq "NA" );
+      push @filteredstrings, "$arr[0]\t$arr[4]\n" unless ( $arr[4] == 0 || $arr[2] eq "NA" );
+      push @filteredstrings, "$arr[1]\t$arr[5]\n" unless ( $arr[5] == 0 || $arr[3] eq "NA" );
     }
     
     if(scalar(@rawstrings)>1) {
