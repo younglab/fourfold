@@ -2,16 +2,38 @@
 
 use strict;
 use Spreadsheet::Read;
+#use Parallel::ForkManager;
 use File::Basename;
 
 
-if( scalar(@ARGV) < 3 ) {
-  die "Need sample table and format type and index!";
+if( scalar(@ARGV) < 2 ) {
+  die "Need sample table and organism index!";
 }
 
-my ($sampletable,$format,$bowtieidx) = @ARGV;
+my ($sampletable,$organismdatabase) = @ARGV;
 
 die "Cannot find file $sampletable!" unless -e $sampletable;
+die "Cannot find organism database $organismdatabase!" unless -e $organismdatabase;
+
+my %organisms;
+
+open(D,"<","$organismdatabase") or die "Cannot read $organismdatabase: $!";
+
+while(<D>) {
+  chomp;
+  
+  my ($id,$bowtie,$fasta) = split /\t/;
+  
+  next if $id =~ /^$/;
+  
+  die "In organism database, cannot find bowtie index for $id!" unless -e "$bowtie.1.ebwt";
+  die "In organism database, cannot fine FASTA file for $id!" unless -e $fasta;
+  
+  for(split(/,/,$id)) {
+    $organisms{lc $_} = [$bowtie,$fasta];
+  }
+}
+close(D);
 
 my $database = ReadData($sampletable);
 my $sheet = $database->[1]; ## get first spreadsheet
@@ -22,52 +44,33 @@ if( !defined($sheet) || !defined($nr) ) {
   exit 1;
 }
 
-die "Old format not implemented yet" if $format eq "old";
 
-for( my $i = 0; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
+my @tmpfiles;
+#my $pm = Parallel::ForkManager->new(50);
+
+### unpack sequences first
+for( my $i = 0; $i < $nr; $i++ ) { 
 
   my @arr = Spreadsheet::Read::cellrow($sheet,$i+1);
   
-  my($name,undef,undef,undef,undef,undef,undef,$fastq) = @arr;
+  my($name,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,$fastq) = @arr;
+  
   
   next if $name =~ /^#/;
   next if $name =~ /^$/;
   
-  my $origfastq = $fastq;
-  if( $fastq =~ /^ftp:\/\// ) {
-    `wget --spider $fastq`;
-    die "$name does not seem to exist at $fastq" unless $? == 0;
-  } else {
-    $fastq =~ s/\\\\WI-FILES/\/nfs/;
-    $fastq =~ s/\\\\WI-HTDATA/\/lab/;
-    $fastq =~ s/\\/\//g;
-    die "Cannot find file $fastq (original name $origfastq)!" unless -e $fastq;
-  }
-}
-
-
-open(S,">",".tmp.sampletable") or die "Cannot write to .tmp.sampletable: $!";
-
-for( my $i = 1; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
-
-  my @arr = Spreadsheet::Read::cellrow($sheet,$i+1);
-  
-  my($name,$type,$cond,$replicate,$chr,$start,$end,$fastq,$barcode,$primer,$e1,$e2,$s1,$s2) = @arr;
-  
-  print "\tProcessing sample $name...\n";
-  
-  print S "$name\t$chr\t$start\t$end\t$e1\t$e2\n";
-  
-  next if $name =~ /^$/;
   
   my $origfastq = $fastq;
   my $basefastqname = basename($fastq);
   my $tmpseqfile = ".tmp.$basefastqname.seq.fq";
+  
+  next if -e $tmpseqfile;
   if( $fastq =~ /^ftp:\/\// ) {
-    #ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByExp/sra/SRX/SRX117/SRX1175151/SRR2220261/SRR2220261.sra
-    `wget $fastq`;
+    my $output = `wget $fastq`;
+    die "wget failed: $output" if $? != 0;
     $fastq = basename($fastq);
-    `fastq-dump --gzip $fastq`;
+    $output = `fastq-dump --gzip $fastq`;
+    die "fastq-dump failed: $output" if $? != 0;
     $fastq =~ s/[.]sra/.fastq.gz/;
   } else {
     $fastq =~ s/\\\\WI-FILES/\/nfs/;
@@ -79,18 +82,39 @@ for( my $i = 1; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
   die "Cannot find file $fastq (original name $origfastq)!" unless -e $fastq;
   
   ### extract sequence
-  unless( -e $tmpseqfile ) {
-    if( $fastq =~ /[.]gz$/i && $fastq !~ /[.]tar[.]gz$/i ) {
-      `zcat $fastq > $tmpseqfile`;
-    } elsif( $fastq =~ /[.]bz2$/i ) {
-      `bzcat $fastq > $tmpseqfile`;
-    } elsif( $fastq =~ /[.]tar[.]gz$/i ) {
-      `tar --strip-components=5 -xzOf $fastq > $tmpseqfile`;
-    } else {
-      `cat $fastq > $tmpseqfile`;
-    }
+  if( $fastq =~ /[.]gz$/i && $fastq !~ /[.]tar[.]gz$/i ) {
+    `zcat $fastq > $tmpseqfile`;
+  } elsif( $fastq =~ /[.]bz2$/i ) {
+    `bzcat $fastq > $tmpseqfile`;
+  } elsif( $fastq =~ /[.]tar[.]gz$/i ) {
+    `tar --strip-components=5 -xzOf $fastq > $tmpseqfile`;
+  } else {
+    `cat $fastq > $tmpseqfile`;
   }
   
+  push @tmpfiles, $tmpseqfile;
+}
+  
+
+
+for( my $i = 0; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
+
+  my @arr = Spreadsheet::Read::cellrow($sheet,$i+1);
+  
+  my($name,undef,undef,undef,$organism,$viewpointid,$viewpointchrom,$viewpointstart,$viewpointend,$readstart,$readend,$fastq,$barcode,$primer,$revprimer,$e1,$e2,$e1s,$e2s) = @arr;
+  
+  
+  next if $name =~ /^#/;
+  next if $name =~ /^$/;
+  print "\tProcessing sample $name...\n";
+
+
+  my $basefastqname = basename($fastq);
+  my $tmpseqfile = ".tmp.$basefastqname.seq.fq";
+
+  
+  die "Cannot find file $fastq (temporary name $tmpseqfile)!" unless -e $tmpseqfile;
+
   
   open(D,"<","$tmpseqfile") or die "Cannot read $tmpseqfile: $!";
   open(P,">",".tmp.primer.fq") or die "Cannot write .tmp.primer.fq: $!";
@@ -100,10 +124,10 @@ for( my $i = 1; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
   
   if($barcode ne "NA") {
     $test = qr/^$barcode$primer/i;
-    $trimlength = length($barcode) + length($primer) - length($s1);
+    $trimlength = length($barcode) + length($primer) - length($e1s);
   } else {
     $test = qr/^$primer/i;
-    $trimlength = length($primer) - length($s1);
+    $trimlength = length($primer) - length($e1s);
   }
   
   while(<D>) {
@@ -129,14 +153,10 @@ for( my $i = 1; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
   close(D);
   
   rename(".tmp.primer.fq","$name.trimmed.fq");
-  
-  #`bowtie -n 1 $bowtieidx -p 8 -k 1 -m 1 -S --chunkmbs 256 --best --strata $name.trimmed.fq > $name.sam`;
-  #`gzip $name.trimmed.fq`;
-  #`samtools view -Sb $name.sam > $name.bam`;
-  #`samtools sort -@ 6 -Ttmp $name.bam > $name.sorted.bam`;
-  #unlink("$name.sam");
-  #unlink("$name.bam");
 }
 
-close(S);
+### cleanup tmp files
+for my $file (@tmpfiles) {
+  unlink($file);
+}
 

@@ -1,16 +1,18 @@
 #!/bin/bash
 
-BASEDIR=$(dirname $0)
 
-if [ $# -lt 3 ];
+BASEDIR=$(dirname $0)
+ORGANISMDATABASE=$BASEDIR/organism-database.txt
+
+if [ $# -lt 1 ];
 then
-  echo "process-4c.sh <sample XSLX table> <bowtie index> <genome FASTA>"
+  echo "process-4c.sh <sample XSLX table>"#" <bowtie index> <genome FASTA>"
   exit 1
 fi
 
 SAMPLETABLE="$1"
-BOWTIEIDX="$2"
-GENOMEFA="$3"
+#BOWTIEIDX="$2"
+#GENOMEFA="$3"
 MINFRAGMENTLENGTH=20
 
 if [ ! -e "$SAMPLETABLE" ];
@@ -19,15 +21,29 @@ then
   exit 1
 fi
 
-if [ ! -e "$BOWTIEIDX.1.ebwt" ];
-then
-  echo "Error: $BOWTIEIDX does not exist!"
-  exit 1
-fi
+#if [ ! -e "$BOWTIEIDX.1.ebwt" ];
+#then
+  #echo "Error: $BOWTIEIDX does not exist!"
+  #exit 1
+#fi
 
-if [ ! -e "$GENOMEFA" ];
+#if [ ! -e "$GENOMEFA" ];
+#then
+  #echo "Error: $GENOMEFA does not exist!"
+  #exit 1
+#fi
+
+mkdir wigfiles
+mkdir stats
+mkdir bamfiles
+
+echo "Validating sample table..."
+
+$BASEDIR/validate-table.pl $SAMPLETABLE $ORGANISMDATABASE
+
+if [ $? -ne 0 ];
 then
-  echo "Error: $GENOMEFA does not exist!"
+  echo "Errors in validating the sample table, see error messages"
   exit 1
 fi
 
@@ -35,7 +51,7 @@ fi
 
 echo "Processing reads..."
 
-$BASEDIR/process-4c-reads.pl $SAMPLETABLE new $BOWTIEIDX
+$BASEDIR/process-4c-reads.pl $SAMPLETABLE
 
 if [ $? -ne 0 ];
 then
@@ -67,8 +83,7 @@ fi
 
 ### map to fragments
 
-mkdir wigfiles
-mkdir stats
+
 $BASEDIR/map-to-fragments.pl $SAMPLETABLE
 
 if [ $? -ne 0 ];
