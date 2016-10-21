@@ -28,6 +28,6 @@ for( my $i = 0; $i < $nr; $i++ ) {
   my $fragmentfile = "$e1-$e2-$organism/fragments.txt";
   die "Cannot find $fragmentfile! Make sure to run re-fragment-identification.pl first!" unless( -e $fragmentfile);
   
-  `$basedir/mapping-from-bam-file $fragmentfile $name.sorted.bam wigfiles/$name.raw.wig wigfiles/$name.filtered.wig stats/$name.stats.txt $viewpointchrom $readstart $readend`;
+  `$basedir/mapping-from-bam-file $fragmentfile bamfiles/$name.sorted.bam wigfiles/$name.raw.wig wigfiles/$name.filtered.wig stats/$name.stats.txt $viewpointchrom $readstart $readend`;
 }
 
