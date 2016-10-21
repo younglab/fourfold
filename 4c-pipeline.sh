@@ -46,6 +46,7 @@ then
   mkdir wigfiles
   mkdir stats
   mkdir bamfiles
+  mkdir logs
 fi
 
 echo "Validating sample table..."
@@ -79,7 +80,7 @@ fi
 for F in *trimmed.fq
 do
   PREFIX=${F%.trimmed.fq}
-  bsub -K -J 4calign "bash $PREFIX.align.sh; \
+  bsub -o logs/$PREFIX.align.log -K -J 4calign "bash $PREFIX.align.sh; \
   gzip $PREFIX.trimmed.fq; \
   samtools view -Sb bamfiles/$PREFIX.sam > bamfiles/$PREFIX.bam; \
   samtools sort -@ 6 -Ttmp$PREFIX bamfiles/$PREFIX.bam > bamfiles/$PREFIX.sorted.bam; \

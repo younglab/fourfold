@@ -46,6 +46,7 @@ if( !defined($sheet) || !defined($nr) ) {
 
 
 my @tmpfiles;
+my %tmpfilesize;
 #my $pm = Parallel::ForkManager->new(50);
 
 ### unpack sequences first
@@ -93,6 +94,7 @@ for( my $i = 0; $i < $nr; $i++ ) {
   }
   
   push @tmpfiles, $tmpseqfile;
+  $tmpfilesize{$tmpseqfile} = `wc -l $tmpseqfile`;
 }
   
 
@@ -120,10 +122,13 @@ for( my $i = 0; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
   open(P,">",".tmp.primer.fq") or die "Cannot write .tmp.primer.fq: $!";
   
   my $test;
+  my $barcodetest = qr/NA/;
   my $trimlength;
+  my ($nbarcode,$nprimer) = (0,0);
   
   if($barcode ne "NA") {
     $test = qr/^$barcode$primer/i;
+    $barcodetest = qr/^$barcode/;
     $trimlength = length($barcode) + length($primer) - length($e1s);
   } else {
     $test = qr/^$primer/i;
@@ -141,7 +146,9 @@ for( my $i = 0; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
       chomp $line3;
       chomp $line4;
       
+      $nbarcode++ if $line2 =~ $barcodetest;
       next unless $line2 =~ $test;
+      $nprimer++;
       
       my $np2 = substr($line2,$trimlength);
       my $np4 = substr($line4,$trimlength);
@@ -155,9 +162,18 @@ for( my $i = 0; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
   rename(".tmp.primer.fq","$name.trimmed.fq");
   
   my $bowtieidx = $organisms{lc $organism}->[0];
+  my $bowtiecmd = "bowtie -n 1 -p 8 -k 1 -m 1 -S --chunkmbs 256 --best --strata $bowtieidx $name.trimmed.fq > bamfiles/$name.sam";
   open(S,">","$name.align.sh") or die "Cannot write to shell script: $!";
-  print S "bowtie -n 1 -p 8 -k 1 -m 1 -S --chunkmbs 256 --best --strata $bowtieidx $name.trimmed.fq > bamfiles/$name.sam\n";
+  print S "$bowtiecmd\n";
   close(S);
+  
+  open(O,">","stats/$name.out") or die "Cannot write to stats/$name.out";
+  print O "Sample ID: $name\n";
+  print O "Number of sequenced reads: $tmpfilesize{$tmpseqfile}\n";
+  print O "Number of reads with barcode $barcode: $nbarcode\n";
+  print O "Number of reads with barcode and primer $barcode$primer: $nprimer\n";
+  print O "Bowtie command: $bowtiecmd\n";
+  close(O);
 }
 
 ### cleanup tmp files
