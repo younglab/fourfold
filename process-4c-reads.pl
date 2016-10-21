@@ -153,6 +153,11 @@ for( my $i = 0; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
   close(D);
   
   rename(".tmp.primer.fq","$name.trimmed.fq");
+  
+  my $bowtieidx = $organisms{lc $organism};
+  open(S,">","$name.align.sh") or die "Cannot write to shell script: $!";
+  print S "bowtie -n 1 -p 8 -k 1 -m 1 -S --chunkmbs 256 --best --strata $bowtieidx $name.trimmed.fq > bamfiles/$name.sam\n";
+  close(S);
 }
 
 ### cleanup tmp files
