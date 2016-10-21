@@ -94,7 +94,9 @@ for( my $i = 0; $i < $nr; $i++ ) {
   }
   
   push @tmpfiles, $tmpseqfile;
-  $tmpfilesize{$tmpseqfile} = `wc -l $tmpseqfile`;
+  my $nlines = `wc -l $tmpseqfile`;
+  chomp $nlines;
+  $tmpfilesize{$tmpseqfile} = (split /\s+/, $nlines)[0];
 }
   
 
