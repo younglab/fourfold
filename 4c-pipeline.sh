@@ -3,6 +3,26 @@
 
 BASEDIR=$(dirname $0)
 ORGANISMDATABASE=$BASEDIR/organism-database.txt
+ENDAFTERVALIDATION=0
+
+
+TEMP=`getopt -o h -l validate-table-only -n '4cpipeline' -- "$@"`
+eval set -- "$TEMP"
+
+while [ $# -ge 1 ]; do
+	case "$1" in
+	  --)
+	    shift
+	    break
+	    ;;
+	  -h)
+	    ;;
+	  --validate-table-only)
+	    ENDAFTERVALIDATION=1
+	    ;;
+	esac
+	shift
+done
 
 if [ $# -lt 1 ];
 then
@@ -21,10 +41,12 @@ then
   exit 1
 fi
 
-
-mkdir wigfiles
-mkdir stats
-mkdir bamfiles
+if [ $ENDAFTERVALIDATION -eq 0 ];
+then
+  mkdir wigfiles
+  mkdir stats
+  mkdir bamfiles
+fi
 
 echo "Validating sample table..."
 
@@ -34,6 +56,12 @@ if [ $? -ne 0 ];
 then
   echo "Errors in validating the sample table, see error messages"
   exit 1
+fi
+
+if [ $ENDAFTERVALIDATION -ne 0 ];
+then
+  echo "Sample table is valid"
+  exit 0
 fi
 
 ### process reads
