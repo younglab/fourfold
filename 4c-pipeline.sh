@@ -21,17 +21,6 @@ then
   exit 1
 fi
 
-#if [ ! -e "$BOWTIEIDX.1.ebwt" ];
-#then
-  #echo "Error: $BOWTIEIDX does not exist!"
-  #exit 1
-#fi
-
-#if [ ! -e "$GENOMEFA" ];
-#then
-  #echo "Error: $GENOMEFA does not exist!"
-  #exit 1
-#fi
 
 mkdir wigfiles
 mkdir stats
@@ -64,14 +53,16 @@ do
   PREFIX=${F%.trimmed.fq}
   bsub -J 4calign "bash $PREFIX.align.sh; \
   gzip $PREFIX.trimmed.fq; \
-  samtools view -Sb $PREFIX.sam > bamfiles/$PREFIX.bam; \
-  samtools sort -@ 6 -Ttmp bamfiles/$PREFIX.bam > bamfiles/$PREFIX.sorted.bam; \
+  samtools view -Sb bamfiles/$PREFIX.sam > bamfiles/$PREFIX.bam; \
+  samtools sort -@ 6 -Ttmp$PREFIX bamfiles/$PREFIX.bam > bamfiles/$PREFIX.sorted.bam; \
   rm bamfiles/$PREFIX.sam bamfiles/$PREFIX.bam;";
 done
 
 wait
 
 ### identify fragments
+
+echo "Identifying fragments..."
 
 $BASEDIR/re-fragment-identification.pl $SAMPLETABLE $ORGANISMDATABASE $MINFRAGMENTLENGTH
 
@@ -83,6 +74,7 @@ fi
 
 ### map to fragments
 
+echo "Mapping to fragments..."
 
 $BASEDIR/map-to-fragments.pl $SAMPLETABLE $BASEDIR
 
