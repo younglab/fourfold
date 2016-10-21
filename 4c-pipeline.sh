@@ -6,7 +6,7 @@ ORGANISMDATABASE=$BASEDIR/organism-database.txt
 
 if [ $# -lt 1 ];
 then
-  echo "process-4c.sh <sample XSLX table>"#" <bowtie index> <genome FASTA>"
+  echo "process-4c.sh <sample XSLX table>"
   exit 1
 fi
 
@@ -51,7 +51,7 @@ fi
 
 echo "Processing reads..."
 
-$BASEDIR/process-4c-reads.pl $SAMPLETABLE
+$BASEDIR/process-4c-reads.pl $SAMPLETABLE $ORGANISMDATABASE
 
 if [ $? -ne 0 ];
 then
@@ -62,18 +62,18 @@ fi
 for F in *trimmed.fq
 do
   PREFIX=${F%.trimmed.fq}
-  bsub -J 4calign "bowtie -n 1 -p 8 -k 1 -m 1 -S --chunkmbs 256 --best --strata $BOWTIEIDX $F > $PREFIX.sam; \
+  bsub -J 4calign "bash $PREFIX.align.sh; \
   gzip $PREFIX.trimmed.fq; \
-  samtools view -Sb $PREFIX.sam > $PREFIX.bam; \
-  samtools sort -@ 6 -Ttmp $PREFIX.bam > $PREFIX.sorted.bam; \
-  rm $PREFIX.sam $PREFIX.bam;";
+  samtools view -Sb $PREFIX.sam > bamfiles/$PREFIX.bam; \
+  samtools sort -@ 6 -Ttmp bamfiles/$PREFIX.bam > bamfiles/$PREFIX.sorted.bam; \
+  rm bamfiles/$PREFIX.sam bamfiles/$PREFIX.bam;";
 done
 
 wait
 
 ### identify fragments
 
-$BASEDIR/re-fragment-identification.pl $SAMPLETABLE $GENOMEFA $MINFRAGMENTLENGTH
+$BASEDIR/re-fragment-identification.pl $SAMPLETABLE $ORGANISMDATABASE $MINFRAGMENTLENGTH
 
 if [ $? -ne 0 ];
 then
@@ -84,7 +84,7 @@ fi
 ### map to fragments
 
 
-$BASEDIR/map-to-fragments.pl $SAMPLETABLE
+$BASEDIR/map-to-fragments.pl $SAMPLETABLE $BASEDIR
 
 if [ $? -ne 0 ];
 then

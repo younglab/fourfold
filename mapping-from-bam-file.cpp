@@ -21,6 +21,12 @@ struct cut_site {
 };
 
 int main(int argv,char **argc) {
+  
+  if(argv<9) {
+    std::cerr << "not enough arguments" << std::endl;
+    return EXIT_FAILURE;
+  }
+  
   std::stringstream coords;
   coords << argc[6] << " " << argc[7] << " " << argc[8];
   
@@ -268,7 +274,7 @@ int main(int argv,char **argc) {
   
   for( i = 0; i < sites_in_cis.size(); i++ ) {
     cut_site *r = sites_in_cis[i];
-    if(r->start == primers || r->end == primere) break;
+    if((r->start+1) == primers || (r->end+1) == primere) break; // right now the cutting coordinates are stored in a 0-offset while the primer coordinates are in a 1-offset, need to synchronize better
   }
   
   if( i == sites_in_cis.size()) {
@@ -282,7 +288,7 @@ int main(int argv,char **argc) {
     cut_site *p = sites_in_cis[i];
     cut_site *pr = sites_in_cis[r];
     
-    if(p->start == primers) {
+    if((p->start+1) == primers) {
       stats << "Self-ligation Reads: " << pr->lcounts << std::endl;
       stats << "Non-cut Reads: " << p->lcounts << std::endl;
     } else {
