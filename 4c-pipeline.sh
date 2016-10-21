@@ -51,11 +51,11 @@ fi
 for F in *trimmed.fq
 do
   PREFIX=${F%.trimmed.fq}
-  bsub -J 4calign "bash $PREFIX.align.sh; \
+  bsub -K -J 4calign "bash $PREFIX.align.sh; \
   gzip $PREFIX.trimmed.fq; \
   samtools view -Sb bamfiles/$PREFIX.sam > bamfiles/$PREFIX.bam; \
   samtools sort -@ 6 -Ttmp$PREFIX bamfiles/$PREFIX.bam > bamfiles/$PREFIX.sorted.bam; \
-  rm bamfiles/$PREFIX.sam bamfiles/$PREFIX.bam;";
+  rm bamfiles/$PREFIX.sam bamfiles/$PREFIX.bam;" &
 done
 
 wait
