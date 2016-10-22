@@ -4,9 +4,10 @@
 BASEDIR=$(dirname $0)
 ORGANISMDATABASE=$BASEDIR/organism-database.txt
 ENDAFTERVALIDATION=0
+LSFQUEUE=normal
 
 
-TEMP=`getopt -o h -l validate-table-only -n '4cpipeline' -- "$@"`
+TEMP=`getopt -o h -l validate-table-only,lsf-queue: -n '4cpipeline' -- "$@"`
 eval set -- "$TEMP"
 
 while [ $# -ge 1 ]; do
@@ -19,6 +20,10 @@ while [ $# -ge 1 ]; do
 	    ;;
 	  --validate-table-only)
 	    ENDAFTERVALIDATION=1
+	    ;;
+	  --lsf-queue)
+	    LSFQUEUE="$2"
+	    shift
 	    ;;
 	esac
 	shift
@@ -77,10 +82,12 @@ then
   exit 1
 fi
 
+echo "Mapping reads..."
+
 for F in *trimmed.fq
 do
   PREFIX=${F%.trimmed.fq}
-  bsub -o logs/$PREFIX.align.log -K -J 4calign "bash $PREFIX.align.sh; \
+  bsub -q $LSFQUEUE -o logs/$PREFIX.align.log -K -J 4calign "bash $PREFIX.align.sh; \
   gzip $PREFIX.trimmed.fq; \
   samtools view -Sb bamfiles/$PREFIX.sam > bamfiles/$PREFIX.bam; \
   samtools sort -@ 6 -Ttmp$PREFIX bamfiles/$PREFIX.bam > bamfiles/$PREFIX.sorted.bam; \
@@ -88,6 +95,8 @@ do
 done
 
 wait
+
+$BASEDIR/add-mapping-stats.pl $SAMPLETABLE
 
 ### identify fragments
 

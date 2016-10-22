@@ -2,7 +2,6 @@
 
 use strict;
 use Spreadsheet::Read;
-#use Parallel::ForkManager;
 use File::Basename;
 
 
@@ -47,7 +46,6 @@ if( !defined($sheet) || !defined($nr) ) {
 
 my @tmpfiles;
 my %tmpfilesize;
-#my $pm = Parallel::ForkManager->new(50);
 
 ### unpack sequences first
 for( my $i = 0; $i < $nr; $i++ ) { 
