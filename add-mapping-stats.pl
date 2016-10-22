@@ -24,7 +24,10 @@ for( my $i = 0; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
 
   my @arr = Spreadsheet::Read::cellrow($sheet,$i+1);
   
-  my($name,undef,undef,undef,$organism,$viewpointid,$viewpointchrom,$viewpointstart,$viewpointend,$readstart,$readend,$fastq,$barcode,$primer,$revprimer,$e1,$e2,$e1s,$e2s) = @arr;
+  my($name) = @arr;
+  
+  next if $name =~ /^#/;
+  next if $name =~ /^$/;
   
   open(S,">>","stats/$name.out") or die "Cannot appened to stats/$name.out: $!";
   open(L,"<","logs/$name.align.log") or die "Cannot read logs/$name.align.log: $!";
