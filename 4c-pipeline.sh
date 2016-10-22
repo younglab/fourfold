@@ -72,6 +72,8 @@ fi
 
 ### process reads
 
+echo "4C analysis launced in $PWD by $USER" | mail -s "[4C] Analysis Pipeline Started" dsday@wi.mit.edu
+
 echo "Processing reads..."
 
 $BASEDIR/process-4c-reads.pl $SAMPLETABLE $ORGANISMDATABASE
@@ -129,5 +131,8 @@ fi
 ### generate reports
 
 #mkdir reports
+
+echo "4C analysis finished in $PWD by $USER" | mail -s "[4C] Analysis Pipeline Finished" dsday@wi.mit.edu
+
 
 echo "Done"
