@@ -8,6 +8,7 @@
 #include <string>
 #include <cstdlib>
 #include <sstream>
+#include <cmath>
 
 using namespace BamTools;
 
@@ -36,8 +37,6 @@ int main(int argv,char **argc) {
   coords >> primerchr;
   coords >> primers;
   coords >> primere;
-  
-  std::cerr << "test: " << primerchr << " " << primers << " " << primere << std::endl;
   
   // Read fragments
   std::ifstream fragments(argc[1]);
@@ -116,6 +115,7 @@ int main(int argv,char **argc) {
   int transreads = 0;
   int cisreads = 0;
   int abnormalreads = 0;
+
   std::vector<cut_site*> vec;
   
   while(bam.GetNextAlignment(align)) {
@@ -204,6 +204,13 @@ int main(int argv,char **argc) {
   int filteredcis = 0;
   int filteredtrans = 0;
   
+  int coverage200kb = 0;
+  int reads200kb = 0;
+  int fragends = 0;
+  int filteredcoverage200kb = 0;
+  int filteredreads200kb = 0;
+  int filteredfragends = 0;
+  
   raw << "track type=wiggle_0" << std::endl;
   filtered << "track type=wiggle_0" << std::endl;
   
@@ -212,6 +219,15 @@ int main(int argv,char **argc) {
     bool foundr = false, foundf = false;
     std::string header = "variableStep chrom=" + chr;
     for( cut_site *s : it->second ) {
+      bool close = false;
+      
+      if(chr == primerchr && (std::abs(s->start-primers) < 100000 || std::abs(s->end-primers) < 100000)) {
+        close = true;
+        fragends+=2;
+        if(s->left_len != -1 ) filteredfragends++;
+        if(s->right_len != -1) filteredfragends++;
+      }
+      
       if(s->lcounts > 0 ) {
         if(!foundr) {
           raw << header << std::endl;
@@ -219,12 +235,21 @@ int main(int argv,char **argc) {
         }
         raw << s->start << "\t" << s->lcounts << std::endl;
         
+        if(close) {
+          coverage200kb++;
+          reads200kb+=s->lcounts;
+        }
+        
         if(s->left_len != -1 ) {
           if(!foundf) {
             filtered << header << std::endl;
             foundf = true;
           }
           filtered << s->start << "\t" << s->lcounts << std::endl;
+          if(close) {
+            filteredcoverage200kb++;
+            filteredreads200kb+=s->lcounts;
+          }
           if( chr == primerchr ) filteredcis += s->lcounts;
           else filteredtrans += s->lcounts;
           
@@ -238,12 +263,23 @@ int main(int argv,char **argc) {
         }
         raw << s->end << "\t" << s->rcounts << std::endl;
         
+        
+        if(close) {
+          coverage200kb++;
+          reads200kb+=s->rcounts;
+        }
+        
         if(s->right_len != -1 ) {
           if(!foundf) {
             filtered << header << std::endl;
             foundf = true;
           }
           filtered << s->end << "\t" << s->rcounts << std::endl;
+          
+          if(close) {
+            filteredcoverage200kb++;
+            filteredreads200kb+=s->rcounts;
+          }
           if( chr == primerchr ) filteredcis += s->rcounts;
           else filteredtrans += s->rcounts;
         }
@@ -254,7 +290,7 @@ int main(int argv,char **argc) {
   raw.close();
   filtered.close();
   
-  std::ofstream stats(argc[5]);
+  std::ofstream stats(argc[5],std::ofstream::out|std::ofstream::app);
   
   if(!stats) {
     std::cerr << "Not a valid stats file" << std::endl;
@@ -268,6 +304,12 @@ int main(int argv,char **argc) {
   stats << "Abnormal Reads: " << abnormalreads << std::endl;
   stats << "Filtered Cis Reads: " << filteredcis << std::endl;
   stats << "Filtered Trans Reads: "  << filteredtrans << std::endl;
+  stats << "Reads within 200kb of read primer: " << reads200kb << std::endl;
+  stats << "Filtered reads within 200kb of read primer: " << filteredreads200kb << std::endl;
+  stats << "Coverage % within 200kb of read primer: " << double(coverage200kb)/fragends*100 << std::endl;
+  stats << "Filtered coverage % within 200kb of read primer: " << double(filteredcoverage200kb)/filteredfragends*100 << std::endl;
+  
+  
   
   std::vector<cut_site*> sites_in_cis = cuts[primerchr];
   int i;
@@ -276,6 +318,9 @@ int main(int argv,char **argc) {
     cut_site *r = sites_in_cis[i];
     if((r->start+1) == primers || (r->end+1) == primere) break; // right now the cutting coordinates are stored in a 0-offset while the primer coordinates are in a 1-offset, need to synchronize better
   }
+  
+  int selfligation = -1;
+  int noncut = -1;
   
   if( i == sites_in_cis.size()) {
     stats << "Self-ligation Reads: NA" << std::endl;
@@ -289,13 +334,33 @@ int main(int argv,char **argc) {
     cut_site *pr = sites_in_cis[r];
     
     if((p->start+1) == primers) {
-      stats << "Self-ligation Reads: " << pr->lcounts << std::endl;
-      stats << "Non-cut Reads: " << p->lcounts << std::endl;
+      selfligation = pr->lcounts;
+      noncut = p->lcounts;
+      
+      stats << "Self-ligation Reads: " << selfligation << std::endl;
+      stats << "Non-cut Reads: " << noncut << std::endl;
     } else {
-      stats << "Self-ligation Reads: " << pl->rcounts << std::endl;
-      stats << "Non-cut Reads: " << p->rcounts << std::endl;
+      selfligation = pl->rcounts;
+      noncut = p->rcounts;
+      
+      stats << "Self-ligation Reads: " << selfligation << std::endl;
+      stats << "Non-cut Reads: " << noncut << std::endl;
     }
   }
+  
+  stats << "Cis % (raw): " << double(cisreads)/(cisreads+transreads)*100.0 << std::endl;
+  if( selfligation > -1 && noncut > -1 ) {
+    stats << "Cis % (raw, no self or noncut): " << double(cisreads-selfligation-noncut)/(cisreads+transreads-selfligation-noncut)*100 << std::endl;
+  } else {
+    stats << "Cis % (raw, no self or noncut): NA" << std::endl;
+  }
+  stats << "Cis % (filtered): " << double(filteredcis)/(filteredcis+filteredtrans)*100.0 << std::endl;
+  if( selfligation > -1 && noncut > -1 ) {
+    stats << "Cis % (filtered, no self or noncut): " << double(cisreads-selfligation-noncut)/(cisreads+transreads-selfligation-noncut)*100 << std::endl;
+  } else {
+    stats << "Cis % (filtered, no self or noncut): NA" << std::endl;
+  }
+  
   
   
   stats.close();
