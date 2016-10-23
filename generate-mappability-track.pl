@@ -35,8 +35,9 @@ while(<F>) {
   chomp;
   
   if(/^>(\w+)/) {
-    procseq($seq,$readlen);
-    $seq =""
+    procseq($seq,$readlen) unless $seq eq "";
+    $seq ="";
+    print "Reading $1...\n";
   } else {
     $seq .= $_;
   }
