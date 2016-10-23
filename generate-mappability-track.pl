@@ -2,18 +2,20 @@
 
 use strict;
 
-my %reads;
 
 sub procseq {
-  my ($seq,$rl) = @_;
+  my ($chr,$seq,$rl) = @_;
   
   my $slen = length($seq);
   
+  open(T,">>",".tmp.fasta") or die "Cannot write to .tmp.fasta! $!";
   for( my $i = 0; $i < ($slen-$rl); $i++ ) {
     my $s = substr($seq,$i,$rl);
+    my $j = $i+$rl;
     
-    $reads{$s} = 1;
+    print T ">$chr:$i-$j\n$s\n";
   }
+  close(T);
 }
 
 if(scalar(@ARGV)<2) {
@@ -35,8 +37,9 @@ while(<F>) {
   chomp;
   
   if(/^>(\w+)/) {
-    procseq($seq,$readlen) unless $seq eq "";
+    procseq($curchr,$seq,$readlen) unless $seq eq "";
     $seq ="";
+    $curchr=$1;
     print "Reading $1...\n";
   } else {
     $seq .= $_;
@@ -45,15 +48,6 @@ while(<F>) {
 
 close(F);
 
+procseq($curchr,$seq,$readlen);
 
-procseq($seq,$readlen);
 
-my $idx = 1;
-
-open(T,">",".tmp.fasta") or die "Cannot write to .tmp.fasta: $!";
-
-for(keys(%reads)) {
-  print T ">read$idx\n$_\n";
-}
-
-close(T);
