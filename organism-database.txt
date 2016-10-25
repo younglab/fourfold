@@ -1,3 +1,3 @@
 mouse,mm9	/nfs/genomes/mouse_gp_jul_07/bowtie/mm9	/nfs/genomes/mouse_gp_jul_07/fasta_whole_genome/mm9.fa
-human,hg19	/nfs/genomes/human_gp_feb_09/bowtie/hg19	/nfs/genomes/human_gp_feb_09/fasta_whole_genome/hg19_all.fa
+human,hg19,homo sapiens	/nfs/genomes/human_gp_feb_09/bowtie/hg19	/nfs/genomes/human_gp_feb_09/fasta_whole_genome/hg19_all.fa
 
