@@ -23,13 +23,23 @@ struct cut_site {
 
 int main(int argv,char **argc) {
   
-  if(argv<9) {
+  if(argv<10) {
     std::cerr << "not enough arguments" << std::endl;
     return EXIT_FAILURE;
   }
   
+  const char *fragmentfile = argc[1];
+  const char *bamfile = argc[2];
+  const char *rawwig = argc[3];
+  const char *filteredwig = argc[4];
+  const char *counttable = argc[5];
+  const char *statsfile = argc[6];
+  const char *pchr = argc[7];
+  const char *pstart = argc[8];
+  const char *pend = argc[9];
+  
   std::stringstream coords;
-  coords << argc[6] << " " << argc[7] << " " << argc[8];
+  coords << pchr << " " << pstart << " " << pend;
   
   std::string primerchr;
   int primers, primere;
@@ -39,11 +49,11 @@ int main(int argv,char **argc) {
   coords >> primere;
   
   // Read fragments
-  std::ifstream fragments(argc[1]);
+  std::ifstream fragments(fragmentfile);
   std::map<std::string,std::vector<cut_site*> > cuts;
   
   if(!fragments) {
-    std::cerr << "Cannot read " << argc[1] << std::endl;
+    std::cerr << "Cannot read " << fragmentfile << std::endl;
     return EXIT_FAILURE;
   }
   
@@ -99,8 +109,8 @@ int main(int argv,char **argc) {
   
   BamReader bam;
   
-  if(!bam.Open(argc[2])) {
-    std::cerr << "Cannot find " << argc[2] << std::endl;
+  if(!bam.Open(bamfile)) {
+    std::cerr << "Cannot find " << bamfile << std::endl;
     return EXIT_FAILURE;
   }
   
@@ -188,16 +198,22 @@ int main(int argv,char **argc) {
   
   std::cout << "Writing output" << std::endl;
   
-  std::ofstream raw(argc[3]);
-  std::ofstream filtered(argc[4]);
+  std::ofstream raw(rawwig);
+  std::ofstream filtered(filteredwig);
+  std::ofstream ctable(counttable);
   
   if(!raw ){
-    std::cerr << "Cannot write!" << std::endl;
+    std::cerr << "Cannot write to " << rawwig << std::endl;
     return EXIT_FAILURE;
   }
   
   if(!filtered) {
-    std::cerr << "Cannot write!" << std::endl;
+    std::cerr << "Cannot write to " << filteredwig << std::endl;
+    return EXIT_FAILURE;
+  }
+  
+  if(!ctable) {
+    std::cerr << "Cannot write to " << counttable << std::endl;
     return EXIT_FAILURE;
   }
   
@@ -254,6 +270,8 @@ int main(int argv,char **argc) {
           else filteredtrans += s->lcounts;
           
         }
+        
+        ctable << chr << "\t" << s->start << "\t" << s->lcounts << std::endl;
       }
       
       if(s->rcounts > 0 ) {
@@ -283,6 +301,8 @@ int main(int argv,char **argc) {
           if( chr == primerchr ) filteredcis += s->rcounts;
           else filteredtrans += s->rcounts;
         }
+        
+        ctable << chr << "\t" << s->end << "\t" << s->rcounts << std::endl;
       }
     }
   }
@@ -290,10 +310,10 @@ int main(int argv,char **argc) {
   raw.close();
   filtered.close();
   
-  std::ofstream stats(argc[5],std::ofstream::out|std::ofstream::app);
+  std::ofstream stats(statsfile,std::ofstream::out|std::ofstream::app);
   
   if(!stats) {
-    std::cerr << "Not a valid stats file" << std::endl;
+    std::cerr << "Cannot write to " << statsfile << std::endl;
     return EXIT_FAILURE;
   }
   
