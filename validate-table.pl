@@ -76,7 +76,7 @@ for( my $i = 0; $i < $nr; $i++ ) {
   }
   
   my $origfastq = $fastq;
-  if( $fastq =~ /^ftp:\/\// ) {
+  if( $fastq =~ /^ftp:\/\//i ) {
     `wget --spider $fastq`;
     die "$name does not seem to exist at $fastq" unless $? == 0;
   } else {
@@ -86,8 +86,8 @@ for( my $i = 0; $i < $nr; $i++ ) {
     die "Cannot find file $fastq (original name $origfastq)!" unless -e $fastq;
   }
   
-  die "Barcode of $name doesn't only contain DNA characters or NA" unless ($barcode =~ /^[ACTG]+$/ || $barcode eq "NA");
-  die "Primer sequence of $name doesn't only contain DNA characters" unless ($primer =~ /^[ACTG]+$/);
+  die "Barcode of $name doesn't only contain DNA characters or NA" unless ($barcode =~ /^[ACTG]+$/i || $barcode eq "NA");
+  die "Primer sequence of $name doesn't only contain DNA characters" unless ($primer =~ /^[ACTG]+$/i);
   
   my $pair = "$e1-$e2";
   my $s = "$e1s-$e2s";
