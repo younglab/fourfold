@@ -3,6 +3,34 @@
 use strict;
 use Spreadsheet::Read;
 
+sub torpm {
+  my ($in,$out,$mapped) = @_;
+  
+  open(I,"<",$in) or die "Cannot read $in: $!";
+  open(O,">",$out) or die "Cannot write to $out: $!";
+  
+  while(<I>) {
+    if(/^track/) {
+      print O;
+      next;
+    }
+    
+    if(/^variableStep/) {
+      print O;
+      next;
+    }
+    
+    chomp;
+    
+    my ($pos,$val) = split /\t/;
+    
+    print O "$pos\t" . sprintf("%.3f",$val/mapped*1e6) . "\n";
+  }
+  
+  close(I);
+  close(O);
+}
+
 if(scalar(@ARGV)<1) {
   die "map-to-fragments.pl <sample table> <basedir>";
 }
@@ -30,8 +58,23 @@ for( my $i = 0; $i < $nr; $i++ ) {
   my $fragmentfile = "$e1-$e2-$organism/fragments.txt";
   die "Cannot find $fragmentfile! Make sure to run re-fragment-identification.pl first!" unless( -e $fragmentfile);
   
-  my $output = `$basedir/mapping-from-bam-file $fragmentfile bamfiles/$name.sorted.bam wigfiles/$name.raw.wig wigfiles/$name.filtered.wig stats/$name.out $viewpointchrom $readstart $readend`;
+  my $output = `$basedir/mapping-from-bam-file $fragmentfile bamfiles/$name.sorted.bam wigfiles/$name.raw.wig wigfiles/$name.filtered.wig wigfiles/$name.counts.txt stats/$name.out $viewpointchrom $readstart $readend`;
   
   die "Error in mapping fragments, output is: $output" unless $? == 0;
+  
+  open(O,"<","stats/$name.out") or die "Cannot read stats file! $!";
+  <O>; <O>; <O>; <O>; <O>; <O>; <O>; <O>; <O>; # skip the 9 lines
+  my $l = <O>; ## only need 10th line (# of mapped reads)
+  my (undef,$num) = split /: /, $l;
+  close(O);
+  
+  torpm("wigfiles/$name.raw.wig","wigfiles/$name.raw.rpm.wig",$num);
+  torpm("wigfiles/$name.filtered.wig","wigfiles/$name.filtered.rpm.wig",$num);
+
+  ### compress
+  `gzip wigfiles/$name.raw.wig`;
+  `gzip wigfiles/$name.filtered.wig`;
+  `gzip wigfiles/$name.raw.rpm.wig`;
+  `gzip wigfiles/$name.filtered.rpm.wig`;
 }
 
