@@ -32,11 +32,12 @@ int main(int argv,char **argc) {
   const char *bamfile = argc[2];
   const char *rawwig = argc[3];
   const char *filteredwig = argc[4];
-  const char *counttable = argc[5];
-  const char *statsfile = argc[6];
-  const char *pchr = argc[7];
-  const char *pstart = argc[8];
-  const char *pend = argc[9];
+  const char *countrawtable = argc[5];
+  const char *countfilteredtable = argc[6];
+  const char *statsfile = argc[7];
+  const char *pchr = argc[8];
+  const char *pstart = argc[9];
+  const char *pend = argc[10];
   
   std::stringstream coords;
   coords << pchr << " " << pstart << " " << pend;
@@ -200,7 +201,9 @@ int main(int argv,char **argc) {
   
   std::ofstream raw(rawwig);
   std::ofstream filtered(filteredwig);
-  std::ofstream ctable(counttable);
+  std::ofstream crtable(countrawtable);
+  std::ofstream cftable(countfilteredtable);
+  
   
   if(!raw ){
     std::cerr << "Cannot write to " << rawwig << std::endl;
@@ -212,8 +215,13 @@ int main(int argv,char **argc) {
     return EXIT_FAILURE;
   }
   
-  if(!ctable) {
-    std::cerr << "Cannot write to " << counttable << std::endl;
+  if(!crtable) {
+    std::cerr << "Cannot write to " << countrawtable << std::endl;
+    return EXIT_FAILURE;
+  }
+  
+  if(!cftable) {
+    std::cerr << "Cannot write to " << countfilteredtable << std::endl;
     return EXIT_FAILURE;
   }
   
@@ -269,9 +277,11 @@ int main(int argv,char **argc) {
           if( chr == primerchr ) filteredcis += s->lcounts;
           else filteredtrans += s->lcounts;
           
+          cftable << chr << "\t" << s->start << "\t" << s->lcounts << std::endl;
+          
         }
         
-        ctable << chr << "\t" << s->start << "\t" << s->lcounts << std::endl;
+        crtable << chr << "\t" << s->start << "\t" << s->lcounts << std::endl;
       }
       
       if(s->rcounts > 0 ) {
@@ -300,9 +310,12 @@ int main(int argv,char **argc) {
           }
           if( chr == primerchr ) filteredcis += s->rcounts;
           else filteredtrans += s->rcounts;
+          
+          cftable << chr << "\t" << s->end << "\t" << s->rcounts << std::endl;
+          
         }
         
-        ctable << chr << "\t" << s->end << "\t" << s->rcounts << std::endl;
+        crtable << chr << "\t" << s->end << "\t" << s->rcounts << std::endl;
       }
     }
   }
