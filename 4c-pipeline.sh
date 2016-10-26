@@ -40,6 +40,13 @@ SAMPLETABLE="$1"
 #GENOMEFA="$3"
 MINFRAGMENTLENGTH=20
 
+if [ "$SAMPLETABLE" == "clean" ];
+then
+  echo "Cleaning directory..."
+  rm -rf wigfiles stats bamfiles logs bootstrap *.fq.gz
+  exit 0
+fi
+
 if [ ! -e "$SAMPLETABLE" ];
 then
   echo "Error: $SAMPLETABLE does not exist!"
@@ -52,6 +59,7 @@ then
   mkdir stats
   mkdir bamfiles
   mkdir logs
+  mkdir bootstrap
 fi
 
 echo "Validating sample table..."

@@ -59,7 +59,7 @@ for( my $i = 0; $i < $nr; $i++ ) {
   my $fragmentfile = "$e1-$e2-$organism/fragments.txt";
   die "Cannot find $fragmentfile! Make sure to run re-fragment-identification.pl first!" unless( -e $fragmentfile);
   
-  my $output = `$basedir/mapping-from-bam-file $fragmentfile bamfiles/$name.sorted.bam wigfiles/$name.raw.wig wigfiles/$name.filtered.wig wigfiles/$name.raw.counts.txt wigfiles/$name.filtered.counts.txt stats/$name.out $viewpointchrom $readstart $readend`;
+  my $output = `$basedir/mapping-from-bam-file $fragmentfile bamfiles/$name.sorted.bam wigfiles/$name.raw.wig wigfiles/$name.filtered.wig bootstrap/$name.raw.counts.txt bootstrap/$name.filtered.counts.txt stats/$name.out $viewpointchrom $readstart $readend`;
   
   die "Error in mapping fragments, output is: $output" unless $? == 0;
   
@@ -72,8 +72,10 @@ for( my $i = 0; $i < $nr; $i++ ) {
   torpm("wigfiles/$name.raw.wig","wigfiles/$name.raw.rpm.wig",$num);
   torpm("wigfiles/$name.filtered.wig","wigfiles/$name.filtered.rpm.wig",$num);
   
-  `Rscript $basedir/bootstrap.r wigfiles/$name.raw.counts.txt wigfiles/$name.raw.counts.bootstrap.txt`; 
-  `Rscript $basedir/bootstrap.r wigfiles/$name.filtered.counts.txt wigfiles/$name.filtered.counts.bootstrap.txt`;
+  `Rscript $basedir/bootstrap.r boostrap/$name.raw.counts.txt boostrap/$name.raw.counts.bootstrap.txt 1`; 
+  `Rscript $basedir/bootstrap.r boostrap/$name.filtered.counts.txt boostrap/$name.filtered.counts.bootstrap.txt 1`;
+  `Rscript $basedir/bootstrap.r boostrap/$name.raw.counts.txt boostrap/$name.raw.rpm.bootstrap.txt $num`; 
+  `Rscript $basedir/bootstrap.r boostrap/$name.filtered.counts.txt boostrap/$name.filtered.rpm.bootstrap.txt $num`;
 
   ### compress
   `gzip wigfiles/$name.raw.wig`;
