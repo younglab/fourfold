@@ -79,10 +79,10 @@ for( my $i = 0; $i < $nr; $i++ ) {
   torpm("wigfiles/$name.raw.wig","wigfiles/$name.raw.rpm.wig",$num);
   torpm("wigfiles/$name.filtered.wig","wigfiles/$name.filtered.rpm.wig",$num);
   
-  executebootstrap("bootstrap/$name.raw.counts.txt","bootstrap/$name.raw.counts.bootstrap.txt",1);
-  executebootstrap("bootstrap/$name.filtered.counts.txt","bootstrap/$name.filtered.counts.bootstrap.txt",1);
-  executebootstrap("bootstrap/$name.raw.counts.txt","bootstrap/$name.raw.rpm.bootstrap.txt",$num);
-  executebootstrap("bootstrap/$name.filtered.counts.txt", "bootstrap/$name.filtered.rpm.bootstrap.txt", $num);
+  executebootstrap($basedir,"bootstrap/$name.raw.counts.txt","bootstrap/$name.raw.counts.bootstrap.txt",1);
+  executebootstrap($basedir,"bootstrap/$name.filtered.counts.txt","bootstrap/$name.filtered.counts.bootstrap.txt",1);
+  executebootstrap($basedir,"bootstrap/$name.raw.counts.txt","bootstrap/$name.raw.rpm.bootstrap.txt",$num);
+  executebootstrap($basedir,"bootstrap/$name.filtered.counts.txt", "bootstrap/$name.filtered.rpm.bootstrap.txt", $num);
 
   ### compress
   `gzip wigfiles/$name.raw.wig`;
