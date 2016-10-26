@@ -31,6 +31,13 @@ sub torpm {
   close(O);
 }
 
+sub executebootstrap {
+  my ($basedir,$infile,$outfile,$num) = @_;
+  
+  my $output = `Rscript $basedir/bootstrap.r $infile $outfile $num`;
+  die "Failed to run bootstrap script: $output" unless $? == 0;
+}
+
 if(scalar(@ARGV)<1) {
   die "map-to-fragments.pl <sample table> <basedir>";
 }
@@ -72,10 +79,10 @@ for( my $i = 0; $i < $nr; $i++ ) {
   torpm("wigfiles/$name.raw.wig","wigfiles/$name.raw.rpm.wig",$num);
   torpm("wigfiles/$name.filtered.wig","wigfiles/$name.filtered.rpm.wig",$num);
   
-  `Rscript $basedir/bootstrap.r boostrap/$name.raw.counts.txt boostrap/$name.raw.counts.bootstrap.txt 1`; 
-  `Rscript $basedir/bootstrap.r boostrap/$name.filtered.counts.txt boostrap/$name.filtered.counts.bootstrap.txt 1`;
-  `Rscript $basedir/bootstrap.r boostrap/$name.raw.counts.txt boostrap/$name.raw.rpm.bootstrap.txt $num`; 
-  `Rscript $basedir/bootstrap.r boostrap/$name.filtered.counts.txt boostrap/$name.filtered.rpm.bootstrap.txt $num`;
+  executebootstrap("bootstrap/$name.raw.counts.txt","bootstrap/$name.raw.counts.bootstrap.txt",1);
+  executebootstrap("bootstrap/$name.filtered.counts.txt","bootstrap/$name.filtered.counts.bootstrap.txt",1);
+  executebootstrap("bootstrap/$name.raw.counts.txt","bootstrap/$name.raw.rpm.bootstrap.txt",$num);
+  executebootstrap("bootstrap/$name.filtered.counts.txt", "bootstrap/$name.filtered.rpm.bootstrap.txt", $num);
 
   ### compress
   `gzip wigfiles/$name.raw.wig`;
