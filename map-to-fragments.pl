@@ -66,7 +66,7 @@ for( my $i = 0; $i < $nr; $i++ ) {
   my $fragmentfile = "$e1-$e2-$organism/fragments.txt";
   die "Cannot find $fragmentfile! Make sure to run re-fragment-identification.pl first!" unless( -e $fragmentfile);
   
-  my $output = `$basedir/mapping-from-bam-file $fragmentfile bamfiles/$name.sorted.bam wigfiles/$name.raw.wig wigfiles/$name.filtered.wig bootstrap/$name.raw.counts.txt bootstrap/$name.filtered.counts.txt stats/$name.out $viewpointchrom $readstart $readend`;
+  my $output = `$basedir/mapping-from-bam-file $fragmentfile bamfiles/$name.sorted.bam wigfiles/$name.raw.wig wigfiles/$name.filtered.wig bootstrap/$name.raw.counts.txt bootstrap/$name.filtered.counts.txt bootstrap/$name.raw.rpm.txt bootstrap/$name.filtered.rpm.txt stats/$name.out $viewpointchrom $readstart $readend`;
   
   die "Error in mapping fragments, output is: $output" unless $? == 0;
   

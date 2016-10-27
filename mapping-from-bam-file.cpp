@@ -23,7 +23,7 @@ struct cut_site {
 
 int main(int argv,char **argc) {
   
-  if(argv<10) {
+  if(argv<12) {
     std::cerr << "not enough arguments" << std::endl;
     return EXIT_FAILURE;
   }
@@ -34,10 +34,12 @@ int main(int argv,char **argc) {
   const char *filteredwig = argc[4];
   const char *countrawtable = argc[5];
   const char *countfilteredtable = argc[6];
-  const char *statsfile = argc[7];
-  const char *pchr = argc[8];
-  const char *pstart = argc[9];
-  const char *pend = argc[10];
+  const char *rpmrawtable = argc[7];
+  const char *rpmfilteredtable = argc[8];
+  const char *statsfile = argc[9];
+  const char *pchr = argc[10];
+  const char *pstart = argc[11];
+  const char *pend = argc[12];
   
   std::stringstream coords;
   coords << pchr << " " << pstart << " " << pend;
@@ -203,7 +205,8 @@ int main(int argv,char **argc) {
   std::ofstream filtered(filteredwig);
   std::ofstream crtable(countrawtable);
   std::ofstream cftable(countfilteredtable);
-  
+  std::ofstream rrtable(rpmrawtable);
+  std::ofstream rftable(rpmfilteredtable);
   
   if(!raw ){
     std::cerr << "Cannot write to " << rawwig << std::endl;
@@ -222,6 +225,17 @@ int main(int argv,char **argc) {
   
   if(!cftable) {
     std::cerr << "Cannot write to " << countfilteredtable << std::endl;
+    return EXIT_FAILURE;
+  }
+  
+  
+  if(!rrtable) {
+    std::cerr << "Cannot write to " << rpmrawtable << std::endl;
+    return EXIT_FAILURE;
+  }
+  
+  if(!rftable) {
+    std::cerr << "Cannot write to " << rpmfilteredtable << std::endl;
     return EXIT_FAILURE;
   }
   
@@ -278,10 +292,14 @@ int main(int argv,char **argc) {
           else filteredtrans += s->lcounts;
           
           cftable << chr << "\t" << s->start << "\t" << s->lcounts << std::endl;
+          rftable << chr << "\t" << s->start << "\t" << double(s->lcounts)/mappedreads*1e6 << std::endl;
+          
           
         }
         
         crtable << chr << "\t" << s->start << "\t" << s->lcounts << std::endl;
+        rrtable << chr << "\t" << s->start << "\t" << double(s->lcounts)/mappedreads*1e6 << std::endl;
+        
       }
       
       if(s->rcounts > 0 ) {
@@ -312,16 +330,24 @@ int main(int argv,char **argc) {
           else filteredtrans += s->rcounts;
           
           cftable << chr << "\t" << s->end << "\t" << s->rcounts << std::endl;
+          rftable << chr << "\t" << s->end << "\t" << double(s->rcounts)/mappedreads*1e6 << std::endl;
+          
           
         }
         
         crtable << chr << "\t" << s->end << "\t" << s->rcounts << std::endl;
+        rrtable << chr << "\t" << s->end << "\t" << double(s->rcounts)/mappedreads*1e6 << std::endl;
+        
       }
     }
   }
   
   raw.close();
   filtered.close();
+  crtable.close();
+  cftable.close();
+  rrtable.close();
+  rftable.close();
   
   std::ofstream stats(statsfile,std::ofstream::out|std::ofstream::app);
   
