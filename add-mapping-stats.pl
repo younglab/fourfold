@@ -29,7 +29,7 @@ for( my $i = 0; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
   next if $name =~ /^#/;
   next if $name =~ /^$/;
   
-  open(S,">>","stats/$name.out") or die "Cannot appened to stats/$name.out: $!";
+  open(S,">>","stats/$name.txt") or die "Cannot appened to stats/$name.out: $!";
   open(L,"<","logs/$name.align.log") or die "Cannot read logs/$name.align.log: $!";
   
   <L>; # skip first line

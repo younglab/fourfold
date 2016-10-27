@@ -167,7 +167,7 @@ for( my $i = 0; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
   print S "$bowtiecmd\n";
   close(S);
   
-  open(O,">","stats/$name.out") or die "Cannot write to stats/$name.out";
+  open(O,">","stats/$name.txt") or die "Cannot write to stats/$name.out";
   print O "Sample ID: $name\n";
   print O "Number of sequenced reads: $tmpfilesize{$tmpseqfile}\n";
   print O "Number of reads with barcode $barcode: $nbarcode\n";

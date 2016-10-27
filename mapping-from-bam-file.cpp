@@ -375,7 +375,7 @@ int main(int argv,char **argc) {
   
   for( i = 0; i < sites_in_cis.size(); i++ ) {
     cut_site *r = sites_in_cis[i];
-    if((r->start+1) == primers || (r->end+1) == primere) break; // right now the cutting coordinates are stored in a 0-offset while the primer coordinates are in a 1-offset, need to synchronize better
+    if((r->start+1) == primers || (r->end) == primere) break; // right now the cutting coordinates are stored in a 0-offset while the primer coordinates are in a 1-offset, need to synchronize better
   }
   
   int selfligation = -1;
