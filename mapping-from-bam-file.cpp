@@ -23,7 +23,7 @@ struct cut_site {
 
 int main(int argv,char **argc) {
   
-  if(argv<12) {
+  if(argv<13) {
     std::cerr << "not enough arguments" << std::endl;
     return EXIT_FAILURE;
   }
@@ -32,14 +32,15 @@ int main(int argv,char **argc) {
   const char *bamfile = argc[2];
   const char *rawwig = argc[3];
   const char *filteredwig = argc[4];
-  const char *countrawtable = argc[5];
-  const char *countfilteredtable = argc[6];
-  const char *rpmrawtable = argc[7];
-  const char *rpmfilteredtable = argc[8];
-  const char *statsfile = argc[9];
-  const char *pchr = argc[10];
-  const char *pstart = argc[11];
-  const char *pend = argc[12];
+  const char *wigname = argc[5];
+  const char *countrawtable = argc[6];
+  const char *countfilteredtable = argc[7];
+  const char *rpmrawtable = argc[8];
+  const char *rpmfilteredtable = argc[9];
+  const char *statsfile = argc[10];
+  const char *pchr = argc[11];
+  const char *pstart = argc[12];
+  const char *pend = argc[13];
   
   std::stringstream coords;
   coords << pchr << " " << pstart << " " << pend;
@@ -248,9 +249,11 @@ int main(int argv,char **argc) {
   int filteredcoverage200kb = 0;
   int filteredreads200kb = 0;
   int filteredfragends = 0;
+  std::stringstream header;
+  header << "track type=wiggle_0 name=\"" << wigname << "\" description=\"" << wigname << "\"";
   
-  raw << "track type=wiggle_0" << std::endl;
-  filtered << "track type=wiggle_0" << std::endl;
+  raw << header.str() << std::endl;
+  filtered << header.str() << std::endl;
   
   for(std::map<std::string,std::vector<cut_site*> >::iterator it = cuts.begin(); it != cuts.end(); it++ ) {
     std::string chr = it->first;
