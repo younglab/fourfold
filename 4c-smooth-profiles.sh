@@ -3,15 +3,19 @@
 BASEDIR=$(dirname $0)
 ORGANISMDATABASE=$BASEDIR/organism-database.txt
 
-if [ $# -lt 3 ];
+if [ $# -lt 5 ];
 then
-  echo "4c-smooth-profiles.sh <XSLX table> <output dir> <sample names>"
+  echo "4c-smooth-profiles.sh <XSLX table> <output dir> <bin size> <step size> <sample names>"
   exit
 fi
 
 SAMPLETABLE="$1"
 shift
 OUTPUTDIR="$1"
+shift
+BINSIZE="$1"
+shift
+STEPSIZE="$1"
 shift
 
 if [ ! -e "$SAMPLETABLE" ];
@@ -31,7 +35,7 @@ then
   exit 1
 fi
 
-$BASEDIR/profile-smoothing.pl $SAMPLETABLE $BASEDIR $ORGANISMDATABASE $OUTPUTDIR $@
+$BASEDIR/profile-smoothing.pl $SAMPLETABLE $BASEDIR $ORGANISMDATABASE $OUTPUTDIR $BINSIZE $STEPSIZE $@
 
 if [ $? -ne 0 ];
 then
