@@ -45,6 +45,7 @@ if( !defined($sheet) || !defined($nr) ) {
 
 
 my @tmpfiles;
+my %tmpfilemap;
 my %tmpfilesize;
 
 ### unpack sequences first
@@ -92,6 +93,7 @@ for( my $i = 0; $i < $nr; $i++ ) {
   }
   
   push @tmpfiles, $tmpseqfile;
+  $tmpfilemap{$name} = $tmpseqfile;
   my $nlines = `wc -l $tmpseqfile`;
   chomp $nlines;
   $tmpfilesize{$tmpseqfile} = (split /\s+/, $nlines)[0];
@@ -111,11 +113,11 @@ for( my $i = 0; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
   print "\tProcessing sample $name...\n";
 
 
-  my $basefastqname = basename($fastq);
-  my $tmpseqfile = ".tmp.$basefastqname.seq.fq";
-
-  
-  die "Cannot find file $fastq (temporary name $tmpseqfile)!" unless -e $tmpseqfile;
+  #my $basefastqname = basename($fastq);
+  #my $tmpseqfile = ".tmp.$basefastqname.seq.fq";
+  die "Somehow cannot find any temporary file for $name" unless defined($tmpfilemap{$name});
+  my $tmpseqfile = $tmpfilemap{$name};
+  die "Somehow the temporary file $tmpseqfile for $name disappeared" unless -e $tmpseqfile;
 
   
   open(D,"<","$tmpseqfile") or die "Cannot read $tmpseqfile: $!";
