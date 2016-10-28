@@ -30,7 +30,7 @@ then
   exit 1
 fi
 
-$BASEDIR/profile-smoothing.pl $SAMPLETABLE $OUTPUTDIR $@
+$BASEDIR/profile-smoothing.pl $SAMPLETABLE $BASEDIR $OUTPUTDIR $@
 
 if [ $? -ne 0 ];
 then
