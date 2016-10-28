@@ -62,8 +62,12 @@ for( my $i = 0; $i < $nr; $i++ ) {
   
   my $origfastq = $fastq;
   my $basefastqname = basename($fastq);
+  $basefastqname =~ s/\\/./g;
+  $basefastqname =~ s/\//./g;
+  $basefastqname =~ s/:/./g;
   my $tmpseqfile = ".tmp.$basefastqname.seq.fq";
-  
+  $tmpfilemap{$name} = $tmpseqfile;
+
   next if -e $tmpseqfile;
   if( $fastq =~ /^ftp:\/\// ) {
     my $output = `wget $fastq`;
@@ -93,7 +97,6 @@ for( my $i = 0; $i < $nr; $i++ ) {
   }
   
   push @tmpfiles, $tmpseqfile;
-  $tmpfilemap{$name} = $tmpseqfile;
   my $nlines = `wc -l $tmpseqfile`;
   chomp $nlines;
   $tmpfilesize{$tmpseqfile} = (split /\s+/, $nlines)[0];
