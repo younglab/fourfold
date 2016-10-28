@@ -1,6 +1,7 @@
 #!/bin/bash
 
 BASEDIR=$(dirname $0)
+ORGANISMDATABASE=$BASEDIR/organism-database.txt
 
 if [ $# -lt 3 ];
 then
@@ -30,7 +31,7 @@ then
   exit 1
 fi
 
-$BASEDIR/profile-smoothing.pl $SAMPLETABLE $BASEDIR $OUTPUTDIR $@
+$BASEDIR/profile-smoothing.pl $SAMPLETABLE $BASEDIR $ORGANISMDATABASE $OUTPUTDIR $@
 
 if [ $? -ne 0 ];
 then
