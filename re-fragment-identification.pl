@@ -101,8 +101,6 @@ for my $kpair (keys(%enzymepairs)) {
   my ($re1,$re2,$organism) = split /-/, $kpair;
   my ($re1s,$re2s,$fasta) = @{$enzymepairs{$kpair}};
   
-  print "DEBUG: $re1s $re2s $fasta\n";
-  
   my @enzymecuts = ([],[]);
   
   open(F,"<",$fasta) or die "Cannot read $fasta: $!";
