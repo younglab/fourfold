@@ -5,29 +5,29 @@ use Spreadsheet::Read;
 
 
 sub findresites {
-  my ($epairs,$chr,$seq,$ecuts) = @_;
+  my ($re1,$re2,$r1,$r2,$chr,$seq,$ecuts) = @_;
   
-  for my $seqpair (keys(%{$epairs})) {
-    my ($re1,$re2) = split /-/, $seqpair;
-    my ($r1,$r2) = @{$epairs->{$seqpair}};
+  #for my $seqpair (keys(%{$epairs})) {
+  #  my ($re1,$re2) = split /-/, $seqpair;
+  #my ($r1,$r2) = @{$epairs->{$seqpair}};
     
-    my $m1 = qr/$r1/i;
-    my $m2 = qr/$r2/i;
+  my $m1 = qr/$r1/i;
+  my $m2 = qr/$r2/i;
       
-    unless(defined($ecuts->{$seqpair})) {
-      $ecuts->{$seqpair} = [];
-    }
+    #unless(defined($ecuts->{$seqpair})) {
+    #  $ecuts->{$seqpair} = [];
+    #}
       
-    while( $seq =~ /$m1/g ) {
-      my ($start,$end) = ($-[0],$+[0]);
-      push @{$ecuts->{$seqpair}->[0]}, [$chr,$start,$end,$re1];
-    }
+  while( $seq =~ /$m1/g ) {
+    my ($start,$end) = ($-[0],$+[0]);
+    push @{$ecuts->[0]}, [$chr,$start,$end,$re1];
+  }
     
-    while( $seq =~ /$m2/g ) {
-      my ($start,$end) = ($-[0],$+[0]);
-      push @{$ecuts->{$seqpair}->[1]},[$chr,$start,$end,$re2];
-    }
-  }   
+  while( $seq =~ /$m2/g ) {
+    my ($start,$end) = ($-[0],$+[0]);
+    push @{$ecuts->[1]},[$chr,$start,$end,$re2];
+  }
+  #}   
 }
 
 ### this all assumes the REs are symmetric!
@@ -69,7 +69,7 @@ my $sheet = $database->[1]; ## get first spreadsheet
 my $nr = ${$sheet}{"maxrow"};
 
 my %enzymepairs;
-my %enzymecuts;
+#my %enzymecuts;
   
 
 for( my $i = 0; $i < $nr; $i++ ) { 
@@ -98,8 +98,12 @@ for( my $i = 0; $i < $nr; $i++ ) {
 
 
 for my $kpair (keys(%enzymepairs)) {
-
-  my $fasta = $enzymepairs{$kpair}->[2];
+  my ($re1,$re2,$organism) = split /-/, $kpair;
+  my ($re1s,$re2s,$fasta) = @{$enzymepairs{$kpair}};
+  
+  print "DEBUG: $re1s $re2s $fasta\n";
+  
+  my @enzymecuts = ([],[]);
   
   open(F,"<",$fasta) or die "Cannot read $fasta: $!";
 
@@ -113,7 +117,7 @@ for my $kpair (keys(%enzymepairs)) {
       my $nextchr = $1;
     
       unless($seq eq "") {
-        findresites(\%enzymepairs,$chr,$seq,\%enzymecuts);
+        findresites($re1,$re2,$re1s,$re2s,$chr,$seq,\@enzymecuts);
       }
     
       $chr = $nextchr;
@@ -128,81 +132,92 @@ for my $kpair (keys(%enzymepairs)) {
   close(F);
 
   unless($seq eq "") {
-    findresites(\%enzymepairs,$chr,$seq,\%enzymecuts);
+    findresites($re1,$re2,$re1s,$re2s,$chr,$seq,\@enzymecuts);
   }
-
-  for my $pair (keys(%enzymecuts)) {
-    mkdir($pair);
   
-    my ($re1,$re2) = split /-/, $pair;
+  undef $seq; ### clean up some memory
+
+  #for my $pair (keys(%enzymecuts)) {
+  mkdir($kpair);
   
-    open(A,">","$pair/$re1.bed") or die "Cannot write to $pair/$re1.bed: $!";
-    print A "track name=\"$re1\" description=\"$re1\"\n";
-    my @first = @{${$enzymecuts{$pair}}[0]};
-    print A join("\t",@{$_}) . "\n" for(@first);
-    close(A);
+  open(A,">","$kpair/$re1.bed") or die "Cannot write to $kpair/$re1.bed: $!";
+  print A "track name=\"$re1\" description=\"$re1\"\n";
+  #my @first = @{${$enzymecuts{$pair}}[0]};
+  #print A join("\t",@{$_}) . "\n" for(@first);
+  print A join("\t",@{$_}) . "\n" for(@{$enzymecuts[0]});
+  close(A);
   
-    open(B,">","$pair/$re2.bed") or die "Cannot write to $pair/$re2.bed: $!";
-    print B "track name=\"$re2\" description=\"$re2\"\n";
-    my @second = @{${$enzymecuts{$pair}}[1]};
-    print B join("\t",@{$_}) . "\n" for(@second);
-    close(B);
+  open(B,">","$kpair/$re2.bed") or die "Cannot write to $kpair/$re2.bed: $!";
+  print B "track name=\"$re2\" description=\"$re2\"\n";
+  #my @second = @{${$enzymecuts{$pair}}[1]};
+  #print B join("\t",@{$_}) . "\n" for(@second);
+  print B join("\t",@{$_}) . "\n" for(@{$enzymecuts[1]});
+  close(B);
 
-    `tail -n +2 $pair/$re1.bed > $pair/.re1.bed`;
-    `tail -n +2 $pair/$re2.bed > $pair/.re2.bed`;
-    `cat $pair/.re1.bed $pair/.re2.bed | sort -k1,1 -k2,2n > $pair/.tmp.bed`;
-    `rm $pair/.re1.bed $pair/.re2.bed`;
+  `tail -n +2 $kpair/$re1.bed > $kpair/.re1.bed`;
+  `tail -n +2 $kpair/$re2.bed > $kpair/.re2.bed`;
+  `cat $kpair/.re1.bed $kpair/.re2.bed | sort -k1,1 -k2,2n > $kpair/.tmp.bed`;
+  `rm $kpair/.re1.bed $kpair/.re2.bed`;
   
-    open(T,"<","$pair/.tmp.bed") or die "Cannot read $pair/.tmp.bed: $!";
+  open(T,"<","$kpair/.tmp.bed") or die "Cannot read $kpair/.tmp.bed: $!";
 
   
-    my %fragmentset;
-    my @cuts;
-    my @sites;
-    my @past;
+  my %fragmentset;
+  my @cuts;
+  my @sites;
+  my @past;
   
-    @cuts = <T>;
+  @cuts = <T>;
   
-    close(T);
+  close(T);
 
-    chomp @cuts;
-    push @sites, [split( /\t/,$_)] for(@cuts);
+  chomp @cuts;
+  push @sites, [split( /\t/,$_)] for(@cuts);
+  
+  undef @cuts;
 
-    for(@sites) {
-      my @cur = @{$_};
-      my @l = ("NA",-1,-1);
-      @l = @{$past[$#past]} if scalar(@past)>0;
+  for(@sites) {
+    my @cur = @{$_};
+    my @l = ("NA",-1,-1);
+    @l = @{$past[$#past]} if scalar(@past)>0;
 
-      if($cur[3] eq $re2) {
-        if($l[3] eq $re1 && $cur[0] eq $l[0] && $l[1] > 0 && ($cur[1]-$l[1]>=$mindistance) ) {
-          my $site = join("\t",@l[0..2]);
+    if($cur[3] eq $re2) {
+      if($l[3] eq $re1 && $cur[0] eq $l[0] && $l[1] > 0 && ($cur[1]-$l[1]>=$mindistance) ) {
+        my $site = join("\t",@l[0..2]);
 
-          $fragmentset{$site}->[1] = $cur[1]-$l[1];
-        }
-      } else {
-        my $site = join("\t",@cur[0..2]);
-
-        $fragmentset{$site} = ["NA","NA"];
-      
-        if($l[3] eq $re2 && $cur[0] eq $l[0] && $l[1] > 0 && ($cur[1]-$l[1]>=$mindistance)) {
-          $fragmentset{$site}->[0] = $cur[1]-$l[1];
-        }
+        $fragmentset{$site}->[1] = $cur[1]-$l[1];
       }
-    
-      push @past, $_;
-    }
-  
-    open(F,">","$pair/.fragments.txt") or die "Cannot write to $pair/.fragments.txt: $!";
-  
-    for my $site (keys(%fragmentset)) {
-      my @dists = @{$fragmentset{$site}};
-    
-      print F "$site\t$dists[0]\t$dists[1]\n";
-    }
-  
-    close(F);
-  
-    `sort -k1,1 -k2,2n $pair/.fragments.txt > $pair/fragments.txt`;
-  }
+    } else {
+      my $site = join("\t",@cur[0..2]);
 
+      $fragmentset{$site} = ["NA","NA"];
+      
+      if($l[3] eq $re2 && $cur[0] eq $l[0] && $l[1] > 0 && ($cur[1]-$l[1]>=$mindistance)) {
+        $fragmentset{$site}->[0] = $cur[1]-$l[1];
+      }
+    }
+    
+    push @past, $_;
+  }
+  
+  undef @past;
+  
+  open(F,">","$kpair/.fragments.txt") or die "Cannot write to $kpair/.fragments.txt: $!";
+  
+  for my $site (keys(%fragmentset)) {
+    my @dists = @{$fragmentset{$site}};
+  
+    print F "$site\t$dists[0]\t$dists[1]\n";
+  }
+  
+  close(F);
+  
+  `sort -k1,1 -k2,2n $kpair/.fragments.txt > $kpair/fragments.txt`;
+  unlink("$kpair/.fragments.txt");
+  unlink("$kpair/.tmp.bed");
+
+  
+  undef @enzymecuts;
 }
+
+
