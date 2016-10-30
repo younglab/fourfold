@@ -164,6 +164,16 @@ for( my $i = 0; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
   close(P);
   close(D);
   
+  ### right now die if a sample had no reads in it -- may want to handle this a bit more
+  ### elegantly in the future to keep processing the other samples in the mean time
+  if( $nprimer == 0 ) {
+    if($nbarcode == 0 ) {
+      die "Sample $name did not have any reads for primer $primer! Additionally, no reads with barcode $barcode were detected in the FASTQ file $fastq as well";
+    } else {
+      die "Sample $name did not have any reads for primer $primer! But the barcode $barcode was found on some reads in the FASTQ file $fastq";
+    }
+  }
+  
   rename(".tmp.primer.fq","$name.trimmed.fq");
   
   my $bowtieidx = $organisms{lc $organism}->[0];
