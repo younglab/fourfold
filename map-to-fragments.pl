@@ -85,9 +85,9 @@ for( my $i = 0; $i < $nr; $i++ ) {
   executebootstrap($basedir,"bootstrap/$name.filtered.counts.txt", "bootstrap/$name.filtered.rpm.bootstrap.txt", $num);
 
   ### compress
-  `gzip wigfiles/$name.raw.wig; rm wigfiles/$name.raw.wig`;
-  `gzip wigfiles/$name.filtered.wig; rm wigfiles/$name.filtered.wig`;
-  `gzip wigfiles/$name.raw.rpm.wig; rm wigfiles/$name.raw.rpm.wig`;
-  `gzip wigfiles/$name.filtered.rpm.wig; rm wigfiles/$name.filtered.rpm.wig`;
+  `gzip wigfiles/$name.raw.wig;`;
+  `gzip wigfiles/$name.filtered.wig;`;
+  `gzip wigfiles/$name.raw.rpm.wig;`;
+  `gzip wigfiles/$name.filtered.rpm.wig; `;
 }
 
