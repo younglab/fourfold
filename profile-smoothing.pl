@@ -39,6 +39,7 @@ my $sheet = $database->[1]; ## get first spreadsheet
 my $nr = ${$sheet}{"maxrow"};
 
 my %samplegroups;
+my %sampleorganism;
 
 for( my $i = 0; $i < $nr; $i++ ) { 
   my @arr = Spreadsheet::Read::cellrow($sheet,$i+1);
@@ -60,9 +61,13 @@ for( my $i = 0; $i < $nr; $i++ ) {
     next unless $found;
   }
   
-  push @{$samplegroups{"$celltype:$condition"}}, ["bootstrap/$name.filtered.rpm.txt", "bootstrap/$name.filtered.rpm.bootstrap.txt"];
+  my $key ="$celltype:$condition";
+  
+  push @{$samplegroups{$key}}, ["bootstrap/$name.filtered.rpm.txt", "bootstrap/$name.filtered.rpm.bootstrap.txt"];
   
   my $chromsizes = $organisms{$organism}->[2];
+  $sampleorganism{$key} = $chromsizes;
+
 
   my $output = `Rscript $basedir/smooth-single-profile.r $binsize $stepsize $chromsizes bootstrap/$name.filtered.rpm.txt bootstrap/$name.filtered.rpm.bootstrap.txt $outputdir/$name.filtered.smoothed.rpm.txt`;
   
@@ -97,9 +102,39 @@ for my $group (keys(%samplegroups)) {
   ### code
   
   my @samples = @{$samplegroups{$group}};
+  my $chromsizes = $sampleorganism{$group};
   
   my $sampleexe = join(" ",@samples);
   
-  `Rscript $basedir/multi-sample-profile.r $outputdir/$celltype-$condition.filtered.rpm.wig $binsize $stepsize $chromsizes $sampleexe`;
+  my $outfile = "$outputdir/$celltype-$condition.filtered.rpm.txt";
+  my $outfilewig = "$outputdir/$celltype-$condition.filtered.rpm.wig";
+  my $sid = "$celltype-$condition";
+
+  
+  `Rscript $basedir/multi-sample-profile.r $outfile $binsize $stepsize $chromsizes $sampleexe`;
+  
+  open(O,"<",$outfile) or die "Cannot read $outfile: $!";
+  open(W,">",$outfilewig) or die "Cannot write to $outfilewig: $!";
+  
+  my $lastchr = "";
+  
+  print W "track type=wiggle_0 name=\"$sid\" description=\"$sid\"\n";
+  
+  while(<O>) {
+    my ($chr,$s,$m) = split /\t/;
+    
+    
+    unless($lastchr eq $chr) {
+      print W "variableStep chrom=$chr span=$stepsize\n";
+      $lastchr = $chr;
+    }
+    
+    print W "$s\t$m\n";
+  }
+  
+  close(O);
+  close(W);
+  
+  `gzip $outfilewig`;
 }
 
