@@ -111,7 +111,9 @@ for my $group (keys(%samplegroups)) {
   my $sid = "$celltype-$condition";
 
   
-  `Rscript $basedir/multi-sample-profile.r $outfile $binsize $stepsize $chromsizes $sampleexe`;
+  my $output = `Rscript $basedir/multi-sample-profile.r $outfile $binsize $stepsize $chromsizes $sampleexe`;
+  
+  die "Smoothing of profile failed: $output" unless $? == 0;
   
   open(O,"<",$outfile) or die "Cannot read $outfile: $!";
   open(W,">",$outfilewig) or die "Cannot write to $outfilewig: $!";
