@@ -74,8 +74,13 @@ for( my $i = 0; $i < $nr; $i++ ) {
   die "Smoothing failed with an error: $output" unless( $? == 0 );
   
   ### generate a WIG file
+  
+  my $outwig = "$outputdir/$name.filtered.smoothed.rpm.wig";
+  my $outbw = "$outputdir/$name.filtered.smoothed.rpm.bw";
+
+  
   open(T,"<","$outputdir/$name.filtered.smoothed.rpm.txt") or die "Cannot read $outputdir/$name.filtered.smoothed.rpm.txt: $!";
-  open(W,">","$outputdir/$name.filtered.smoothed.rpm.wig") or die "Cannot write $outputdir/$name.filtered.smoothed.rpm.wig: $!";
+  open(W,">","$outwig") or die "Cannot write $outwig: $!";
   
   print W "track type=wiggle_0 name=\"$name\" description=\"$name\"\n";
   my $lastchr = "";
@@ -94,6 +99,9 @@ for( my $i = 0; $i < $nr; $i++ ) {
   
   close(W);
   close(T);
+  
+  `wigToBigWig $outwig $chromsizes $outbw`; 
+  `gzip $outwig`;
 }
 
 for my $group (keys(%samplegroups)) {
@@ -104,13 +112,18 @@ for my $group (keys(%samplegroups)) {
   my @samples = @{$samplegroups{$group}};
   my $chromsizes = $sampleorganism{$group};
   
-  my $sampleexe = join(" ",@samples);
+  my @tmp;
+  
+  push @tmp, join(" ",@{$_}) for (@samples);
+  my $sampleexe = join(" ",@tmp);
   
   my $outfile = "$outputdir/$celltype-$condition.filtered.rpm.txt";
   my $outfilewig = "$outputdir/$celltype-$condition.filtered.rpm.wig";
+  my $outfilebw = "$outputdir/$celltype-$condition.filtered.rpm.bw";
+
   my $sid = "$celltype-$condition";
 
-  
+  print "DEBUG: Rscript $basedir/multi-sample-profile.r $outfile $binsize $stepsize $chromsizes $sampleexe\n";
   my $output = `Rscript $basedir/multi-sample-profile.r $outfile $binsize $stepsize $chromsizes $sampleexe`;
   
   die "Smoothing of profile failed: $output" unless $? == 0;
@@ -137,6 +150,7 @@ for my $group (keys(%samplegroups)) {
   close(O);
   close(W);
   
+  `wigToBigWig $outfilewig $chromsizes $outfilebw`; 
   `gzip $outfilewig`;
 }
 
