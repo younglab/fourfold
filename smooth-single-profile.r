@@ -25,7 +25,7 @@ g <- unlist(GRangesList(lapply(1:nrow(chrom.sizes),function(i) {
   chr <- as.character(chrom.sizes[i,1])
   msize <- chrom.sizes[i,2]
   
-  pos <- seq(0,msize+stepsize,by=stepsize)
+  pos <- seq(1,msize+stepsize,by=stepsize)
   
   GRanges(seqnames=chr,ranges=IRanges(pos,width=binsize),strand='*')
 })))

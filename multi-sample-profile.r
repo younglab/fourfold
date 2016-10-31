@@ -42,7 +42,7 @@ mcols(uniq.pos) <- cbind(mcols(uniq.pos),DataFrame(do.call(cbind,s.v)))
 bins <- unlist(GRangesList(lapply(1:nrow(chrom.sizes),function(i) {
   n <- chrom.sizes[i,2]
   
-  pos <- seq(0,n+step.size,by=step.size)
+  pos <- seq(1,n+step.size,by=step.size)
   GRanges(seqnames=chrom.sizes[i,1],ranges=IRanges(pos,width=bin.size),strand='*',signal=rep(0,length(pos)))
 })))
 
