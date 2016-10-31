@@ -95,5 +95,11 @@ for my $group (keys(%samplegroups)) {
   my ($celltype,$condition) = split /:/, $group;
   
   ### code
+  
+  my @samples = @{$samplegroups{$group}};
+  
+  my $sampleexe = join(" ",@samples);
+  
+  `Rscript $basedir/multi-sample-profile.r $outputdir/$celltype-$condition.filtered.rpm.wig $binsize $stepsize $chromsizes $sampleexe`;
 }
 
