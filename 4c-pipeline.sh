@@ -124,7 +124,7 @@ fi
 
 echo "Mapping to fragments..."
 
-$BASEDIR/map-to-fragments.pl $SAMPLETABLE $BASEDIR
+$BASEDIR/map-to-fragments.pl $SAMPLETABLE $BASEDIR $ORGANISMDATABASE
 
 if [ $? -ne 0 ];
 then

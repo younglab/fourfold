@@ -39,13 +39,35 @@ sub executebootstrap {
 }
 
 if(scalar(@ARGV)<1) {
-  die "map-to-fragments.pl <sample table> <basedir>";
+  die "map-to-fragments.pl <sample table> <basedir> <organism database>";
 }
 
 
-my ($sampletable,$basedir) = @ARGV;
+my ($sampletable,$basedir,$organismdatabase) = @ARGV;
 
 die "Cannot find $sampletable!" unless -e $sampletable;
+die "Cannot find $organismdatabase!" unless -e $organismdatabase;
+
+my %organisms;
+
+open(D,"<","$organismdatabase") or die "Cannot read $organismdatabase: $!";
+
+while(<D>) {
+  chomp;
+  
+  my ($id,$bowtie,$fasta,$chromsizes) = split /\t/;
+  
+  next if $id =~ /^$/;
+  
+  die "In organism database, cannot find bowtie index for $id!" unless -e "$bowtie.1.ebwt";
+  die "In organism database, cannot find FASTA file for $id!" unless -e $fasta;
+  die "In organism database, cannot find chromosome sizes file for $id!" unless- e $chromsizes;
+  
+  for(split(/,/,$id)) {
+    $organisms{lc $_} = [$bowtie,$fasta,$chromsizes];
+  }
+}
+close(D);
 
 my $database = ReadData($sampletable);
 my $sheet = $database->[1]; ## get first spreadsheet
@@ -83,6 +105,14 @@ for( my $i = 0; $i < $nr; $i++ ) {
   executebootstrap($basedir,"bootstrap/$name.filtered.counts.txt","bootstrap/$name.filtered.counts.bootstrap.txt",1);
   executebootstrap($basedir,"bootstrap/$name.raw.counts.txt","bootstrap/$name.raw.rpm.bootstrap.txt",$num);
   executebootstrap($basedir,"bootstrap/$name.filtered.counts.txt", "bootstrap/$name.filtered.rpm.bootstrap.txt", $num);
+  
+  my $chromsizes = $organisms{lc $organism}->[2];
+  
+  `wigToBigWig wigfiles/$name.raw.wig $chromsizes wigfiles/$name.raw.bw`;
+  `wigToBigWig wigfiles/$name.filtered.wig $chromsizes wigfiles/$name.filtered.bw`;
+  `wigToBigWig wigfiles/$name.raw.rpm.wig $chromsizes wigfiles/$name.raw.rpm.bw`;
+  `wigToBigWig wigfiles/$name.filtered.rpm.wig $chromsizes wigfiles/$name.filtered.rpm.bw`;
+
 
   ### compress
   `gzip wigfiles/$name.raw.wig;`;
