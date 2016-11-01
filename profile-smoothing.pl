@@ -123,7 +123,6 @@ for my $group (keys(%samplegroups)) {
 
   my $sid = "$celltype-$condition";
 
-  print "DEBUG: Rscript $basedir/multi-sample-profile.r $outfile $binsize $stepsize $chromsizes $sampleexe\n";
   my $output = `Rscript $basedir/multi-sample-profile.r $outfile $binsize $stepsize $chromsizes $sampleexe`;
   
   die "Smoothing of profile failed: $output" unless $? == 0;
