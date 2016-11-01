@@ -418,7 +418,7 @@ int main(int argv,char **argc) {
   }
   stats << "Cis % (filtered): " << double(filteredcis)/(filteredcis+filteredtrans)*100.0 << std::endl;
   if( selfligation > -1 && noncut > -1 ) {
-    stats << "Cis % (filtered, no self or noncut): " << double(cisreads-selfligation-noncut)/(cisreads+transreads-selfligation-noncut)*100 << std::endl;
+    stats << "Cis % (filtered, no self or noncut): " << double(filteredcis-selfligation-noncut)/(filteredcis+filteredtrans-selfligation-noncut)*100 << std::endl;
   } else {
     stats << "Cis % (filtered, no self or noncut): NA" << std::endl;
   }
