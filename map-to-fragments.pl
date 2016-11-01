@@ -61,7 +61,7 @@ while(<D>) {
   
   die "In organism database, cannot find bowtie index for $id!" unless -e "$bowtie.1.ebwt";
   die "In organism database, cannot find FASTA file for $id!" unless -e $fasta;
-  die "In organism database, cannot find chromosome sizes file for $id!" unless- e $chromsizes;
+  die "In organism database, cannot find chromosome sizes file for $id!" unless -e $chromsizes;
   
   for(split(/,/,$id)) {
     $organisms{lc $_} = [$bowtie,$fasta,$chromsizes];
