@@ -31,6 +31,52 @@ sub torpm {
   close(O);
 }
 
+sub tomegabaserpm {
+  my ($in,$out,$chr,$start,$end) = @_;
+  
+  open(I,"<",$in) or die "Cannot read $in: $!";
+  open(O,">",$out) or die "Cannot write to $out: $!";
+  
+  my @entries;
+  my $onchrom = 0;
+  my $megabasecounts = 0;
+  
+  while(<I>) {
+    if(/^track/) {
+      print O;
+      next;
+    }
+    
+    if(/^variableStep.*chrom=(chr\w+)/) {
+      if($1 eq $chr) {
+        print O;
+        $onchrom = 1;
+      } else {
+        $onchrom = 0;
+      }
+      next;
+    }
+    
+    chomp;
+    
+    my ($pos,$val) = split /\t/;
+    
+    next unless $onchrom;
+    next unless ($start <= $pos && $pos <= $end);
+    
+    $megabasecounts += $val;
+    
+    #print O "$pos\t" . sprintf("%.3f",$val/$mapped*1e6) . "\n";
+    push @entries, [$pos,$val];
+  }
+  
+  close(I);
+  
+  print O "$_->[0]\t" . sprintf("%.3f",$_->[1]/$megabasecounts*1e6) . "\n" for(@entries);
+  
+  close(O);
+}
+
 sub executebootstrap {
   my ($basedir,$infile,$outfile,$num) = @_;
   
@@ -100,6 +146,9 @@ for( my $i = 0; $i < $nr; $i++ ) {
   
   torpm("wigfiles/$name.raw.wig","wigfiles/$name.raw.rpm.wig",$num);
   torpm("wigfiles/$name.filtered.wig","wigfiles/$name.filtered.rpm.wig",$num);
+  
+  tomegabaserpm("wigfiles/$name.raw.wig","wigfiles/$name.raw.MB.rpm.wig",$viewpointchrom,$viewpointstart,$viewpointend);
+  tomegabaserpm("wigfiles/$name.filtered.wig","wigfiles/$name.filtered.MB.rpm.wig",$viewpointchrom,$viewpointstart,$viewpointend);
   
   executebootstrap($basedir,"bootstrap/$name.raw.counts.txt","bootstrap/$name.raw.counts.bootstrap.txt",1);
   executebootstrap($basedir,"bootstrap/$name.filtered.counts.txt","bootstrap/$name.filtered.counts.bootstrap.txt",1);
