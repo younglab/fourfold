@@ -32,7 +32,9 @@ sub torpm {
 }
 
 sub tomegabaserpm {
-  my ($in,$out,$chr,$start,$end) = @_;
+  my ($in,$out,$chr,$ostart,$oend) = @_;
+  
+  my ($start,$end) = ($ostart-1e6,$oend+1e6);
   
   open(I,"<",$in) or die "Cannot read $in: $!";
   open(O,">",$out) or die "Cannot write to $out: $!";
