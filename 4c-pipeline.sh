@@ -5,9 +5,12 @@ BASEDIR=$(dirname $0)
 ORGANISMDATABASE=$BASEDIR/organism-database.txt
 ENDAFTERVALIDATION=0
 LSFQUEUE=normal
+BOWTIEK=1
+BOWTIEM=1
+BOWTIEN=1
 
 
-TEMP=`getopt -o h -l validate-table-only,lsf-queue: -n '4cpipeline' -- "$@"`
+TEMP=`getopt -o hk:m:v: -l validate-table-only,lsf-queue:,bowtie-m:,bowtie-k:,bowtie-v: -n '4cpipeline' -- "$@"`
 eval set -- "$TEMP"
 
 while [ $# -ge 1 ]; do
@@ -15,6 +18,18 @@ while [ $# -ge 1 ]; do
 	  --)
 	    shift
 	    break
+	    ;;
+	  -n|--bowtie-n)
+	    BOWTIEN="$2"
+	    shift
+	    ;;
+	  -m|--bowtie-m)
+	    BOWTIEM="$2"
+	    shift
+	    ;;
+	  -k|--bowtie-k)
+	    BOWTIEK="$2"
+	    shift
 	    ;;
 	  -h)
 	    ;;
@@ -84,7 +99,7 @@ echo "4C analysis launced in $PWD by $USER" | mail -s "[4C] Analysis Pipeline St
 
 echo "Processing reads..."
 
-$BASEDIR/process-4c-reads.pl $SAMPLETABLE $ORGANISMDATABASE
+$BASEDIR/process-4c-reads.pl $SAMPLETABLE $ORGANISMDATABASE $BOWTIEN $BOWTIEK $BOWTIEM
 
 if [ $? -ne 0 ];
 then

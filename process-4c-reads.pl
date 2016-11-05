@@ -5,11 +5,11 @@ use Spreadsheet::Read;
 use File::Basename;
 
 
-if( scalar(@ARGV) < 2 ) {
-  die "Need sample table and organism index!";
+if( scalar(@ARGV) < 5 ) {
+  die "Need sample table and organism index and bowtie options!";
 }
 
-my ($sampletable,$organismdatabase) = @ARGV;
+my ($sampletable,$organismdatabase,$bowtien,$bowtiek,$bowtiem) = @ARGV;
 
 die "Cannot find file $sampletable!" unless -e $sampletable;
 die "Cannot find organism database $organismdatabase!" unless -e $organismdatabase;
@@ -177,7 +177,7 @@ for( my $i = 0; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
   rename(".tmp.primer.fq","$name.trimmed.fq");
   
   my $bowtieidx = $organisms{lc $organism}->[0];
-  my $bowtiecmd = "bowtie -n 1 -p 8 -k 1 -m 1 -S --chunkmbs 256 --best --strata $bowtieidx $name.trimmed.fq > bamfiles/$name.sam";
+  my $bowtiecmd = "bowtie -n $bowtien -p 8 -k $bowtiek -m $bowtiem -S --chunkmbs 256 --best --strata $bowtieidx $name.trimmed.fq > bamfiles/$name.sam";
   open(S,">","$name.align.sh") or die "Cannot write to shell script: $!";
   print S "$bowtiecmd\n";
   close(S);
