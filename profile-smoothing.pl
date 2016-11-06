@@ -3,13 +3,34 @@
 use strict;
 use Spreadsheet::Read;
 
-if(scalar(@ARGV)<7) {
-  die "profile-smoothing.pl <sample table> <basedir> <organism databse> <output dir> <bin size> <step size> <samples...>";
+sub in {
+  my ($test,$ref) = @_;
+  
+  my $ret = 0;
+  
+  if(scalar(@{$ref})==1) {
+    $ret = 1 if $test =~ m/$ref->[0]/;
+  } else {
+  
+    for(@{$ref}) {
+      if($test eq $_) {
+        $ret = 1;
+        last;
+      }
+    }
+  }
+  
+  return $ret;
 }
 
-my ($sampletable,$basedir,$organismdatabase,$outputdir,$binsize,$stepsize,@samples) = @ARGV;
+if(scalar(@ARGV)<8) {
+  die "profile-smoothing.pl <sample table> <basedir> <organism databse> <input dir> <output dir> <bin size> <step size> <samples...>";
+}
+
+my ($sampletable,$basedir,$organismdatabase,$inputdir,$outputdir,$binsize,$stepsize,@samples) = @ARGV;
 
 die "Cannot find $sampletable!" unless -e $sampletable;
+die "Cannot find directory $inputdir" unless -e $inputdir;
 die "Cannot find $outputdir!" unless -e $outputdir;
 die "Cannot find $organismdatabase" unless -e $organismdatabase;
 
@@ -49,27 +70,18 @@ for( my $i = 0; $i < $nr; $i++ ) {
   next if $name =~ /^#/;
   
   unless( $samples[0] eq "all") {
-    my $found = 0;
-    
-    for(@samples) {
-      if(lc $_ eq lc $name) {
-        $found = 1;
-        last;
-      }
-    }
-    
-    next unless $found;
+    next unless in($name,\@samples);
   }
   
   my $key ="$celltype:$condition";
   
-  push @{$samplegroups{$key}}, ["bootstrap/$name.filtered.rpm.txt", "bootstrap/$name.filtered.rpm.bootstrap.txt"];
+  push @{$samplegroups{$key}}, ["$inputdir/$name.filtered.rpm.txt", "$inputdir/$name.filtered.rpm.bootstrap.txt"];
   
   my $chromsizes = $organisms{$organism}->[2];
   $sampleorganism{$key} = $chromsizes;
 
 
-  my $output = `Rscript $basedir/smooth-single-profile.r $binsize $stepsize $chromsizes bootstrap/$name.filtered.rpm.txt bootstrap/$name.filtered.rpm.bootstrap.txt $outputdir/$name.filtered.smoothed.rpm.txt`;
+  my $output = `Rscript $basedir/smooth-single-profile.r $binsize $stepsize $chromsizes $inputdir/$name.filtered.rpm.txt $inputdir/$name.filtered.rpm.bootstrap.txt $outputdir/$name.filtered.smoothed.rpm.txt`;
   
   die "Smoothing failed with an error: $output" unless( $? == 0 );
   

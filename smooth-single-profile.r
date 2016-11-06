@@ -17,9 +17,9 @@ output.file <- args[6]
 chrom.sizes <- read.table(csize.file,sep='\t')
 
 signal <- read.table(measuredsignal.file,sep='\t')
-bootstrap <- read.table(bootstrap.file,sep='\t')
+#bootstrap <- read.table(bootstrap.file,sep='\t')
 
-s <- GRanges(seqnames=as.character(signal[,1]),ranges=IRanges(signal[,2],width=1),strand='*',signal[,3],bootstrap[,-(1:2)])
+s <- GRanges(seqnames=as.character(signal[,1]),ranges=IRanges(signal[,2],width=1),strand='*',signal[,3])#,bootstrap[,-(1:2)])
 
 g <- unlist(GRangesList(lapply(1:nrow(chrom.sizes),function(i) {
   chr <- as.character(chrom.sizes[i,1])
