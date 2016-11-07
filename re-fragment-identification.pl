@@ -7,17 +7,11 @@ use Spreadsheet::Read;
 sub findresites {
   my ($re1,$re2,$r1,$r2,$chr,$seq,$ecuts) = @_;
   
-  #for my $seqpair (keys(%{$epairs})) {
-  #  my ($re1,$re2) = split /-/, $seqpair;
-  #my ($r1,$r2) = @{$epairs->{$seqpair}};
-    
+  return if $seq eq "";
+ 
   my $m1 = qr/$r1/i;
   my $m2 = qr/$r2/i;
-      
-    #unless(defined($ecuts->{$seqpair})) {
-    #  $ecuts->{$seqpair} = [];
-    #}
-      
+
   while( $seq =~ /$m1/g ) {
     my ($start,$end) = ($-[0],$+[0]);
     push @{$ecuts->[0]}, [$chr,$start,$end,$re1];
@@ -114,9 +108,7 @@ for my $kpair (keys(%enzymepairs)) {
     if(/^>(\w+)/) {
       my $nextchr = $1;
     
-      unless($seq eq "") {
-        findresites($re1,$re2,$re1s,$re2s,$chr,$seq,\@enzymecuts);
-      }
+      findresites($re1,$re2,$re1s,$re2s,$chr,$seq,\@enzymecuts);
     
       $chr = $nextchr;
       $seq ="";
@@ -129,26 +121,20 @@ for my $kpair (keys(%enzymepairs)) {
 
   close(F);
 
-  unless($seq eq "") {
-    findresites($re1,$re2,$re1s,$re2s,$chr,$seq,\@enzymecuts);
-  }
+  findresites($re1,$re2,$re1s,$re2s,$chr,$seq,\@enzymecuts);
   
   undef $seq; ### clean up some memory
 
-  #for my $pair (keys(%enzymecuts)) {
   mkdir($kpair);
   
   open(A,">","$kpair/$re1.bed") or die "Cannot write to $kpair/$re1.bed: $!";
   print A "track name=\"$re1\" description=\"$re1\"\n";
-  #my @first = @{${$enzymecuts{$pair}}[0]};
-  #print A join("\t",@{$_}) . "\n" for(@first);
+
   print A join("\t",@{$_}) . "\n" for(@{$enzymecuts[0]});
   close(A);
   
   open(B,">","$kpair/$re2.bed") or die "Cannot write to $kpair/$re2.bed: $!";
   print B "track name=\"$re2\" description=\"$re2\"\n";
-  #my @second = @{${$enzymecuts{$pair}}[1]};
-  #print B join("\t",@{$_}) . "\n" for(@second);
   print B join("\t",@{$_}) . "\n" for(@{$enzymecuts[1]});
   close(B);
 
@@ -165,6 +151,8 @@ for my $kpair (keys(%enzymepairs)) {
   my @sites;
   my @past;
   
+  push @past, ["NA",-1,-1];
+  
   @cuts = <T>;
   
   close(T);
@@ -176,8 +164,7 @@ for my $kpair (keys(%enzymepairs)) {
 
   for(@sites) {
     my @cur = @{$_};
-    my @l = ("NA",-1,-1);
-    @l = @{$past[$#past]} if scalar(@past)>0;
+    my @l = @{$past[$#past]};
 
     if($cur[3] eq $re2) {
       if($l[3] eq $re1 && $cur[0] eq $l[0] && $l[1] > 0 && ($cur[1]-$l[1]>=$mindistance) ) {
@@ -190,13 +177,14 @@ for my $kpair (keys(%enzymepairs)) {
 
       $fragmentset{$site} = ["NA","NA"];
       
-      if($l[3] eq $re2 && $cur[0] eq $l[0] && $l[1] > 0 && ($cur[1]-$l[1]>=$mindistance)) {
+    if($l[3] eq $re2 && $cur[0] eq $l[0] && $l[1] > 0 && ($cur[1]-$l[1]>=$mindistance)) {
         $fragmentset{$site}->[0] = $cur[1]-$l[1];
-      }
     }
+   }
     
     push @past, $_;
   }
+  
   
   undef @past;
   
