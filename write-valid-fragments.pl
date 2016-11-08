@@ -2,7 +2,13 @@
 
 use strict;
 
+if(scalar(@ARGV)<2) {
+  die "write-valid-fragments.pl <fragment file> <output BED file>";
+}
+
 my ($infile,$outfile) = @ARGV;
+
+die "Cannot find fragment file $infile!" unless -e $infile;
 
 my @frags;
 
