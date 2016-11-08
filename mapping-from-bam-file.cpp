@@ -71,8 +71,8 @@ int main(int argv,char **argc) {
     
     fragments >> start;
     fragments >> end;
-    fragments >> lr;
     fragments >> ll;
+    fragments >> lr;
     
     if(lr == "NA") {
       lright = -1;
@@ -131,6 +131,8 @@ int main(int argv,char **argc) {
   int abnormalreads = 0;
 
   std::vector<cut_site*> vec;
+  const RefVector& refs = bam.GetReferenceData();
+  
   
   while(bam.GetNextAlignment(align)) {
     totalreads++;
@@ -144,7 +146,6 @@ int main(int argv,char **argc) {
     
     if(curchr != align.RefID) {
       int refids = bam.GetReferenceCount();
-      const RefVector& refs = bam.GetReferenceData();
       
       for( RefData r : refs) {
         int tmpid = bam.GetReferenceID(r.RefName);
