@@ -31,6 +31,10 @@ sub torpm {
   close(O);
 }
 
+sub converttobigwig {
+  my ($origfile,$bwfile) = @_;
+}
+
 sub tomegabaserpm {
   my ($in,$out,$chr,$ostart,$oend) = @_;
   
@@ -149,8 +153,8 @@ for( my $i = 0; $i < $nr; $i++ ) {
   torpm("wigfiles/$name.raw.wig","wigfiles/$name.raw.rpm.wig",$num);
   torpm("wigfiles/$name.filtered.wig","wigfiles/$name.filtered.rpm.wig",$num);
   
-  tomegabaserpm("wigfiles/$name.raw.wig","wigfiles/$name.raw.MB.rpm.wig",$viewpointchrom,$viewpointstart,$viewpointend);
-  tomegabaserpm("wigfiles/$name.filtered.wig","wigfiles/$name.filtered.MB.rpm.wig",$viewpointchrom,$viewpointstart,$viewpointend);
+#  tomegabaserpm("wigfiles/$name.raw.wig","wigfiles/$name.raw.MB.rpm.wig",$viewpointchrom,$viewpointstart,$viewpointend);
+#  tomegabaserpm("wigfiles/$name.filtered.wig","wigfiles/$name.filtered.MB.rpm.wig",$viewpointchrom,$viewpointstart,$viewpointend);
   
   executebootstrap($basedir,"bootstrap/$name.raw.counts.txt","bootstrap/$name.raw.counts.bootstrap.txt",1);
   executebootstrap($basedir,"bootstrap/$name.filtered.counts.txt","bootstrap/$name.filtered.counts.bootstrap.txt",1);
