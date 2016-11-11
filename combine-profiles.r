@@ -26,7 +26,7 @@ m <- do.call(cbind,lapply(gl,function(g) {
   v
 }))
 
-ofile <- paste(outdir,paste(paste(sampletype,condition,sep='-'),"txt",sep='.'),sep='/')
+#ofile <- paste(outdir,paste(paste(sampletype,condition,sep='-'),"txt",sep='.'),sep='/')
 
 df <- data.frame(chr=seqnames(r),pos=start(r),mean.signal=rowMeans(m))
 
