@@ -2,14 +2,12 @@ library(GenomicRanges)
 
 args <- commandArgs(T)
 
-if(length(args)<4) {
-  stop("Need at least 4 arguments: sample type, condition, output directory, file 1, file 2, [file 3...]")
+if(length(args)<3) {
+  stop("Need at least 4 arguments: outfile, file 1, file 2, [file 3...]")
 }
 
-sampletype <- args[1]
-condition <- args[2]
-outdir <- args[3]
-files <- args[-c(1:3)]
+ofile <- args[1]
+files <- args[-1]
 
 gl <- GRangesList(lapply(files,function(f) {
   temp <- read.table(f,sep='\t')
