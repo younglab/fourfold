@@ -60,6 +60,7 @@ my $sheet = $database->[1]; ## get first spreadsheet
 my $nr = ${$sheet}{"maxrow"};
 
 my @norm;
+my %samplegroups;
 
 for( my $i = 0; $i < $nr; $i++ ) { 
   my @arr = Spreadsheet::Read::cellrow($sheet,$i+1);
@@ -69,6 +70,11 @@ for( my $i = 0; $i < $nr; $i++ ) {
   
   if(in($name,\@samples)) {
     push @norm, [$name,"bootstrap/$name.filtered.rpm.txt"];
+    
+    my $samplekey = "$celltype-$condition";
+    $samplegroups{$samplekey} = [] unless defined($samplegroups{$samplekey});
+    
+    push @{$samplegroups{$samplekey}}, "$outputdir/$name.filtered.rpm.txt";
   }
 }
 
@@ -121,5 +127,45 @@ for(@output) {
   open(O,">",$outputfile) or die "Cannot write to $outputfile: $!";
   print O "$_\n" for(@{$_->[1]});
   close(O);
+}
+
+unlink("$outputdir/quantile-normalized-samples.txt");
+
+for my $skey (keys(%samplegroups)) { 
+  print "DEBUG: $skey\n";
+  my @files = @{$samplegroups{$skey}};
+  
+  next unless scalar(@files)>=2;
+  
+  my $ofile = "$outputdir/$skey.filtered.rpm.txt";
+  my $wfile = "$outputdir/$skey.filtered.rpm.wig";
+
+  my $f = join(" ",@files);
+
+  
+  my $output = `Rscript $basedir/combine-profiles.r $ofile $f`;
+  
+  open(T,"<","$ofile") or die "Cannot read $ofile: $!";
+  open(W,">",$wfile) or die "Cannot write to $wfile: $!";
+  
+  print W "track type=wiggle_0 name=\"$skey-QuantNorm\" description=\"$skey-QuantNorm\"\n";
+  
+  my $lastchr = "";
+  
+  while(<T>) {
+    chomp;
+    
+    my ($chr,$pos,$s) = split /\t/;
+    
+    unless($lastchr eq $chr) {
+      print W "variableStep chrom=$chr\n";
+      $lastchr =$chr;
+    }
+    
+    print W "$pos\t$s\n";
+  }
+  
+  close(T);
+  close(W);
 }
   
