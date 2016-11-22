@@ -80,8 +80,7 @@ for( my $i = 0; $i < $nr; $i++ ) {
   my $chromsizes = $organisms{$organism}->[2];
   $sampleorganism{$key} = $chromsizes;
 
-
-  my $output = `Rscript $basedir/smooth-single-profile.r $binsize $stepsize $chromsizes $inputdir/$name.filtered.rpm.txt $inputdir/$name.filtered.rpm.bootstrap.txt $outputdir/$name.filtered.smoothed.rpm.txt`;
+  my $output = `Rscript $basedir/smooth-single-profile.r $binsize $stepsize $chromsizes $inputdir/$name.filtered.rpm.txt $inputdir/$name.filtered.rpm.bootstrap.txt $outputdir/$name.filtered.smoothed.rpm.txt 2> /dev/null`;
   
   die "Smoothing failed with an error: $output" unless( $? == 0 );
   
@@ -135,7 +134,7 @@ for my $group (keys(%samplegroups)) {
 
   my $sid = "$celltype-$condition";
 
-  my $output = `Rscript $basedir/multi-sample-profile.r $outfile $binsize $stepsize $chromsizes $sampleexe`;
+  my $output = `Rscript $basedir/multi-sample-profile.r $outfile $binsize $stepsize $chromsizes $sampleexe 2> /dev/null`;
   
   die "Smoothing of profile failed: $output" unless $? == 0;
   

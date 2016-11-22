@@ -21,7 +21,7 @@ bootstrap.files <- args[seq(2,length(args),by=2)]
 N <- length(signal.files)
 
 s <- lapply(signal.files,read.table,sep='\t')
-b <- lapply(bootstrap.files,read.table,sep='\t')
+#b <- lapply(bootstrap.files,read.table,sep='\t')
 
 gs <- lapply(s,function(df) GRanges(seqnames=as.character(df[,1]),ranges=IRanges(df[,2],width=1),strand='*',signal=df[,3]))
 
@@ -48,13 +48,14 @@ bins <- unlist(GRangesList(lapply(1:nrow(chrom.sizes),function(i) {
 
 o <- findOverlaps(bins,uniq.pos)
 
-ms <- sapply(split(as.matrix(mcols(uniq.pos))[subjectHits(o),],queryHits(o)),function(m) {
-  if(is.vector(m)) {
-    mean(m)
-  } else {
-    mean(m)
-  }
-})
+ms <- sapply(split(as.matrix(mcols(uniq.pos))[subjectHits(o),],queryHits(o)),mean)
+#             #function(m) {
+#  if(is.vector(m)) {
+#    mean(m)
+#  } else {
+#    mean(m)
+#  }
+#})
 
 idx <- as.integer(names(ms))
 
