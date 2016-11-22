@@ -14,10 +14,15 @@ measuredsignal.file <- args[4]
 bootstrap.file <- args[5]
 output.file <- args[6]
 
+write("debug 0\n",file=stderr())
+
+
 chrom.sizes <- read.table(csize.file,sep='\t')
 
 signal <- read.table(measuredsignal.file,sep='\t')
 #bootstrap <- read.table(bootstrap.file,sep='\t')
+
+write("debug 1\n",file=stderr())
 
 s <- GRanges(seqnames=as.character(signal[,1]),ranges=IRanges(signal[,2],width=1),strand='*',signal[,3])#,bootstrap[,-(1:2)])
 
@@ -30,18 +35,29 @@ g <- unlist(GRangesList(lapply(1:nrow(chrom.sizes),function(i) {
   GRanges(seqnames=chr,ranges=IRanges(pos,width=binsize),strand='*')
 })))
 
+write("debug 2\n",file=stderr())
+
+
 o <- findOverlaps(g,s)
 
 m <- as.matrix(mcols(s)[subjectHits(o),])
 
-r <- lapply(split(m,queryHits(o)),function(ms) {
-  if(is.vector(ms)) return(as.vector(c(ms[1],quantile(ms[-1],probs=c(.025,.975)))))
-  x <- colMeans(ms)
+write("debug 3\n",file=stderr())
+
+
+#r <- lapply(split(m,queryHits(o)),function(ms) {
+#  if(is.vector(ms)) return(as.vector(c(ms[1])))#,quantile(ms[-1],probs=c(.025,.975)))))
+#  x <- colMeans(ms)
   
-  c(x[,1],as.vector(quantile(x,probs=c(.025,.975))))
-})
+#  c(x[,1])#,as.vector(quantile(x,probs=c(.025,.975))))
+#})
+
+r <- sapply(split(m,queryHits(o)),mean)
+
+write("debug 4",file=stderr())
+
 
 gs <- g[as.integer(names(r))]
-df <- data.frame(seqnames(gs),start(gs),end(gs),do.call(rbind,r))
+df <- data.frame(seqnames(gs),start(gs),end(gs),r)#,do.call(rbind,r))
 
 write.table(df,file=output.file,sep='\t',row.names=F,col.names=F,quote=F)
