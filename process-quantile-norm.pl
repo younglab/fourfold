@@ -10,7 +10,7 @@ sub in {
   my $ret = 0;
   
   if(scalar(@{$ref})==1) {
-    $ret = 1 if $test =~ m/$ref->[0]/;
+    $ret = 1 if ($ref->[0] eq "all" || $test =~ m/$ref->[0]/);
   } else {
   
     for(@{$ref}) {
@@ -67,6 +67,7 @@ for( my $i = 0; $i < $nr; $i++ ) {
   
   my($name,$celltype,$condition,$rep,$organism,$viewpointid,$viewpointchrom,$viewpointstart,$viewpointend,$readstart,$readend,$fastq,$barcode,$primer,$revprimer,$e1,$e2,$e1s,$e2s) = @arr;
   
+  next if $name =~ /^#/;
   
   if(in($name,\@samples)) {
     push @norm, [$name,"bootstrap/$name.filtered.rpm.txt"];
