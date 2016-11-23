@@ -10,7 +10,7 @@ sub in {
   my $ret = 0;
   
   if(scalar(@{$ref})==1) {
-    $ret = 1 if $test =~ m/$ref->[0]/;
+    $ret = 1 if ($ref->[0] eq "all" || $test =~ m/$ref->[0]/);
   } else {
   
     for(@{$ref}) {
