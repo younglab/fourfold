@@ -2,7 +2,8 @@
 
 use strict;
 use Spreadsheet::Read;
-
+use FourCOpts::OrganismDatabase qw(loadorgdatabase);
+use FourCOpts::WigFile qw(writewigfile);
 
 sub in {
   my ($test,$ref) = @_;
@@ -29,29 +30,31 @@ if(scalar(@ARGV)<7) {
 }
 
 my ($sampletable,$organismdatabase,$basedir,$pseudocount,$inputdir,$outputdir,@files) = @ARGV;
+my $binsize = 5000;
+my $stepsize = 50;
 
 die "Cannot find file $sampletable!" unless -e $sampletable;
 die "Cannot find organism database $organismdatabase!" unless -e $organismdatabase;
 
-my %organisms;
+my %organisms = %{loadorgdatabase($organismdatabase)};
 
-open(D,"<","$organismdatabase") or die "Cannot read $organismdatabase: $!";
+#open(D,"<","$organismdatabase") or die "Cannot read $organismdatabase: $!";
 
-while(<D>) {
-  chomp;
+#while(<D>) {
+#  chomp;
   
-  my ($id,$bowtie,$fasta) = split /\t/;
+#  my ($id,$bowtie,$fasta) = split /\t/;
   
-  next if $id =~ /^$/;
+#  next if $id =~ /^$/;
   
-  die "In organism database, cannot find bowtie index for $id!" unless -e "$bowtie.1.ebwt";
-  die "In organism database, cannot fine FASTA file for $id!" unless -e $fasta;
+#  die "In organism database, cannot find bowtie index for $id!" unless -e "$bowtie.1.ebwt";
+#  die "In organism database, cannot fine FASTA file for $id!" unless -e $fasta;
   
-  for(split(/,/,$id)) {
-    $organisms{lc $_} = [$bowtie,$fasta];
-  }
-}
-close(D);
+#  for(split(/,/,$id)) {
+#    $organisms{lc $_} = [$bowtie,$fasta];
+#  }
+#}
+#close(D);
 
 my $database = ReadData($sampletable);
 my $sheet = $database->[1]; ## get first spreadsheet
@@ -63,6 +66,7 @@ if( !defined($sheet) || !defined($nr) ) {
 }
 
 my %samplegroups;
+my %sampleorg;
 
 for( my $i = 0; $i < $nr; $i++ ) { 
 
@@ -77,6 +81,7 @@ for( my $i = 0; $i < $nr; $i++ ) {
   my $samplekey = "$sampletype-$condition";
   
   push @{$samplegroups{$samplekey}}, "$inputdir/$name.filtered.rpm.txt";
+  $sampleorg{$samplekey} = $organism; ### expand this later
 }
 
 my @sgroups = keys(%samplegroups);
@@ -86,16 +91,22 @@ for( my $i = 0; $i <= $#sgroups; $i++ ) {
     my ($group1,$group2) = @sgroups[$i,$j];
     
     my $outputfile1 = "$outputdir/$group1-$group2-comparison.txt";
+    my $outputsmoothedfile1 = "$outputdir/$group1-$group2-comparison.smoothed.txt";
+
     my $outputfile2 = "$outputdir/$group2-$group1-comparison.txt";
+    my $outputsmoothedfile2 = "$outputdir/$group2-$group1-comparison.smoothed.txt";
+
 
     my $f1 = join(" ",@{$samplegroups{$group1}});
     my $f2 = join(" ",@{$samplegroups{$group2}});
     
-    my $output = `Rscript $basedir/comparison.r $outputfile1 $pseudocount $f1 SEP $f2`;
+    my $org = $sampleorg{$group1}; ## expand this later
+    
+    my $output = `Rscript $basedir/../scripts/comparison/comparison.r $outputfile1 $outputsmoothedfile1 $organisms{$org}->[2] $binsize $stepsize $pseudocount $f1 SEP $f2`;
     
     die "Failed to compare samples: $output" unless $? == 0;
     
-    $output = `Rscript $basedir/comparison.r $outputfile2 $pseudocount $f2 SEP $f1`;
+    $output = `Rscript $basedir/../scripts/comparison/comparison.r $outputfile2 $outputsmoothedfile2 $organisms{$org}->[2] $binsize $stepsize $pseudocount $f2 SEP $f1`;
     
     die "Failed to compare samples: $output" unless $? == 0;
     

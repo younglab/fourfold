@@ -23,8 +23,12 @@ if(length(args) < 5) {
 }
 
 outputfile <- args[1]
-pseudocount <- as.numeric(args[2])
-args <- args[-(1:2)]
+outputsmoothedfile <- args[2]
+csize.file <- args[3]
+binsize <- as.integer(args[4])
+stepsize <- as.integer(args[5])
+pseudocount <- as.numeric(args[6])
+args <- args[-(1:6)]
 
 w <- which(args=="SEP")
 
@@ -69,4 +73,43 @@ mcols(r)[,'ratio'] <- s.ratio
 
 
 write.table(data.frame(seqnames(r),start(r),r$ratio),outputfile,sep='\t',row.names=F,col.names=F,quote=F)
+
+rred <- r[r$ratio!=0 & !is.na(r$ratio)]
+
+chrom.sizes <- read.table(csize.file,sep='\t')
+
+#signal <- read.table(measuredsignal.file,sep='\t')
+#bootstrap <- read.table(bootstrap.file,sep='\t')
+
+
+#s <- GRanges(seqnames=as.character(signal[,1]),ranges=IRanges(signal[,2],width=1),strand='*',signal[,3])#,bootstrap[,-(1:2)])
+
+s <- rred
+
+g <- unlist(GRangesList(lapply(1:nrow(chrom.sizes),function(i) {
+  chr <- as.character(chrom.sizes[i,1])
+  msize <- chrom.sizes[i,2]
+  
+  pos <- seq(1,msize+stepsize,by=stepsize)
+  
+  GRanges(seqnames=chr,ranges=IRanges(pos,width=binsize),strand='*')
+})))
+
+o <- findOverlaps(g,s)
+
+m <- as.matrix(mcols(s)[subjectHits(o),])
+
+#r <- lapply(split(m,queryHits(o)),function(ms) {
+#  if(is.vector(ms)) return(as.vector(c(ms[1])))#,quantile(ms[-1],probs=c(.025,.975)))))
+#  x <- colMeans(ms)
+
+#  c(x[,1])#,as.vector(quantile(x,probs=c(.025,.975))))
+#})
+
+r <- sapply(split(m,queryHits(o)),mean)
+
+gs <- g[as.integer(names(r))]
+df <- data.frame(seqnames(gs),start(gs),r)#,do.call(rbind,r))
+
+write.table(df,file=outputsmoothedfile,sep='\t',row.names=F,col.names=F,quote=F)
 

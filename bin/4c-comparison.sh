@@ -1,7 +1,9 @@
 #!/bin/bash
 
 BASEDIR=$(dirname $0)
-ORGANISMDATABASE=$BASEDIR/organism-database.txt
+SCRIPTDIR=$BASEDIR/../scripts/comparison
+LIBDIR=$BASEDIR/../lib
+ORGANISMDATABASE=$BASEDIR/../db/organism-database.txt
 PSEUDOCOUNT=0.000001
 
 if [ $# -lt 4 ];
@@ -28,7 +30,7 @@ then
   exit 1
 fi
 
-$BASEDIR/compare-samples.pl $SAMPLES $ORGANISMDATABASE $BASEDIR $PSEUDOCOUNT $INPUTDIR $OUTPUTDIR $@
+perl -I$LIBDIR $SCRIPTDIR/compare-samples.pl $SAMPLES $ORGANISMDATABASE $BASEDIR $PSEUDOCOUNT $INPUTDIR $OUTPUTDIR $@
 
 if [ $? -ne 0 ];
 then
