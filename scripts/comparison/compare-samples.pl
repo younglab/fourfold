@@ -110,6 +110,9 @@ for( my $i = 0; $i <= $#sgroups; $i++ ) {
     
     die "Failed to compare samples: $output" unless $? == 0;
     
+    writewigfile($outputsmoothedfile1,"$outputdir/$group1-$group2-comparison-smoothed.wig","$group1-$group2-comparison smoothed");
+    writewigfile($outputsmoothedfile2,"$outputdir/$group2-$group1-comparison-smoothed.wig","$group2-$group1-comparison smoothed");
+    
     my $wigfile = "$outputdir/$group1-$group2-comparison.wig";
     open(O,"<",$outputfile1) or die "Cannot read $outputfile1: $!";
     open(W,">",$wigfile) or die "Cannot write to $wigfile: $!";
