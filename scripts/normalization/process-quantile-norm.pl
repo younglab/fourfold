@@ -2,6 +2,7 @@
 
 use strict;
 use Spreadsheet::Read;
+use FourCOpts::OrganismDatabase qw(loadorgdatabase);
 
 
 sub in {
@@ -34,26 +35,7 @@ my ($sampletable,$basedir,$organismdatabase,$outputdir,@samples) = @ARGV;
 die "Cannot find $sampletable!" unless -e $sampletable;
 die "Cannot find $outputdir!" unless -e $outputdir;
 
-my %organisms;
-
-open(D,"<","$organismdatabase") or die "Cannot read $organismdatabase: $!";
-
-while(<D>) {
-  chomp;
-  
-  my ($id,$bowtie,$fasta,$chromsizes) = split /\t/;
-  
-  next if $id =~ /^$/;
-  
-  die "In organism database, cannot find bowtie index for $id!" unless -e "$bowtie.1.ebwt";
-  die "In organism database, cannot find FASTA file for $id!" unless -e $fasta;
-  die "In organism database, cannot find chromosome sizes for $id!" unless -e $chromsizes;
-  
-  for(split(/,/,$id)) {
-    $organisms{lc $_} = [$bowtie,$fasta,$chromsizes];
-  }
-}
-close(D);
+my %organisms = %{loadorgdatabase($organismdatabase)};
 
 my $database = ReadData($sampletable);
 my $sheet = $database->[1]; ## get first spreadsheet
@@ -61,6 +43,7 @@ my $nr = ${$sheet}{"maxrow"};
 
 my @norm;
 my %samplegroups;
+my $chromfile = "";
 
 for( my $i = 0; $i < $nr; $i++ ) { 
   my @arr = Spreadsheet::Read::cellrow($sheet,$i+1);
@@ -70,12 +53,14 @@ for( my $i = 0; $i < $nr; $i++ ) {
   next if $name =~ /^#/;
   
   if(in($name,\@samples)) {
-    push @norm, [$name,"bootstrap/$name.filtered.rpm.txt"];
+    push @norm, [$name,"bootstrap/$name.filtered.counts.txt"];
     
     my $samplekey = "$celltype-$condition";
     $samplegroups{$samplekey} = [] unless defined($samplegroups{$samplekey});
     
-    push @{$samplegroups{$samplekey}}, "$outputdir/$name.filtered.rpm.txt";
+    push @{$samplegroups{$samplekey}}, ["$outputdir/$name.filtered.counts.txt","$outputdir/$name.filtered.rpm.txt"];
+    
+    $chromfile = $organisms{$organism}->[2];
   }
 }
 
@@ -84,9 +69,8 @@ die "not enough samples" if scalar(@norm) < 2;
 my $exe = "";
 $exe .= join(" ",@{$_}) . " " for(@norm);
 
-#print "DEBUG: $exe\n";
 
-my $output = `Rscript $basedir/quantile-normalization.r $outputdir $exe`;
+my $output = `Rscript $basedir/quantile-normalization.r $outputdir $exe 2>/dev/null`;
 
 die "Failed to normalize: $output" unless $? == 0;
 
@@ -125,26 +109,41 @@ close(N);
 
 for(@output) {
   my $outputfile ="$outputdir/$$_[0].filtered.rpm.wig";
+  my $bigwigfile = "$outputdir/$$_[0].filtered.rpm.bw";
   open(O,">",$outputfile) or die "Cannot write to $outputfile: $!";
   print O "$_\n" for(@{$_->[1]});
   close(O);
+  
+  `wigToBigWig $outputfile $chromfile $bigwigfile`;
 }
 
 unlink("$outputdir/quantile-normalized-samples.txt");
 
 for my $skey (keys(%samplegroups)) { 
-  print "DEBUG: $skey\n";
+  #print "DEBUG: $skey\n";
   my @files = @{$samplegroups{$skey}};
+  my @countfiles;
+  my @rpmfiles;
   
   next unless scalar(@files)>=2;
   
+  for(@files) {
+    push @countfiles, $_->[0];
+    push @rpmfiles, $_->[1];
+  }
+  
+  
   my $ofile = "$outputdir/$skey.filtered.rpm.txt";
   my $wfile = "$outputdir/$skey.filtered.rpm.wig";
+  my $bwfile = "$outputdir/$skey.filtered.rpm.bw";
 
-  my $f = join(" ",@files);
+
+  my $f = join(" ",@rpmfiles);
 
   
-  my $output = `Rscript $basedir/combine-profiles.r $ofile $f`;
+  my $output = `Rscript $basedir/combine-profiles.r $ofile $f 2>&1`;
+  
+  die "Failed to combine samples: $output" unless $? == 0;
   
   open(T,"<","$ofile") or die "Cannot read $ofile: $!";
   open(W,">",$wfile) or die "Cannot write to $wfile: $!";
@@ -168,5 +167,7 @@ for my $skey (keys(%samplegroups)) {
   
   close(T);
   close(W);
+  
+  `wigToBigWig $wfile $chromfile $bwfile`;
 }
   

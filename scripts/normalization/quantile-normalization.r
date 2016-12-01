@@ -42,8 +42,11 @@ rownames(out) <- NULL
 write.table(out,file=output,col.names=T,row.names=F,quote=F,sep='\t')
 
 lapply(colnames(out)[-(1:2)],function(n) {
-  df <- out[,c("chr","pos",n)]
-  f <- paste(outdir,paste(n,"filtered.rpm.txt",sep='.'),sep='/')
+  df <- dfrpm <- out[,c("chr","pos",n)]
+  dfrpm[,3] <- df[,3]/sum(df[,3])*1e6
+  fcounts <- paste(outdir,paste(n,"filtered.counts.txt",sep='.'),sep='/')
+  frpm <- paste(outdir,paste(n,"filtered.rpm.txt",sep='.'),sep='/')
   
-  write.table(df,file=f,col.names=F,row.names=F,quote=F,sep='\t')
+  write.table(df,file=fcounts,col.names=F,row.names=F,quote=F,sep='\t')
+  write.table(dfrpm,file=frpm,col.names=F,row.names=F,quote=F,sep='\t')
 })
