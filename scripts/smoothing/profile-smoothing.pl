@@ -2,6 +2,8 @@
 
 use strict;
 use Spreadsheet::Read;
+use FourCOpts::OrganismDatabase qw(loadorgdatabase);
+use FourCOpts::WigFile qw(writewigfile);
 
 sub in {
   my ($test,$ref) = @_;
@@ -34,26 +36,7 @@ die "Cannot find directory $inputdir" unless -e $inputdir;
 die "Cannot find $outputdir!" unless -e $outputdir;
 die "Cannot find $organismdatabase" unless -e $organismdatabase;
 
-my %organisms;
-
-open(D,"<","$organismdatabase") or die "Cannot read $organismdatabase: $!";
-
-while(<D>) {
-  chomp;
-  
-  my ($id,$bowtie,$fasta,$chromsizes) = split /\t/;
-  
-  next if $id =~ /^$/;
-  
-  die "In organism database, cannot find bowtie index for $id!" unless -e "$bowtie.1.ebwt";
-  die "In organism database, cannot find FASTA file for $id!" unless -e $fasta;
-  die "In organism database, cannot find chromosome sizes for $id!" unless -e $chromsizes;
-  
-  for(split(/,/,$id)) {
-    $organisms{lc $_} = [$bowtie,$fasta,$chromsizes];
-  }
-}
-close(D);
+my %organisms = %{loadorgdatabase($organismdatabase)};
 
 my $database = ReadData($sampletable);
 my $sheet = $database->[1]; ## get first spreadsheet
