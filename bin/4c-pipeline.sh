@@ -2,7 +2,8 @@
 
 
 BASEDIR=$(dirname $0)
-ORGANISMDATABASE=$BASEDIR/organism-database.txt
+SCRIPTDIR=$BASEDIR/../scripts/core
+ORGANISMDATABASE=$BASEDIR/../db/organism-database.txt
 ENDAFTERVALIDATION=0
 LSFQUEUE=normal
 BOWTIEK=1
@@ -68,7 +69,7 @@ then
   exit 1
 fi
 
-if [ $ENDAFTERVALIDATION -eq 0 ];
+if [ "$ENDAFTERVALIDATION" -eq 0 ];
 then
   mkdir wigfiles
   mkdir stats
@@ -79,7 +80,7 @@ fi
 
 echo "Validating sample table..."
 
-$BASEDIR/validate-table.pl $SAMPLETABLE $ORGANISMDATABASE
+$SCRIPTDIR/validate-table.pl $SAMPLETABLE $ORGANISMDATABASE
 
 if [ $? -ne 0 ];
 then
@@ -99,7 +100,7 @@ echo "4C analysis launced in $PWD by $USER" | mail -s "[4C] Analysis Pipeline St
 
 echo "Processing reads..."
 
-$BASEDIR/process-4c-reads.pl $SAMPLETABLE $ORGANISMDATABASE $BOWTIEN $BOWTIEK $BOWTIEM
+$SCRIPTDIR/process-4c-reads.pl $SAMPLETABLE $ORGANISMDATABASE $BOWTIEN $BOWTIEK $BOWTIEM
 
 if [ $? -ne 0 ];
 then
@@ -121,13 +122,13 @@ done
 
 wait
 
-$BASEDIR/add-mapping-stats.pl $SAMPLETABLE
+$SCRIPTDIR/add-mapping-stats.pl $SAMPLETABLE
 
 ### identify fragments
 
 echo "Identifying fragments..."
 
-$BASEDIR/re-fragment-identification.pl $SAMPLETABLE $ORGANISMDATABASE $MINFRAGMENTLENGTH
+$SCRIPTDIR/re-fragment-identification.pl $SAMPLETABLE $ORGANISMDATABASE $MINFRAGMENTLENGTH
 
 if [ $? -ne 0 ];
 then
@@ -139,17 +140,13 @@ fi
 
 echo "Mapping to fragments..."
 
-$BASEDIR/map-to-fragments.pl $SAMPLETABLE $BASEDIR $ORGANISMDATABASE
+$SCRIPTDIR/map-to-fragments.pl $SAMPLETABLE $BASEDIR $ORGANISMDATABASE
 
 if [ $? -ne 0 ];
 then
   echo "Errors in mapping the reads to restriction digest fragments, see error messages"
   exit 1
 fi
-
-### smooth profiles
-
-### comparisons
 
 ### generate reports
 
