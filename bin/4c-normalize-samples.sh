@@ -1,13 +1,15 @@
 #!/bin/bash
 
 BASEDIR=$(dirname $0)
-ORGANISMDATABASE=$BASEDIR/organism-database.txt
+SCRIPTDIR=$BASEDIR/../scripts/normalization
+LIBDIR=$BASEDIR/../lib
+ORGANISMDATABASE=$BASEDIR/../db/organism-database.txt
 
 
 if [ $# -lt 4 ];
 then
   echo "4c-normalize-samples.sh <sample table> <normalization type> <output dir> <samples...>"
-  echo "Valid normalization types are: quantile, "
+  echo "Valid normalization types are: quantile"
   exit 1
 fi
 
@@ -17,6 +19,12 @@ OUTPUTDIR="$3"
 shift
 shift
 shift
+
+if [ ! -e "$SAMPLETABLE" ];
+then
+  echo "Cannot find $SAMPLETABLE!"
+  exit 1
+fi
 
 if [ ! -e "$OUTPUTDIR" ];
 then
@@ -31,7 +39,7 @@ fi
 
 case $NORMTYPE in
   quantile)
-    $BASEDIR/process-quantile-norm.pl $SAMPLETABLE $BASEDIR $ORGANISMDATABASE $OUTPUTDIR $@
+    perl -I$LIBDIR $SCRIPTDIR/process-quantile-norm.pl $SAMPLETABLE $SCRIPTDIR $ORGANISMDATABASE $OUTPUTDIR $@
     ;;
   
   *)
@@ -39,4 +47,10 @@ case $NORMTYPE in
     exit 1
     ;;
 esac
+
+if [ $? -ne 0 ];
+then
+  echo "Error in normalizing samples, please see error messages"
+  exit 1
+fi
 
