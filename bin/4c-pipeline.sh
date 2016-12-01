@@ -3,6 +3,7 @@
 
 BASEDIR=$(dirname $0)
 SCRIPTDIR=$BASEDIR/../scripts/core
+LIBDIR=$BASEDIR/../lib
 ORGANISMDATABASE=$BASEDIR/../db/organism-database.txt
 ENDAFTERVALIDATION=0
 LSFQUEUE=normal
@@ -80,7 +81,7 @@ fi
 
 echo "Validating sample table..."
 
-$SCRIPTDIR/validate-table.pl $SAMPLETABLE $ORGANISMDATABASE
+perl -I$LIBDIR $SCRIPTDIR/validate-table.pl $SAMPLETABLE $ORGANISMDATABASE
 
 if [ $? -ne 0 ];
 then
@@ -100,7 +101,7 @@ echo "4C analysis launced in $PWD by $USER" | mail -s "[4C] Analysis Pipeline St
 
 echo "Processing reads..."
 
-$SCRIPTDIR/process-4c-reads.pl $SAMPLETABLE $ORGANISMDATABASE $BOWTIEN $BOWTIEK $BOWTIEM
+perl -I$LIBDIR $SCRIPTDIR/process-4c-reads.pl $SAMPLETABLE $ORGANISMDATABASE $BOWTIEN $BOWTIEK $BOWTIEM
 
 if [ $? -ne 0 ];
 then
@@ -122,13 +123,13 @@ done
 
 wait
 
-$SCRIPTDIR/add-mapping-stats.pl $SAMPLETABLE
+perl -I$LIBDIR $SCRIPTDIR/add-mapping-stats.pl $SAMPLETABLE
 
 ### identify fragments
 
 echo "Identifying fragments..."
 
-$SCRIPTDIR/re-fragment-identification.pl $SAMPLETABLE $ORGANISMDATABASE $MINFRAGMENTLENGTH
+perl -I$LIBDIR $SCRIPTDIR/re-fragment-identification.pl $SAMPLETABLE $ORGANISMDATABASE $MINFRAGMENTLENGTH
 
 if [ $? -ne 0 ];
 then
@@ -140,7 +141,7 @@ fi
 
 echo "Mapping to fragments..."
 
-$SCRIPTDIR/map-to-fragments.pl $SAMPLETABLE $BASEDIR $ORGANISMDATABASE
+perl -I$LIBDIR $SCRIPTDIR/map-to-fragments.pl $SAMPLETABLE $BASEDIR $ORGANISMDATABASE
 
 if [ $? -ne 0 ];
 then
