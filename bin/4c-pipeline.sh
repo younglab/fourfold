@@ -141,7 +141,7 @@ fi
 
 echo "Mapping to fragments..."
 
-perl -I$LIBDIR $SCRIPTDIR/map-to-fragments.pl $SAMPLETABLE $BASEDIR $ORGANISMDATABASE
+perl -I$LIBDIR $SCRIPTDIR/map-to-fragments.pl $SAMPLETABLE $BASEDIR $SCRIPTDIR $ORGANISMDATABASE
 
 if [ $? -ne 0 ];
 then

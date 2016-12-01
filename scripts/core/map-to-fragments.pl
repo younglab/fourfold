@@ -90,12 +90,12 @@ sub executebootstrap {
   die "Failed to run bootstrap script: $output" unless $? == 0;
 }
 
-if(scalar(@ARGV)<1) {
-  die "map-to-fragments.pl <sample table> <basedir> <organism database>";
+if(scalar(@ARGV)<4) {
+  die "map-to-fragments.pl <sample table> <basedir> <scriptdir> <organism database>";
 }
 
 
-my ($sampletable,$basedir,$organismdatabase) = @ARGV;
+my ($sampletable,$basedir,$scriptdir,$organismdatabase) = @ARGV;
 
 die "Cannot find $sampletable!" unless -e $sampletable;
 die "Cannot find $organismdatabase!" unless -e $organismdatabase;
@@ -168,10 +168,10 @@ for( my $i = 0; $i < $nr; $i++ ) {
 #  tomegabaserpm("wigfiles/$name.raw.wig","wigfiles/$name.raw.MB.rpm.wig",$viewpointchrom,$viewpointstart,$viewpointend);
 #  tomegabaserpm("wigfiles/$name.filtered.wig","wigfiles/$name.filtered.MB.rpm.wig",$viewpointchrom,$viewpointstart,$viewpointend);
   
-  executebootstrap($basedir,"bootstrap/$name.raw.counts.txt","bootstrap/$name.raw.counts.bootstrap.txt",1);
-  executebootstrap($basedir,"bootstrap/$name.filtered.counts.txt","bootstrap/$name.filtered.counts.bootstrap.txt",1);
-  executebootstrap($basedir,"bootstrap/$name.raw.counts.txt","bootstrap/$name.raw.rpm.bootstrap.txt",$num);
-  executebootstrap($basedir,"bootstrap/$name.filtered.counts.txt", "bootstrap/$name.filtered.rpm.bootstrap.txt", $num);
+  executebootstrap($scriptdir,"bootstrap/$name.raw.counts.txt","bootstrap/$name.raw.counts.bootstrap.txt",1);
+  executebootstrap($scriptdir,"bootstrap/$name.filtered.counts.txt","bootstrap/$name.filtered.counts.bootstrap.txt",1);
+  executebootstrap($scriptdir,"bootstrap/$name.raw.counts.txt","bootstrap/$name.raw.rpm.bootstrap.txt",$num);
+  executebootstrap($scriptdir,"bootstrap/$name.filtered.counts.txt", "bootstrap/$name.filtered.rpm.bootstrap.txt", $num);
   
   `wigToBigWig wigfiles/$name.raw.wig $chromsizes wigfiles/$name.raw.bw`;
   `wigToBigWig wigfiles/$name.filtered.wig $chromsizes wigfiles/$name.filtered.bw`;
@@ -202,7 +202,7 @@ for my $sck (keys(%sampletypes)) {
     my $wfile = $wigoutputfiles[$i];
     my $bwfile = $bwoutputfiles[$i];
     
-    my $output = `Rscript $basedir/combine-profiles.r $ofile $sfiles`;
+    my $output = `Rscript $scriptdir/combine-profiles.r $ofile $sfiles`;
     die "Failed to combine files in $sck" unless $? == 0;
     
     open(T,"<",$ofile) or die "Cannot read $ofile: $!";
