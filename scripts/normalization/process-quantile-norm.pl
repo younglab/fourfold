@@ -141,7 +141,7 @@ for my $skey (keys(%samplegroups)) {
   my $f = join(" ",@rpmfiles);
 
   
-  my $output = `Rscript $basedir/combine-profiles.r $ofile $f 2>&1`;
+  my $output = `Rscript $basedir/../core/combine-profiles.r $ofile $f 2>&1`;
   
   die "Failed to combine samples: $output" unless $? == 0;
   

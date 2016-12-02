@@ -202,8 +202,8 @@ for my $sck (keys(%sampletypes)) {
     my $wfile = $wigoutputfiles[$i];
     my $bwfile = $bwoutputfiles[$i];
     
-    my $output = `Rscript $scriptdir/combine-profiles.r $ofile $sfiles`;
-    die "Failed to combine files in $sck" unless $? == 0;
+    my $output = `Rscript $scriptdir/combine-profiles.r $ofile $sfiles 2>&1`;
+    die "Failed to combine files in $sck: $output" unless $? == 0;
     
     open(T,"<",$ofile) or die "Cannot read $ofile: $!";
     open(W,">",$wfile) or die "Cannot write to $wfile: $!";
