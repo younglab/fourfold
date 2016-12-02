@@ -70,10 +70,11 @@ for( my $i = 0; $i < $nr; $i++ ) {
 
   next if -e $tmpseqfile;
   if( $fastq =~ /^ftp:\/\// ) {
-    my $output = `wget $fastq`;
+    my $bfastq = basename($fastq);
+    my $output = `wget $fastq 2>logs/$bfastq.log`;
     die "wget failed: $output" if $? != 0;
     $fastq = basename($fastq);
-    $output = `fastq-dump --gzip $fastq`;
+    $output = `fastq-dump --gzip $bfastq`;
     die "fastq-dump failed: $output" if $? != 0;
     $fastq =~ s/[.]sra/.fastq.gz/;
   } else {
