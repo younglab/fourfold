@@ -2,6 +2,7 @@
 
 use strict;
 use Spreadsheet::Read;
+use FourCOpts::OrganismDatabase qw(loadorgdatabase);
 
 if(scalar(@ARGV)<2) {
   die "Syntax: ./validate-table.pl <sample table> <organism database>";
@@ -21,25 +22,25 @@ if( !defined($sheet) || !defined($nr) ) {
   exit 1;
 }
 
-my %organisms;
+my %organisms = %{loadorgdatabase($organismdatabase)};
 
-open(D,"<","$organismdatabase") or die "Cannot read $organismdatabase: $!";
+#open(D,"<","$organismdatabase") or die "Cannot read $organismdatabase: $!";
 
-while(<D>) {
-  chomp;
+#while(<D>) {
+#  chomp;
   
-  my ($id,$bowtie,$fasta) = split /\t/;
+#  my ($id,$bowtie,$fasta) = split /\t/;
   
-  next if $id =~ /^$/;
+#  next if $id =~ /^$/;
   
-  die "In organism database, cannot find bowtie index for $id!" unless -e "$bowtie.1.ebwt";
-  die "In organism database, cannot fine FASTA file for $id!" unless -e $fasta;
+#  die "In organism database, cannot find bowtie index for $id!" unless -e "$bowtie.1.ebwt";
+#  die "In organism database, cannot fine FASTA file for $id!" unless -e $fasta;
   
-  for(split(/,/,$id)) {
-    $organisms{lc $_} = [$bowtie,$fasta];
-  }
-}
-close(D);
+#  for(split(/,/,$id)) {
+#    $organisms{lc $_} = [$bowtie,$fasta];
+#  }
+#}
+#close(D);
 
 
 my %names;
@@ -60,6 +61,8 @@ for( my $i = 0; $i < $nr; $i++ ) {
   
   die "$organism for $name doesn't match any entry within the organism database" unless defined($organisms{lc $organism});
   
+  die "Please set viewpoint information for sample $name to \"NA\" if not in use" if( $viewpointid =~ /^$/ || $viewpointchrom =~ /^$/ || $viewpointstart =~ /^$/ || $viewpointend =~ /^$/ || $readstart =~ /^$/ || $readend =~ /^$/ );
+  
   if(defined($viewpoints{$viewpointid})) {
     my @d = @{$viewpoints{$viewpointid}};
     my @s = ($viewpointchrom,$viewpointstart,$viewpointend,$readstart,$readend);
@@ -72,7 +75,11 @@ for( my $i = 0; $i < $nr; $i++ ) {
     }
     
   } else {
-    $viewpoints{$viewpointid} = [$viewpointchrom,$viewpointstart,$viewpointend,$readstart,$readend];
+    if( $viewpointid eq "NA") {
+      warn "For sample $name, viewpoint consistentcy checking is turned off!";
+    } else {
+      $viewpoints{$viewpointid} = [$viewpointchrom,$viewpointstart,$viewpointend,$readstart,$readend];
+    }
   }
   
   my $origfastq = $fastq;

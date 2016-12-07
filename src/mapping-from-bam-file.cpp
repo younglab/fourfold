@@ -41,16 +41,21 @@ int main(int argv,char **argc) {
   const char *pchr = argc[11];
   const char *pstart = argc[12];
   const char *pend = argc[13];
-  
-  std::stringstream coords;
-  coords << pchr << " " << pstart << " " << pend;
-  
+
   std::string primerchr;
   int primers, primere;
   
-  coords >> primerchr;
-  coords >> primers;
-  coords >> primere;
+  if( std::strcmp(pchr,"NA") == 0 || std::strcmp(pstart,"NA") == 0 || std::strcmp(pend,"NA") == 0 ) {
+    primerchr = "NA";
+    primers = primere = -1;
+  } else {  
+    std::stringstream coords;
+    coords << pchr << " " << pstart << " " << pend;
+  
+    coords >> primerchr;
+    coords >> primers;
+    coords >> primere;
+  }
   
   // Read fragments
   std::ifstream fragments(fragmentfile);
