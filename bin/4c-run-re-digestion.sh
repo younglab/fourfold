@@ -2,7 +2,8 @@
 
 MINFRAGMENTLENGTH=20
 BASEDIR=$(dirname $0)
-ORGANISMDATABASE=$BASEDIR/organism-database.txt
+SCRIPTDIR=$BASEDIR/../scripts/re
+ORGANISMDATABASE=$BASEDIR/../db/organism-database.txt
 
 if [ $# -lt 5 ];
 then
@@ -16,13 +17,13 @@ RE2="$3"
 RE2SEQ="$4"
 ORGANISM="$5"
 
-echo "Running RE cutting..."
+echo "Running RE digestion..."
 
-$BASEDIR/standalone-re-cutting.pl $RE1 $RE1SEQ $RE2 $RE2SEQ $ORGANISM
+$SCRIPTDIR/standalone-re-cutting.pl $RE1 $RE1SEQ $RE2 $RE2SEQ $ORGANISM
 
 if [ $? -ne 0 ];
 then
-  echo "Errors in cutting, see error messages"
+  echo "Errors in simulating RE digestion, see error messages"
   exit 1
 fi
 
