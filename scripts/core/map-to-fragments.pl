@@ -143,7 +143,10 @@ for( my $i = 0; $i < $nr; $i++ ) {
   my $fragmentfile = "$e1-$e2-$organism/fragments.txt";
   die "Cannot find $fragmentfile! Make sure to run re-fragment-identification.pl first!" unless( -e $fragmentfile);
   
-  my $output = `$basedir/mapping-from-bam-file $fragmentfile bamfiles/$name.sorted.bam wigfiles/$name.raw.wig wigfiles/$name.filtered.wig $name bootstrap/$name.raw.counts.txt bootstrap/$name.filtered.counts.txt bootstrap/$name.raw.rpm.txt bootstrap/$name.filtered.rpm.txt stats/$name.txt $viewpointchrom $readstart $readend`;
+  my $argstr = "$fragmentfile bamfiles/$name.sorted.bam wigfiles/$name.raw.wig wigfiles/$name.filtered.wig $name bootstrap/$name.raw.counts.txt bootstrap/$name.filtered.counts.txt bootstrap/$name.raw.rpm.txt bootstrap/$name.filtered.rpm.txt stats/$name.txt $viewpointchrom $readstart $readend";
+  my $output = `$basedir/mapping-from-bam-file $argstr 2>&1`;
+  
+  die "Error in mapping fragments. Arguments were ($argstr) and output was: $output" unless $? == 0;
   
   my $sampleconditionkey = "$sampletype-$condition";
   
@@ -154,7 +157,6 @@ for( my $i = 0; $i < $nr; $i++ ) {
   push @{$sampletypes{$sampleconditionkey}->[2]}, "bootstrap/$name.raw.rpm.txt";
   push @{$sampletypes{$sampleconditionkey}->[3]}, "bootstrap/$name.filtered.rpm.txt";
    
-  die "Error in mapping fragments, output is: $output" unless $? == 0;
   
   open(O,"<","stats/$name.txt") or die "Cannot read stats file! $!";
   <O>; <O>; <O>; <O>; <O>; <O>; <O>; <O>; <O>; # skip the 9 lines

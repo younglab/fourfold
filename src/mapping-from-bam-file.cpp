@@ -24,7 +24,7 @@ struct cut_site {
 int main(int argv,char **argc) {
   
   if(argv<13) {
-    std::cerr << "not enough arguments" << std::endl;
+    std::cerr << "Error: not enough arguments" << std::endl;
     return EXIT_FAILURE;
   }
   
