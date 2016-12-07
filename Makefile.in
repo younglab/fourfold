@@ -2,6 +2,7 @@ CC = g++
 CCOPT = -std=gnu++11
 BAMINCL = -I/usr/local/include/bamtools
 LIBBAMTOOLS = -lbamtools
+prefix = @prefix@
 
 all: quantification
 
@@ -9,5 +10,6 @@ quantification:
 	cd src && g++ $(CCOPT) $(BAMINCL) -o mapping-from-bam-file mapping-from-bam-file.cpp $(LIBBAMTOOLS)
 
 install:
-	cp -r bin/* scripts/* db/* lib/* ${prefix}/bin
+	mkdir ${prefix}
+	cp -r bin/* scripts/* db/* lib/* ${prefix}
 	cp src/mapping-from-bam-file ${prefix}/bin
