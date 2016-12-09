@@ -2,6 +2,7 @@
 
 use strict;
 use Spreadsheet::Read;
+use FourCOpts::OrganismDatabase;
 
 sub torpm {
   my ($in,$out,$mapped) = @_;
@@ -100,26 +101,26 @@ my ($sampletable,$basedir,$scriptdir,$organismdatabase) = @ARGV;
 die "Cannot find $sampletable!" unless -e $sampletable;
 die "Cannot find $organismdatabase!" unless -e $organismdatabase;
 
-my %organisms;
+my %organisms = %{loadorgdatabase($organismdatabase)};
 
-open(D,"<","$organismdatabase") or die "Cannot read $organismdatabase: $!";
+#open(D,"<","$organismdatabase") or die "Cannot read $organismdatabase: $!";
 
-while(<D>) {
-  chomp;
+#while(<D>) {
+#  chomp;
   
-  my ($id,$bowtie,$fasta,$chromsizes) = split /\t/;
+#  my ($id,$bowtie,$fasta,$chromsizes) = split /\t/;
   
-  next if $id =~ /^$/;
+#  next if $id =~ /^$/;
   
-  die "In organism database, cannot find bowtie index for $id!" unless -e "$bowtie.1.ebwt";
-  die "In organism database, cannot find FASTA file for $id!" unless -e $fasta;
-  die "In organism database, cannot find chromosome sizes file for $id!" unless -e $chromsizes;
+#  die "In organism database, cannot find bowtie index for $id!" unless -e "$bowtie.1.ebwt";
+#  die "In organism database, cannot find FASTA file for $id!" unless -e $fasta;
+#  die "In organism database, cannot find chromosome sizes file for $id!" unless -e $chromsizes;
   
-  for(split(/,/,$id)) {
-    $organisms{lc $_} = [$bowtie,$fasta,$chromsizes];
-  }
-}
-close(D);
+#  for(split(/,/,$id)) {
+#    $organisms{lc $_} = [$bowtie,$fasta,$chromsizes];
+#  }
+#}
+#close(D);
 
 my $database = ReadData($sampletable);
 my $sheet = $database->[1]; ## get first spreadsheet
