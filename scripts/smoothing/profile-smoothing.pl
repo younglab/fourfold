@@ -62,18 +62,20 @@ for( my $i = 0; $i < $nr; $i++ ) {
   
   my $chromsizes = $organisms{$organism}->[2];
   $sampleorganism{$key} = $chromsizes;
+  
+  my $outtable = "$outputdir/$name.filtered.rpm.txt";
 
-  my $output = `Rscript $basedir/smooth-single-profile.r $binsize $stepsize $chromsizes $inputdir/$name.filtered.rpm.txt $inputdir/$name.filtered.rpm.bootstrap.txt $outputdir/$name.filtered.smoothed.rpm.txt 2> /dev/null`;
+  my $output = `Rscript $basedir/smooth-single-profile.r $binsize $stepsize $chromsizes $inputdir/$name.filtered.rpm.txt $inputdir/$name.filtered.rpm.bootstrap.txt $outtable 2>&1`;
   
   die "Smoothing failed with an error: $output" unless( $? == 0 );
   
   ### generate a WIG file
   
-  my $outwig = "$outputdir/$name.filtered.smoothed.rpm.wig";
-  my $outbw = "$outputdir/$name.filtered.smoothed.rpm.bw";
+  my $outwig = "$outputdir/$name.filtered.rpm.wig";
+  my $outbw = "$outputdir/$name.filtered.rpm.bw";
 
   
-  open(T,"<","$outputdir/$name.filtered.smoothed.rpm.txt") or die "Cannot read $outputdir/$name.filtered.smoothed.rpm.txt: $!";
+  open(T,"<","$outtable") or die "Cannot read $outtable: $!";
   open(W,">","$outwig") or die "Cannot write $outwig: $!";
   
   print W "track type=wiggle_0 name=\"$name\" description=\"$name\"\n";
