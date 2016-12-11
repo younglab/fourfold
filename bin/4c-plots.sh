@@ -5,14 +5,15 @@ SCRIPTDIR=$BASEDIR/../scripts/plots
 ORGANISMDATABASE=$BASEDIR/../db/organism-database.txt
 INPUTDIR=bootstrap
 
-if [ $# -lt 3 ];
+if [ $# -lt 2 ];
 then
-  echo "Syntax: 4c-plots.sh <template sample XLSX file> <output dir>"
+  echo "Syntax: 4c-plots.sh <template sample XLSX file> <genomic coordinates> <output dir>"
   exit 1
 fi
 
 SAMPLETABLE="$1"
-OUTPUTDIR="$2"
+COORDINATES="$2"
+OUTPUTDIR="$3"
 
 if [ ! -e "$SAMPLETABLE" ];
 then
@@ -33,6 +34,7 @@ fi
 
 
 # command
+$SCRIPTDIR/make-plots.pl $SAMPLETABLE $ORGANISMDATABASE $SCRIPTDIR $COORDINATES $INPUTDIR $OUTPUTDIR
 
 if [ $? -ne 0 ];
 then
