@@ -5,6 +5,43 @@ SCRIPTDIR=$BASEDIR/../scripts/plots
 ORGANISMDATABASE=$BASEDIR/../db/organism-database.txt
 INPUTDIR=bootstrap
 
+function helpmenu() {
+  if [ $# -gt 0 ];
+  then
+    echo "$@"
+  fi
+  
+  echo "Syntax: 4c-plots.sh [options] <template sample XLSX file> <genomic coordinates> <output dir>"
+  echo "-h help menu"
+  echo "-i DIR,--inputdir=DIR set input directory"
+}
+
+TEMP=`getopt -o hi: -l inputdir: -n '4cplots' -- "$@"`
+eval set -- "$TEMP"
+
+while [ $# -ge 1 ]; do
+	case "$1" in
+	  --)
+	    shift
+	    break
+	    ;;
+	  -h)
+	    helpmenu
+	    exit 0
+	    ;;
+	  -i|--inputdir)
+	    INPUTDIR="$2"
+	    if [ ! -d "$INPUTDIR" ];
+	    then
+	      helpmenu "Error: $INPUTDIR is not a directory!"
+	      exit 1
+	    fi
+	    shift
+	    ;;
+	esac
+	shift
+done
+
 if [ $# -lt 2 ];
 then
   echo "Syntax: 4c-plots.sh <template sample XLSX file> <genomic coordinates> <output dir>"

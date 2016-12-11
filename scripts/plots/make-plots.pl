@@ -31,7 +31,7 @@ for( my $i = 0; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
   
   next if $name =~ /^#/;
   
-  my $output = `Rscript $basedir/plot-4c-signal.r $inputdir/$name.filtered.rpm.bootstrap.txt $inputdir/$name.filtered.rpm.txt ci $genomecoord $outputdir/$name.pdf $outputdir/$name.png 2>&1`;
+  my $output = `Rscript $basedir/plot-4c-signal.r $inputdir/$name.filtered.rpm.txt $inputdir/$name.filtered.rpm.bootstrap.txt ci $genomecoord $outputdir/$name.pdf $outputdir/$name.png 2>&1`;
   
   die "Failed to generate output for $name, messages: $output" unless $? == 0;
 }
