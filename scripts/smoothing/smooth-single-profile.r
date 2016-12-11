@@ -58,6 +58,6 @@ write("debug 4",file=stderr())
 
 
 gs <- g[as.integer(names(r))]
-df <- data.frame(seqnames(gs),start(gs),end(gs),r)#,do.call(rbind,r))
+df <- data.frame(seqnames(gs),start(gs),r)
 
 write.table(df,file=output.file,sep='\t',row.names=F,col.names=F,quote=F)
