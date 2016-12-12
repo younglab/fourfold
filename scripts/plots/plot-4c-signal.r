@@ -1,5 +1,6 @@
 library(Cairo)
 library(GenomicRanges)
+library(matrixStats)
 
 convert.string.to.Granges <- function(s) {
   r <- regexec("([[:alnum:]]+):([[:alnum:]]+)-([[:alnum:]]+)",s)
@@ -14,11 +15,40 @@ convert.string.to.Granges <- function(s) {
   GRanges(seqnames=v[1],ranges=IRanges(as.integer(v[2]),as.integer(v[3])),strand='*')
 }
 
+conf.int <- function(x,y,m) {
+  q <- rowQuantiles(m,probs=c(.025,.975))
+  
+  ### debugging
+  f <- tempfile("file",".")
+  write.table(data.frame(x,q[,1],y,q[,2]),f,sep='\t',row.names=F,col.names = F,quote=F)
+  
+  polygon(c(x,rev(x)),c(q[,1],y),col=rgb(1,0,0,.5))
+  polygon(c(x,rev(x)),c(q[,2],y),col=rgb(1,0,0,.5))
+}
+
+int.sd <- function(x,y,m) {
+  q <- rowSds(m)
+  
+  polygon(c(x,rev(x)),c(y+q,y),col=rgb(1,0,0,.5))
+  polygon(c(x,rev(x)),c(y-q,y),col=rgb(1,0,0,.5))
+}
+
+polygon.ignore <- function(x,y,m) {
+  
+}
+
 make.plot <- function(g) {
   x <- start(g)
   y <- g$signal
   
   plot(x,y,type='l',ylim=quantile(y,probs=c(0,.95)),xlab="Genomic Position",ylab="RPM")
+  
+  f <- switch(c.type,
+              ci=conf.int,
+              sd=int.sd,
+              na=polygon.ignore)
+  
+  f(x,y,as.matrix(mcols(g)[,-1]))
 }
 
 args <- commandArgs(T)
@@ -36,9 +66,9 @@ png.file <- args[6]
 
 
 st <- read.table(st.file,sep='\t')
-#bt <- read.table(bt.file,sep='\t')
+bt <- read.table(bt.file,sep='\t')
 
-st.g <- GRanges(seqnames=as.character(st[,1]),ranges=IRanges(st[,2],width=1),strand='*',signal=st[,3])
+st.g <- GRanges(seqnames=as.character(st[,1]),ranges=IRanges(st[,2],width=1),strand='*',signal=st[,3],as.matrix(bt[,-c(1:2)]))
 
 pdf(pdf.file,width=12,height=6)
 make.plot(subsetByOverlaps(st.g,region))
