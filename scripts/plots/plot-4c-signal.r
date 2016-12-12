@@ -17,11 +17,7 @@ convert.string.to.Granges <- function(s) {
 
 conf.int <- function(x,y,m) {
   q <- rowQuantiles(m,probs=c(.025,.975))
-  
-  ### debugging
-  f <- tempfile("file",".")
-  write.table(data.frame(x,q[,1],y,q[,2]),f,sep='\t',row.names=F,col.names = F,quote=F)
-  
+
   polygon(c(x,rev(x)),c(q[,1],y),col=rgb(1,0,0,.5))
   polygon(c(x,rev(x)),c(q[,2],y),col=rgb(1,0,0,.5))
 }

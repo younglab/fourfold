@@ -4,6 +4,7 @@ BASEDIR=$(dirname $0)
 SCRIPTDIR=$BASEDIR/../scripts/plots
 ORGANISMDATABASE=$BASEDIR/../db/organism-database.txt
 INPUTDIR=bootstrap
+SHADING=ci
 
 function helpmenu() {
   if [ $# -gt 0 ];
@@ -13,7 +14,8 @@ function helpmenu() {
   
   echo "Syntax: 4c-plots.sh [options] <template sample XLSX file> <genomic coordinates> <output dir>"
   echo "-h help menu"
-  echo "-i DIR,--inputdir=DIR set input directory"
+  echo "-i DIR, --inputdir=DIR set input directory"
+  echo "-s TYPE, --shading=TYPE set the shading type, one of confidence interval (ci), standard deviation (sd), or none (na)"
 }
 
 TEMP=`getopt -o hi: -l inputdir: -n '4cplots' -- "$@"`
@@ -36,6 +38,10 @@ while [ $# -ge 1 ]; do
 	      helpmenu "Error: $INPUTDIR is not a directory!"
 	      exit 1
 	    fi
+	    shift
+	    ;;
+	  -s|--shading)
+	    SHADING="$2"
 	    shift
 	    ;;
 	esac

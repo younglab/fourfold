@@ -4,9 +4,9 @@ use strict;
 use Spreadsheet::Read;
 
 
-die "Arguments: <template file> <organism database> <basedir> <genomic coordinates> <input dir> <output dir>" unless scalar(@ARGV)>=6;
+die "Arguments: <template file> <organism database> <basedir> <genomic coordinates> <shading> <input dir> <output dir>" unless scalar(@ARGV)>=6;
 
-my ($sampletable,$organismdatabase,$basedir,$genomecoord, $inputdir,$outputdir) = @ARGV;
+my ($sampletable,$organismdatabase,$basedir,$genomecoord, $shading,$inputdir,$outputdir) = @ARGV;
 
 die "Cannot find $sampletable!" unless -e $sampletable;
 die "Cannot find $organismdatabase" unless -e $organismdatabase;
@@ -31,7 +31,7 @@ for( my $i = 0; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
   
   next if $name =~ /^#/;
   
-  my $output = `Rscript $basedir/plot-4c-signal.r $inputdir/$name.filtered.rpm.txt $inputdir/$name.filtered.rpm.bootstrap.txt ci $genomecoord $outputdir/$name.pdf $outputdir/$name.png 2>&1`;
+  my $output = `Rscript $basedir/plot-4c-signal.r $inputdir/$name.filtered.rpm.txt $inputdir/$name.filtered.rpm.bootstrap.txt $shading $genomecoord $outputdir/$name.pdf $outputdir/$name.png 2>&1`;
   
   die "Failed to generate output for $name, messages: $output" unless $? == 0;
 }
