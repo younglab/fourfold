@@ -11,6 +11,10 @@ BOWTIEK=1
 BOWTIEM=1
 BOWTIEN=1
 
+function cleanproc() {
+  rm -rf wigfiles stats bamfiles logs bootstrap *.fq.gz .tmp*
+}
+
 
 TEMP=`getopt -o hk:m:v: -l validate-table-only,lsf-queue:,bowtie-m:,bowtie-k:,bowtie-v: -n '4cpipeline' -- "$@"`
 eval set -- "$TEMP"
@@ -60,7 +64,7 @@ MINFRAGMENTLENGTH=20
 if [ "$SAMPLETABLE" == "clean" ];
 then
   echo "Cleaning directory..."
-  rm -rf wigfiles stats bamfiles logs bootstrap *.fq.gz
+  cleanproc
   exit 0
 fi
 
