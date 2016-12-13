@@ -1,6 +1,7 @@
 #!/usr/bin/perl
 
 use strict;
+use File::Basename;
 use Spreadsheet::Read;
 use FourCOpts::OrganismDatabase qw(loadorgdatabase);
 
@@ -23,25 +24,6 @@ if( !defined($sheet) || !defined($nr) ) {
 }
 
 my %organisms = %{loadorgdatabase($organismdatabase)};
-
-#open(D,"<","$organismdatabase") or die "Cannot read $organismdatabase: $!";
-
-#while(<D>) {
-#  chomp;
-  
-#  my ($id,$bowtie,$fasta) = split /\t/;
-  
-#  next if $id =~ /^$/;
-  
-#  die "In organism database, cannot find bowtie index for $id!" unless -e "$bowtie.1.ebwt";
-#  die "In organism database, cannot fine FASTA file for $id!" unless -e $fasta;
-  
-#  for(split(/,/,$id)) {
-#    $organisms{lc $_} = [$bowtie,$fasta];
-#  }
-#}
-#close(D);
-
 
 my %names;
 my %viewpoints;
@@ -84,7 +66,8 @@ for( my $i = 0; $i < $nr; $i++ ) {
   
   my $origfastq = $fastq;
   if( $fastq =~ /^ftp:\/\//i ) {
-    `wget --spider $fastq`;
+    my $basename = basename($fastq);
+    `wget --spider $fastq &> logs/$basename.wget.validate.txt`;
     die "$name does not seem to exist at $fastq" unless $? == 0;
   } else {
     $fastq =~ s/\\\\WI-FILES/\/nfs/;
