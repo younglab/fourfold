@@ -6,6 +6,7 @@ SCRIPTDIR=$BASEDIR/../scripts/core
 LIBDIR=$BASEDIR/../lib
 ORGANISMDATABASE=$BASEDIR/../db/organism-database.txt
 ENDAFTERVALIDATION=0
+SKIPVALIDATION=0
 LSFQUEUE=normal
 BOWTIEK=1
 BOWTIEM=1
@@ -15,8 +16,24 @@ function cleanproc() {
   rm -rf wigfiles stats bamfiles logs bootstrap *.fq.gz .tmp*
 }
 
+function helpmenu() {
+  if [ $# -gt 0 ];
+  then
+    echo "$@"
+  fi
+  
+  echo "Syntax: process-4c.sh <sample XSLX table>"
+  echo "-h Help menu (this menu)"
+  echo "-n INT, --bowtie-n=INT Sets bowtie 1 -n parameter to INT"
+  echo "-m INT, --bowtie-m=INT sets bowtie 1 -m parameter to INT"
+  echo "-k INT, --bowtie-k=INT sets bowtie 1 -k parameter to INT"
+  echo "--validate-table-only exits after running XSLX table validation"
+  echo "--skip-table-validation skips table validation step"
+  echo "--lsf-queue=STR sets the LSF queue to dispatch on (default 'normal')"
+}
 
-TEMP=`getopt -o hk:m:v: -l validate-table-only,lsf-queue:,bowtie-m:,bowtie-k:,bowtie-v: -n '4cpipeline' -- "$@"`
+
+TEMP=`getopt -o hk:m:v: -l validate-table-only,lsf-queue:,bowtie-m:,bowtie-k:,bowtie-v:,skip-table-validation -n '4cpipeline' -- "$@"`
 eval set -- "$TEMP"
 
 while [ $# -ge 1 ]; do
@@ -38,9 +55,14 @@ while [ $# -ge 1 ]; do
 	    shift
 	    ;;
 	  -h)
+	    helpmenu
+	    exit 0
 	    ;;
 	  --validate-table-only)
 	    ENDAFTERVALIDATION=1
+	    ;;
+	  --skip-table-validation)
+	    SKIPVALIDATION=1
 	    ;;
 	  --lsf-queue)
 	    LSFQUEUE="$2"
@@ -52,7 +74,7 @@ done
 
 if [ $# -lt 1 ];
 then
-  echo "process-4c.sh <sample XSLX table>"
+  helpmenu "Error: not enough arguments"
   exit 1
 fi
 
@@ -74,6 +96,12 @@ then
   exit 1
 fi
 
+if [ "$SKIPVALIDATION" -ne 0 ] && [ "$ENDAFTERVALIDATION" -ne 0 ];
+then
+  helpmenu "Error: --validate-table-only and --skip-table-validation cannot be both on"
+  exit 1
+fi
+
 if [ "$ENDAFTERVALIDATION" -eq 0 ];
 then
   mkdir wigfiles
@@ -83,20 +111,25 @@ then
   mkdir bootstrap
 fi
 
-echo "Validating sample table..."
 
-perl -I$LIBDIR $SCRIPTDIR/validate-table.pl $SAMPLETABLE $ORGANISMDATABASE
+if [ $SKIPVALIDATION -eq 0 ];
+  echo "Validating sample table..."
 
-if [ $? -ne 0 ];
-then
-  echo "Errors in validating the sample table, see error messages"
-  exit 1
-fi
+  perl -I$LIBDIR $SCRIPTDIR/validate-table.pl $SAMPLETABLE $ORGANISMDATABASE
 
-if [ $ENDAFTERVALIDATION -ne 0 ];
-then
-  echo "Sample table is valid"
-  exit 0
+  if [ $? -ne 0 ];
+  then
+    echo "Errors in validating the sample table, see error messages"
+    exit 1
+  fi
+
+  if [ $ENDAFTERVALIDATION -ne 0 ];
+  then
+    echo "Sample table is valid"
+    exit 0
+  fi
+else
+  echo "Skipping validation step..."
 fi
 
 ### process reads
