@@ -113,6 +113,7 @@ fi
 
 
 if [ $SKIPVALIDATION -eq 0 ];
+then
   echo "Validating sample table..."
 
   perl -I$LIBDIR $SCRIPTDIR/validate-table.pl $SAMPLETABLE $ORGANISMDATABASE
