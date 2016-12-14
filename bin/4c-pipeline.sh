@@ -7,6 +7,7 @@ LIBDIR=$BASEDIR/../lib
 ORGANISMDATABASE=$BASEDIR/../db/organism-database.txt
 ENDAFTERVALIDATION=0
 SKIPVALIDATION=0
+GEO=no
 LSFQUEUE=normal
 BOWTIEK=1
 BOWTIEM=1
@@ -30,10 +31,11 @@ function helpmenu() {
   echo "--validate-table-only exits after running XSLX table validation"
   echo "--skip-table-validation skips table validation step"
   echo "--lsf-queue=STR sets the LSF queue to dispatch on (default 'normal')"
+  echo "--geo Save GEO-uploadable files"
 }
 
 
-TEMP=`getopt -o hk:m:v: -l validate-table-only,lsf-queue:,bowtie-m:,bowtie-k:,bowtie-v:,skip-table-validation -n '4cpipeline' -- "$@"`
+TEMP=`getopt -o hk:m:v: -l validate-table-only,lsf-queue:,bowtie-m:,bowtie-k:,bowtie-v:,skip-table-validation,geo -n '4cpipeline' -- "$@"`
 eval set -- "$TEMP"
 
 while [ $# -ge 1 ]; do
@@ -67,6 +69,9 @@ while [ $# -ge 1 ]; do
 	  --lsf-queue)
 	    LSFQUEUE="$2"
 	    shift
+	    ;;
+	  --geo)
+	    GEO=yes
 	    ;;
 	esac
 	shift
@@ -139,7 +144,7 @@ echo "4C analysis launced in $PWD by $USER" | mail -s "[4C] Analysis Pipeline St
 
 echo "Processing reads..."
 
-perl -I$LIBDIR $SCRIPTDIR/process-4c-reads.pl $SAMPLETABLE $ORGANISMDATABASE $BOWTIEN $BOWTIEK $BOWTIEM
+perl -I$LIBDIR $SCRIPTDIR/process-4c-reads.pl $SAMPLETABLE $ORGANISMDATABASE $BOWTIEN $BOWTIEK $BOWTIEM $GEO
 
 if [ $? -ne 0 ];
 then

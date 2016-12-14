@@ -3,36 +3,21 @@
 use strict;
 use Spreadsheet::Read;
 use File::Basename;
+use FourCOpts::OrganismDatabase qw(loadorgdatabase);
 
 
-if( scalar(@ARGV) < 5 ) {
+if( scalar(@ARGV) < 6 ) {
   die "Need sample table and organism index and bowtie options!";
 }
 
-my ($sampletable,$organismdatabase,$bowtien,$bowtiek,$bowtiem) = @ARGV;
+my ($sampletable,$organismdatabase,$bowtien,$bowtiek,$bowtiem,$geostr) = @ARGV;
+
+my $geo = $geostr eq "yes";
 
 die "Cannot find file $sampletable!" unless -e $sampletable;
 die "Cannot find organism database $organismdatabase!" unless -e $organismdatabase;
 
-my %organisms;
-
-open(D,"<","$organismdatabase") or die "Cannot read $organismdatabase: $!";
-
-while(<D>) {
-  chomp;
-  
-  my ($id,$bowtie,$fasta) = split /\t/;
-  
-  next if $id =~ /^$/;
-  
-  die "In organism database, cannot find bowtie index for $id!" unless -e "$bowtie.1.ebwt";
-  die "In organism database, cannot fine FASTA file for $id!" unless -e $fasta;
-  
-  for(split(/,/,$id)) {
-    $organisms{lc $_} = [$bowtie,$fasta];
-  }
-}
-close(D);
+my %organisms = %{loadorgdatabase($organismdatabase)};
 
 my $database = ReadData($sampletable);
 my $sheet = $database->[1]; ## get first spreadsheet
@@ -126,19 +111,25 @@ for( my $i = 0; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
   
   open(D,"<","$tmpseqfile") or die "Cannot read $tmpseqfile: $!";
   open(P,">",".tmp.primer.fq") or die "Cannot write .tmp.primer.fq: $!";
+  if($geo) {
+    open(G,">",".tmp.geo.fq") or die "Cannot write to .tmp.geo.fq: $!";
+  }
   
   my $test;
   my $barcodetest = qr/NA/;
   my $trimlength;
+  my $geotrimlength;
   my ($nbarcode,$nprimer) = (0,0);
   
   if($barcode ne "NA") {
     $test = qr/^$barcode$primer/i;
     $barcodetest = qr/^$barcode/;
     $trimlength = length($barcode) + length($primer) - length($e1s);
+    $geotrimlength = length($barcode);
   } else {
     $test = qr/^$primer/i;
     $trimlength = length($primer) - length($e1s);
+    $geotrimlength = 0;
   }
   
   while(<D>) {
@@ -160,10 +151,18 @@ for( my $i = 0; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
       my $np4 = substr($line4,$trimlength);
       
       print P "$line1\n$np2\n$line3\n$np4\n";
+      
+      if($geo) {
+        $np2 = substr($line2,$geotrimlength);
+        $np4 = substr($line4,$geotrimlength);
+        
+        print G "$line1\n$np2\n$line3\n$np4\n";
+      }
   }
   
   close(P);
   close(D);
+  close(G) if $geo;
   
   ### right now die if a sample had no reads in it -- may want to handle this a bit more
   ### elegantly in the future to keep processing the other samples in the mean time
@@ -176,6 +175,11 @@ for( my $i = 0; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
   }
   
   rename(".tmp.primer.fq","$name.trimmed.fq");
+  if( $geo ) {
+    rename(".tmp.geo.fq","$name.geo.fq");
+    `gzip $name.geo.fq`;
+    `md5sum $name.geo.fq.gz > $name.geo.fq.gz.md5sum`;
+  }
   
   my $bowtieidx = $organisms{lc $organism}->[0];
   my $bowtiecmd = "bowtie -n $bowtien -p 8 -k $bowtiek -m $bowtiem -S --chunkmbs 256 --best --strata $bowtieidx $name.trimmed.fq > bamfiles/$name.sam";
