@@ -53,7 +53,9 @@ for( my $i = 0; $i < $nr; $i++ ) {
   next if $name =~ /^#/;
   
   if(in($name,\@samples)) {
-    push @norm, [$name,"bootstrap/$name.filtered.counts.txt"];
+    my $cfile = "bootstrap/$name.filtered.counts.txt";
+    my $cbfile = "bootstrap/$name.filtered.counts.bootstrap.txt";
+    push @norm, [$name,$cfile,$cbfile];
     
     my $samplekey = "$celltype-$condition";
     $samplegroups{$samplekey} = [] unless defined($samplegroups{$samplekey});
@@ -70,9 +72,9 @@ my $exe = "";
 $exe .= join(" ",@{$_}) . " " for(@norm);
 
 
-my $output = `Rscript $basedir/quantile-normalization.r $outputdir $exe 2>/dev/null`;
+my $output = `Rscript $basedir/quantile-normalization.r $outputdir $exe 2>&1`;
 
-die "Failed to normalize: $output" unless $? == 0;
+die "Failed to normalize (cmd: Rscript $basedir/quantile-normalization.r $outputdir $exe): $output" unless $? == 0;
 
 open(N,"<","$outputdir/quantile-normalized-samples.txt") or die "Cannot read normalized samples: $!";
 
