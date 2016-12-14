@@ -2,7 +2,7 @@
 
 use strict;
 use Spreadsheet::Read;
-use FourCOpts::OrganismDatabase;
+use FourCOpts::OrganismDatabase qw(loadorgdatabase);
 
 sub torpm {
   my ($in,$out,$mapped) = @_;
