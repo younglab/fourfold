@@ -26,10 +26,10 @@ sub in {
 }
 
 if(scalar(@ARGV)<8) {
-  die "profile-smoothing.pl <sample table> <basedir> <organism databse> <input dir> <output dir> <bin size> <step size> <samples...>";
+  die "profile-smoothing.pl <sample table> <basedir> <organism databse> <smoothing mode> <input dir> <output dir> <bin size> <step size> <samples...>";
 }
 
-my ($sampletable,$basedir,$organismdatabase,$inputdir,$outputdir,$binsize,$stepsize,@samples) = @ARGV;
+my ($sampletable,$basedir,$organismdatabase,$smoothingmode,$inputdir,$outputdir,$binsize,$stepsize,@samples) = @ARGV;
 
 die "Cannot find $sampletable!" unless -e $sampletable;
 die "Cannot find directory $inputdir" unless -e $inputdir;
@@ -65,7 +65,7 @@ for( my $i = 0; $i < $nr; $i++ ) {
   
   my $outtable = "$outputdir/$name.filtered.rpm.txt";
 
-  my $output = `Rscript $basedir/smooth-single-profile.r $binsize $stepsize $chromsizes $inputdir/$name.filtered.rpm.txt $inputdir/$name.filtered.rpm.bootstrap.txt $outtable 2>&1`;
+  my $output = `Rscript $basedir/smooth-single-profile.r $binsize $stepsize $chromsizes $smoothingmode $inputdir/$name.filtered.rpm.txt $inputdir/$name.filtered.rpm.bootstrap.txt $outtable 2>&1`;
   
   die "Smoothing failed with an error: $output" unless( $? == 0 );
   
@@ -75,7 +75,6 @@ for( my $i = 0; $i < $nr; $i++ ) {
   my $outbw = "$outputdir/$name.filtered.rpm.bw";
 
   writewigfile($outtable,$outwig,$name);
-
   
   `wigToBigWig $outwig $chromsizes $outbw`; 
   `gzip $outwig`;

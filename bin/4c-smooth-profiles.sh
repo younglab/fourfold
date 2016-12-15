@@ -5,8 +5,9 @@ LIBDIR=$BASEDIR/../lib
 SCRIPTDIR=$BASEDIR/../scripts/smoothing
 ORGANISMDATABASE=$BASEDIR/../db/organism-database.txt
 INPUTDIR="bootstrap"
+SMOOTHINGMODE=mean
 
-TEMP=`getopt -o hi: -l input-dir: -n '4csmoothing' -- "$@"`
+TEMP=`getopt -o hm:i: -l input-dir:,mode: -n '4csmoothing' -- "$@"`
 eval set -- "$TEMP"
 
 function helpmenu() {
@@ -20,6 +21,9 @@ function helpmenu() {
   echo "Options:"
   echo "-h  Help menu"
   echo "-i|--input  Set input directory (default bootstrap)"
+  echo "-m STR|--mode=STR Set smoothing mode (see below, default mean)"
+  echo ""
+  echo "Modes of smoothing: mean, linear"
 }
 
 while [ $# -ge 1 ]; do
@@ -35,6 +39,20 @@ while [ $# -ge 1 ]; do
 	  -h)
 	    helpmenu
 	    exit 0
+	    ;;
+	  -m|--mode)
+	  
+	    SMOOTHINGMODE="$2"
+	    
+	    case "$SMOOTHINGMODE" in ## validate mode
+        mean|linear)
+          ;;
+        *)
+          helpmenu "Error: invalid smoothing mode"
+          exit 1
+          ;;
+      esac
+	    shift
 	    ;;
 	esac
 	shift
@@ -91,7 +109,8 @@ then
   exit 1
 fi
 
-perl -I$LIBDIR $SCRIPTDIR/profile-smoothing.pl $SAMPLETABLE $SCRIPTDIR $ORGANISMDATABASE $INPUTDIR $OUTPUTDIR $BINSIZE $STEPSIZE $FILES
+
+perl -I$LIBDIR $SCRIPTDIR/profile-smoothing.pl $SAMPLETABLE $SCRIPTDIR $ORGANISMDATABASE $SMOOTHINGMODE $INPUTDIR $OUTPUTDIR $BINSIZE $STEPSIZE $FILES
 
 if [ $? -ne 0 ];
 then

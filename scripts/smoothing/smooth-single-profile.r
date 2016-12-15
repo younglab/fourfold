@@ -3,6 +3,21 @@ library(GenomicRanges)
 
 args <- commandArgs(T)
 
+
+mean.proc <- function(idx,m) {
+  mean(m[,3])
+}
+
+linear.proc <- function(idx,m) {
+  
+  pos <- m[idx[1],1]
+  l <- lm.fit(cbind(1,matrix(m[idx,2],ncol=1)),m[idx,3]) ## Bx+a model
+  
+  cf <- coefficients(l)
+  
+  cf[2]*pos+cf[1]
+}
+
 if(length(args) < 6) {
   stop("failed")
 }
@@ -10,9 +25,14 @@ if(length(args) < 6) {
 binsize <- as.integer(args[1])
 stepsize <- as.integer(args[2])
 csize.file <- args[3]
-measuredsignal.file <- args[4]
-bootstrap.file <- args[5]
-output.file <- args[6]
+smoothing.mode <- args[4]
+measuredsignal.file <- args[5]
+bootstrap.file <- args[6]
+output.file <- args[7]
+
+proc <- switch(smoothing.mode,
+               mean=mean.proc,
+               linear=linear.proc)
 
 write("debug 0\n",file=stderr())
 
@@ -40,7 +60,7 @@ write("debug 2\n",file=stderr())
 
 o <- findOverlaps(g,s)
 
-m <- as.matrix(mcols(s)[subjectHits(o),])
+m <- cbind(start(g)[queryHits(o)],start(s)[subjectHits(o)],as.matrix(mcols(s)[subjectHits(o),]))
 
 write("debug 3\n",file=stderr())
 
@@ -52,7 +72,7 @@ write("debug 3\n",file=stderr())
 #  c(x[,1])#,as.vector(quantile(x,probs=c(.025,.975))))
 #})
 
-r <- sapply(split(m,queryHits(o)),mean)
+r <- sapply(split(1:nrow(m),queryHits(o)),proc,m=m)
 
 write("debug 4",file=stderr())
 
