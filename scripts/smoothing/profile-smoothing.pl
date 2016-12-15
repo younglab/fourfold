@@ -75,27 +75,7 @@ for( my $i = 0; $i < $nr; $i++ ) {
   my $outbw = "$outputdir/$name.filtered.rpm.bw";
 
   writewigfile($outtable,$outwig,$name);
-  
-  #open(T,"<","$outtable") or die "Cannot read $outtable: $!";
-  #open(W,">","$outwig") or die "Cannot write $outwig: $!";
-  
-  #print W "track type=wiggle_0 name=\"$name\" description=\"$name\"\n";
-  #my $lastchr = "";
-  #while(<T>) {
-  #  chomp;
-    
-  #  my ($chr,$start,$end,$s,$lb,$ub) = split /\t/;
-    
-  #  unless($lastchr eq $chr) {
-  #    print W "variableStep chrom=$chr span=$stepsize\n";
-  #    $lastchr=$chr;
-  #  }
-    
-  #  print W "$start\t$s\n";
-  #}
-  
-  #close(W);
-  #close(T);
+
   
   `wigToBigWig $outwig $chromsizes $outbw`; 
   `gzip $outwig`;
@@ -125,28 +105,6 @@ for my $group (keys(%samplegroups)) {
   die "Smoothing of profile failed: $output" unless $? == 0;
   
   writewigfile($outfile,$outfilewig,$sid);
-  
-  #open(O,"<",$outfile) or die "Cannot read $outfile: $!";
-  #open(W,">",$outfilewig) or die "Cannot write to $outfilewig: $!";
-  
-  #my $lastchr = "";
-  
-  #print W "track type=wiggle_0 name=\"$sid\" description=\"$sid\"\n";
-  
-  #while(<O>) {
-    #my ($chr,$s,$m) = split /\t/;
-    
-    
-    #unless($lastchr eq $chr) {
-    #  print W "variableStep chrom=$chr span=$stepsize\n";
-    #  $lastchr = $chr;
-    #}
-    
-    #print W "$s\t$m\n";
-  #}
-  
-  #close(O);
-  #close(W);
   
   `wigToBigWig $outfilewig $chromsizes $outfilebw`; 
   `gzip $outfilewig`;
