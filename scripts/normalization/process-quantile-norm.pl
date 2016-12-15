@@ -71,12 +71,14 @@ die "not enough samples" if scalar(@norm) < 2;
 my $exe = "";
 $exe .= join(" ",@{$_}) . " " for(@norm);
 
+my $qnormtmp = "$outputdir/quantile-normalized-samples.txt";
+my $qnormbtmp = "$outputdir/quantile-normalized-samples-bootstrap.txt"
 
 my $output = `Rscript $basedir/quantile-normalization.r $outputdir $exe 2>&1`;
 
 die "Failed to normalize (cmd: Rscript $basedir/quantile-normalization.r $outputdir $exe): $output" unless $? == 0;
 
-open(N,"<","$outputdir/quantile-normalized-samples.txt") or die "Cannot read normalized samples: $!";
+open(N,"<","$qnormtmp") or die "Cannot read normalized samples: $!";
 
 <N>; ## skip header
 
@@ -119,7 +121,8 @@ for(@output) {
   `wigToBigWig $outputfile $chromfile $bigwigfile`;
 }
 
-unlink("$outputdir/quantile-normalized-samples.txt");
+unlink("$qnormtmp");
+unlink("$qnormbtmp");
 
 for my $skey (keys(%samplegroups)) { 
   #print "DEBUG: $skey\n";
