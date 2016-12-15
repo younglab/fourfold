@@ -72,7 +72,7 @@ my $exe = "";
 $exe .= join(" ",@{$_}) . " " for(@norm);
 
 my $qnormtmp = "$outputdir/quantile-normalized-samples.txt";
-my $qnormbtmp = "$outputdir/quantile-normalized-samples-bootstrap.txt"
+my $qnormbtmp = "$outputdir/quantile-normalized-samples-bootstrap.txt";
 
 my $output = `Rscript $basedir/quantile-normalization.r $outputdir $exe 2>&1`;
 
