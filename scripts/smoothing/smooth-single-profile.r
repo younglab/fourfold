@@ -5,17 +5,29 @@ args <- commandArgs(T)
 
 
 mean.proc <- function(idx,m) {
-  mean(m[,3])
+  as.vector(mean(m[idx,4]))
 }
 
 linear.proc <- function(idx,m) {
   
-  pos <- m[idx[1],1]
-  l <- lm.fit(cbind(1,matrix(m[idx,2],ncol=1)),m[idx,3]) ## Bx+a model
+  if(length(idx)>1) {
+    p <- m[idx,]
+    pos <- p[1,1]
+    l <- lm.fit(p[,2:3],p[,4]) ## Bx+a model
+    
+  } else {
+    p <- m[idx,]
+    pos <- p[1]
+    l <- lm.fit(matrix(p[2:3],ncol=2),p[4]) ## Bx+a model
+  }
+  
+ # pos <- p[1,1]
+  #l <- lm.fit(p[,2:3],p[,4]) ## Bx+a model
   
   cf <- coefficients(l)
+  if(any(is.na(cf))) cf[is.na(cf)] <- 0
   
-  cf[2]*pos+cf[1]
+  as.vector(cf[2]*pos+cf[1])
 }
 
 if(length(args) < 6) {
@@ -60,7 +72,7 @@ write("debug 2\n",file=stderr())
 
 o <- findOverlaps(g,s)
 
-m <- cbind(start(g)[queryHits(o)],start(s)[subjectHits(o)],as.matrix(mcols(s)[subjectHits(o),]))
+m <- cbind(start(g)[queryHits(o)],1,start(s)[subjectHits(o)],as.matrix(mcols(s)[subjectHits(o),]))
 
 write("debug 3\n",file=stderr())
 
@@ -72,7 +84,9 @@ write("debug 3\n",file=stderr())
 #  c(x[,1])#,as.vector(quantile(x,probs=c(.025,.975))))
 #})
 
-r <- sapply(split(1:nrow(m),queryHits(o)),proc,m=m)
+idx <- split(1:nrow(m),queryHits(o))
+
+r <- sapply(idx,proc,m=m)
 
 write("debug 4",file=stderr())
 
