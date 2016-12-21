@@ -9,29 +9,33 @@
  * dm -- NxM matrix of values
  * dim -- 2 integer vector of dm dimensions
  */
-SEXP fourc_smoothing_mean(SEXP idxes, SEXP dm, SEXP dim) {
+SEXP fourc_smoothing_mean(SEXP idxes, SEXP v) {
   int N = length(idxes);
-  int n = INTEGER(dim)[0];
-  int m = INTEGER(dim)[1];
-  SEXP r = PROTECT(allocMatrix(REALSXP,N,m));
-  double *dmp = REAL(dm);
+  //int n = INTEGER(dim)[0];
+  //int m = INTEGER(dim)[1];
+  SEXP r = PROTECT(allocVector(REALSXP,N));
+  //double *dmp = REAL(dm);
+  double *pv = REAL(v);
+  double *pr = REAL(r);
   
   for( int i = 0; i < N; i++ ) {
-    SEXP idx = VECTOR_ELT(idxes,i);
-    int l = length(idx);
-    double *cur = dmp;
+    SEXP vi = VECTOR_ELT(idxes,i);
+    int *idx = INTEGER(vi);
+    int l = length(vi);
+    double d = 0;
+    //double *cur = dmp;
     
-    for( int j = 0; j < m; j++ ) {
-      double d = 0;
-      if( j != 0 ) cur += n; 
+    //for( int j = 0; j < m; j++ ) {
+    //  double d = 0;
+    //  if( j != 0 ) cur += n; 
       
-      for( int k = 0; k < l; k++ ) {
-        d += cur[INTEGER(idx)[k]-1];
-      }
-      
-      d /= l;
-      REAL(r)[i+j*N] = d;
+    for( int k = 0; k < l; k++ ) {
+      d += pv[idx[k]-1];
     }
+      
+    d /= l;
+    pr[i] = d;
+    //}
   }
   UNPROTECT(1);
   return r;

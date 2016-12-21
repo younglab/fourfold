@@ -21,7 +21,9 @@ mean.proc <- function(idx,m) {
 mean.proc.c <- function(idxl,m) {
   m <- m[,-c(1:3)]
   storage.mode(m) <- "double"
-  .Call("fourc_smoothing_mean",lapply(idxl,as.integer),m,as.integer(dim(m)))
+  idxl <- lapply(idxl,as.integer)
+  #.Call("fourc_smoothing_mean",lapply(idxl,as.integer),m,as.integer(dim(m)))
+  do.call(cbind,lapply(1:ncol(m),function(i) .Call("fourc_smoothing_mean",idxl,m[,i])))
 }
 
 linear.proc <- function(idx,m) {
