@@ -63,6 +63,8 @@ for( my $i = 0; $i < $nr; $i++ ) {
   my $chromsizes = $organisms{$organism}->[2];
   $sampleorganism{$key} = $chromsizes;
   
+  print "\tSmoothing profile $name...\n";
+  
   my $outtable = "$outputdir/$name.filtered.rpm.txt";
   my $outtableb = "$outputdir/$name.filtered.rpm.bootstrap.txt";
 
