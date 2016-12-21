@@ -65,7 +65,7 @@ for( my $i = 0; $i < $nr; $i++ ) {
   
   my $outtable = "$outputdir/$name.filtered.rpm.txt";
 
-  my $output = `Rscript $basedir/smooth-single-profile.r $binsize $stepsize $chromsizes $smoothingmode $inputdir/$name.filtered.rpm.txt $inputdir/$name.filtered.rpm.bootstrap.txt $outtable 2>&1`;
+  my $output = `Rscript $basedir/smooth-single-profile.r $basedir/../../lib/fourc-smoothing-routines.so $binsize $stepsize $chromsizes $smoothingmode $inputdir/$name.filtered.rpm.txt $inputdir/$name.filtered.rpm.bootstrap.txt $outtable 2>&1`;
   
   die "Smoothing failed with an error: $output" unless( $? == 0 );
   

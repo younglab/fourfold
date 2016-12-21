@@ -6,13 +6,24 @@ prefix = @prefix@
 
 all: quantification
 
+clean:
+	cd src && rm -f *.o *.so mapping-from-bam-file
+
+
 quantification:
 	cd src && g++ $(CCOPT) $(BAMINCL) -o mapping-from-bam-file mapping-from-bam-file.cpp $(LIBBAMTOOLS)
+	cd src && R CMD SHLIB fourc-smoothing-routines.c
 
-install:
+install: quantification
 	mkdir ${prefix}
 	cp -r bin ${prefix}/bin
 	cp -r scripts ${prefix}/scripts
 	cp -r db ${prefix}/db
 	cp -r lib ${prefix}/lib
 	cp src/mapping-from-bam-file ${prefix}/bin
+	cp src/fourc-smoothing-routines.so ${prefix}/lib
+
+cleaninstall: quantification
+	rm -rf ${prefix}
+	$(MAKE) install
+

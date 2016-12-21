@@ -16,6 +16,12 @@ mean.proc <- function(idx,m) {
   r
 }
 
+mean.proc.c <- function(idxl,m) {
+  m <- m[,-c(1:3)]
+  storage.mode(m) <- "double"
+  .Call("fourc_smoothing_mean",lapply(idxl,as.integer),m,as.integer(dim(m)))
+}
+
 linear.proc <- function(idx,m) {
   
   if(length(idx)>1) {
@@ -35,21 +41,25 @@ linear.proc <- function(idx,m) {
   as.vector(cf[2]*pos+cf[1])
 }
 
-if(length(args) < 6) {
+if(length(args) < 8) {
   stop("failed")
 }
 
-binsize <- as.integer(args[1])
-stepsize <- as.integer(args[2])
-csize.file <- args[3]
-smoothing.mode <- args[4]
-measuredsignal.file <- args[5]
-bootstrap.file <- args[6]
-output.file <- args[7]
+library.file <- args[1]
+binsize <- as.integer(args[2])
+stepsize <- as.integer(args[3])
+csize.file <- args[4]
+smoothing.mode <- args[5]
+measuredsignal.file <- args[6]
+bootstrap.file <- args[7]
+output.file <- args[8]
+
+dyn.load(library.file) ### 
+
 
 proc <- switch(smoothing.mode,
-               mean=mean.proc,
-               linear=linear.proc)
+               mean=mean.proc.c)#,
+               #linear=linear.proc)
 
 write("debug 0\n",file=stderr())
 
@@ -61,7 +71,8 @@ bootstrap <- read.table(bootstrap.file,sep='\t')
 
 write("debug 1\n",file=stderr())
 
-s <- GRanges(seqnames=as.character(signal[,1]),ranges=IRanges(signal[,2],width=1),strand='*',signal[,3],bootstrap[,-(1:2)])
+s <- GRanges(seqnames=as.character(signal[,1]),ranges=IRanges(signal[,2],width=1),strand='*')#,signal[,3],bootstrap[,-(1:2)])
+d <- cbind(signal[,3],as.matrix(bootstrap[,-c(1:2)]))
 
 g <- unlist(GRangesList(lapply(1:nrow(chrom.sizes),function(i) {
   chr <- as.character(chrom.sizes[i,1])
@@ -77,19 +88,23 @@ write("debug 2\n",file=stderr())
 
 o <- findOverlaps(g,s)
 
-m <- cbind(start(g)[queryHits(o)],1,start(s)[subjectHits(o)],as.matrix(mcols(s)[subjectHits(o),]))
+m <- cbind(start(g)[queryHits(o)],1,start(s)[subjectHits(o)],d[subjectHits(o),])
 
 write("debug 3\n",file=stderr())
 
 idx <- split(1:nrow(m),queryHits(o))
 
 #r <- sapply(idx,proc,m=m)
-r <- do.call(rbind,lapply(idx,proc,m=m))
+#r <- do.call(rbind,lapply(idx,proc,m=m))
+r <- proc(idx,m)
 
 write("debug 4",file=stderr())
 
+print(r)
+save(r,file='tmp.Rdata')
 
-gs <- g[as.integer(names(r))]
+
+gs <- g[as.integer(names(idx))]
 df <- data.frame(seqnames(gs),start(gs),r)
 
 write.table(df,file=output.file,sep='\t',row.names=F,col.names=F,quote=F)
