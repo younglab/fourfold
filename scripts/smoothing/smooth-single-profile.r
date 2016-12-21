@@ -1,9 +1,9 @@
 library(matrixStats)
 library(GenomicRanges)
 
-write.4c.table <- function(fname,chrs,m) {
+write.4c.table <- function(fname,chrs,pos,m) {
   storage.mode(m) <- "double"
-  .Call("fast_write",as.character(fname),as.character(chrs),m,as.integer(dim(m)))
+  .Call("fast_write",as.character(fname),as.character(chrs),as.integer(pos),m,as.integer(dim(m)))
 }
 
 mean.proc <- function(idx,m) {
@@ -46,7 +46,7 @@ linear.proc <- function(idx,m) {
 args <- commandArgs(T)
 
 
-if(length(args) < 8) {
+if(length(args) < 9) {
   stop("failed")
 }
 
@@ -58,6 +58,8 @@ smoothing.mode <- args[5]
 measuredsignal.file <- args[6]
 bootstrap.file <- args[7]
 output.file <- args[8]
+output.bootstrap.file <- args[9]
+
 
 dyn.load(library.file) ### 
 
@@ -123,9 +125,13 @@ gc()
 #df <- data.frame(seqnames(gs),start(gs),r)
 #df <- cbind(as.character(seqnames(gs)),start(gs),r)
 
-chrs <- as.character(seqnames(gs))
-dm <- cbind(start(gs),r)
+rs <- matrix(r[,1],ncol=1)
 
-write.4c.table(output.file,chrs,dm)
+chrs <- as.character(seqnames(gs))
+pos <- as.integer(start(gs))
+
+write.4c.table(output.file,chrs,pos,rs)
+write.4c.table(output.bootstrap.file,chrs,pos,r[,-1])
+
 
 #write.table(df,file=output.file,sep='\t',row.names=F,col.names=F,quote=F)

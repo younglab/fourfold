@@ -37,9 +37,10 @@ SEXP fourc_smoothing_mean(SEXP idxes, SEXP dm, SEXP dim) {
   return r;
 }
 
-SEXP fast_write(SEXP fnamer,SEXP chrs, SEXP m, SEXP dim) {
+SEXP fast_write(SEXP fnamer,SEXP chrs, SEXP poses, SEXP m, SEXP dim) {
   FILE *fp;
   const char *fname = CHAR(STRING_ELT(fnamer,0));
+  int *ppos = INTEGER(poses);
   double *pm = REAL(m);
   int l = length(chrs);
   int N = INTEGER(dim)[0];
@@ -52,7 +53,7 @@ SEXP fast_write(SEXP fnamer,SEXP chrs, SEXP m, SEXP dim) {
   for( int i = 0; i < l; i++ ){
     const char *chr = CHAR(STRING_ELT(chrs,i));
     
-    fprintf(fp,"%s\t",chr);
+    fprintf(fp,"%s\t%d\t",chr,ppos[i]);
     
     double *p = pm;
     
