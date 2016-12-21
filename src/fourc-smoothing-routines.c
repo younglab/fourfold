@@ -2,6 +2,7 @@
 #include <Rinternals.h>
 #include <Rmath.h>
 #include <R_ext/Print.h>
+#include <stdio.h>
 
 /**
  * idxes -- list of indexes for the matrix dm
@@ -25,19 +26,49 @@ SEXP fourc_smoothing_mean(SEXP idxes, SEXP dm, SEXP dim) {
       if( j != 0 ) cur += n; 
       
       for( int k = 0; k < l; k++ ) {
-        //int t = j*n+(INTEGER(idx)[k]-1);
-        
-        //Rprintf("[%d,%d,%d,%d,%d,%d,%d,%d]\n",i,j,k,INTEGER(idx)[k],N,n,m,t);
-        
-        //d += dmp[j*n+(INTEGER(idx)[k]-1)];
         d += cur[INTEGER(idx)[k]-1];
       }
       
       d /= l;
-      //Rprintf("----[%d,%d] %d %d %d\n",i,j,N,n,m);
       REAL(r)[i+j*N] = d;
     }
   }
   UNPROTECT(1);
   return r;
+}
+
+SEXP fast_write(SEXP fnamer,SEXP chrs, SEXP m, SEXP dim) {
+  FILE *fp;
+  const char *fname = CHAR(STRING_ELT(fnamer,0));
+  double *pm = REAL(m);
+  int l = length(chrs);
+  int N = INTEGER(dim)[0];
+  int M = INTEGER(dim)[1];
+  
+  if( ( fp = fopen(fname,"w")) == NULL) {
+    error("Failed to open file for writing");
+  }
+  
+  for( int i = 0; i < l; i++ ){
+    const char *chr = CHAR(STRING_ELT(chrs,i));
+    
+    fprintf(fp,"%s\t",chr);
+    
+    double *p = pm;
+    
+    for( int j = 0; j < M; j++ ) {
+      if( j != 0 ) p += N;
+      double d = p[i];
+      if(j < (M-1)) {
+        fprintf(fp,"%f\t",d); 
+      } else {
+        fprintf(fp,"%f\n",d);
+      }
+    }
+  }
+  
+  
+  fclose(fp);
+  
+  return R_NilValue;
 }

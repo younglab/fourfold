@@ -1,8 +1,10 @@
 library(matrixStats)
 library(GenomicRanges)
 
-args <- commandArgs(T)
-
+write.4c.table <- function(fname,chrs,m) {
+  storage.mode(m) <- "double"
+  .Call("fast_write",as.character(fname),as.character(chrs),m,as.integer(dim(m)))
+}
 
 mean.proc <- function(idx,m) {
   
@@ -40,6 +42,9 @@ linear.proc <- function(idx,m) {
   
   as.vector(cf[2]*pos+cf[1])
 }
+
+args <- commandArgs(T)
+
 
 if(length(args) < 8) {
   stop("failed")
@@ -115,6 +120,12 @@ gs <- g[as.integer(names(idx))]
 rm(g,m,o,idx)
 gc() 
 
-df <- data.frame(seqnames(gs),start(gs),r)
+#df <- data.frame(seqnames(gs),start(gs),r)
+#df <- cbind(as.character(seqnames(gs)),start(gs),r)
 
-write.table(df,file=output.file,sep='\t',row.names=F,col.names=F,quote=F)
+chrs <- as.character(seqnames(gs))
+dm <- cbind(start(gs),r)
+
+write.4c.table(output.file,chrs,dm)
+
+#write.table(df,file=output.file,sep='\t',row.names=F,col.names=F,quote=F)
