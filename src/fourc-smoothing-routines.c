@@ -10,6 +10,7 @@
  * dim -- 2 integer vector of dm dimensions
  */
 SEXP fourc_smoothing_mean(SEXP idxes, SEXP v) {
+  Rprintf("test\n");
   int N = length(idxes);
   //int n = INTEGER(dim)[0];
   //int m = INTEGER(dim)[1];
