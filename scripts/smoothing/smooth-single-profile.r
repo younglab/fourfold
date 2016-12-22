@@ -24,9 +24,14 @@ mean.proc.c <- function(idxl,m) {
   idxl <- lapply(idxl,as.integer)
   #.Call("fourc_smoothing_mean",lapply(idxl,as.integer),m,as.integer(dim(m)))
   r <- lapply(1:ncol(m),function(i) .Call("fourc_smoothing_mean",idxl,m[,i]))
+  print("hmm")
   rm(m,idxl)
   gc()
-  do.call(cbind,r)
+  print("mehh")
+  print(length(r))
+  print(length(r[[1]]))
+  #do.call(cbind,r)
+  r
 }
 
 linear.proc <- function(idx,m) {
@@ -116,6 +121,7 @@ idx <- split((1:nrow(m))[subjectHits(o)],queryHits(o))
 r <- proc(idx,m) 
 
 write("debug 4",file=stderr())
+save(r,file=output.file)
 
 #print(r)
 #save(r,file='tmp.Rdata')
@@ -135,8 +141,8 @@ rs <- matrix(r[,1],ncol=1)
 chrs <- as.character(seqnames(gs))
 pos <- as.integer(start(gs))
 
-write.4c.table(output.file,chrs,pos,rs)
-write.4c.table(output.bootstrap.file,chrs,pos,r[,-1])
+#write.4c.table(output.file,chrs,pos,rs)
+#write.4c.table(output.bootstrap.file,chrs,pos,r[,-1])
 
 
 #write.table(df,file=output.file,sep='\t',row.names=F,col.names=F,quote=F)
