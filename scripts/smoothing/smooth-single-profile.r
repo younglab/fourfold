@@ -18,7 +18,7 @@ mean.proc <- function(idx,m) {
   r
 }
 
-mean.proc.c <- function(fname,chrs,pos,idxl,m) {
+mean.proc.c <- function(fname,chrs,pos,idxl,m,stats=0) {
   if(ncol(m) > 4 ) {
     m <- m[,-c(1:3)]
   } else {
@@ -26,7 +26,7 @@ mean.proc.c <- function(fname,chrs,pos,idxl,m) {
   }
   storage.mode(m) <- "double"
   idxl <- lapply(idxl,as.integer)
-  .Call("fourc_smoothing_mean",as.character(fname),as.character(chrs),as.integer(pos),idxl,m,as.integer(dim(m)))
+  .Call("fourc_smoothing_mean",as.character(fname),as.character(chrs),as.integer(pos),idxl,m,as.integer(dim(m)),as.integer(stats))
 }
 
 linear.proc <- function(idx,m) {
@@ -123,7 +123,7 @@ pos <- as.integer(start(gs))
 #r <- sapply(idx,proc,m=m)
 #r <- do.call(rbind,lapply(idx,proc,m=m))
 proc(output.file,chrs,pos,idx,ms)
-proc(output.bootstrap.file,chrs,pos,idx,mb) 
+proc(output.bootstrap.file,chrs,pos,idx,mb,1) 
 
 
 write("debug 4",file=stderr())

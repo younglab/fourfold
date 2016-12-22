@@ -4,13 +4,56 @@
 #include <R_ext/Print.h>
 #include <stdio.h>
 #include <malloc.h>
+#include <stdlib.h>
+
+double mean_helper(double *d,size_t n ) {
+  double v = 0;
+  
+  for( int i = 0; i < n; i++ ) v += d[i];
+  
+  v /= n;
+  return v;
+}
+
+double median_helper(double *d,size_t n ) {
+  double v = 0;
+  
+  if( n % 2 == 0 ) { // even
+    double x = d[n/2-1];
+    double y = d[n/2];
+    
+    v = (x+y)/2;
+  } else {
+    v = d[(int)(n/2)];
+  }
+  return v;
+}
+
+double quantile_helper(double *d,size_t n,double perc ) {
+  double v = 0;
+  
+  v = d[(int)((n-1)*perc)];
+  
+  return v;
+}
+
+int comp(const void *a, const void *b) {
+  double x = *((const double *)a);
+  double y = *((const double *)b);
+  
+  if(x<y)
+    return -1;
+  else if(x>y)
+    return 1;
+  return 0;
+}
 
 /**
  * idxes -- list of indexes for the matrix dm
  * dm -- NxM matrix of values
  * dim -- 2 integer vector of dm dimensions
  */
-SEXP fourc_smoothing_mean(SEXP fnamer,SEXP chrs, SEXP poses, SEXP idxes, SEXP dm, SEXP dim) {
+SEXP fourc_smoothing_mean(SEXP fnamer,SEXP chrs, SEXP poses, SEXP idxes, SEXP dm, SEXP dim, SEXP statsv) {
   //Rprintf("test\n");
   const char *fname = CHAR(STRING_ELT(fnamer,0));
   FILE *fp;
@@ -18,12 +61,12 @@ SEXP fourc_smoothing_mean(SEXP fnamer,SEXP chrs, SEXP poses, SEXP idxes, SEXP dm
   int n = INTEGER(dim)[0];
   int m = INTEGER(dim)[1];
   int *pposes = INTEGER(poses);
+  int statsonly = INTEGER(statsv)[0]==1;
   //SEXP r = PROTECT(allocVector(REALSXP,N));
   //double *dmp = REAL(dm);
   //double *pv = REAL(v);
   //double *pr = REAL(r);
   double *pm = REAL(dm);
-  double v[n];
   
   if( ( fp = fopen(fname,"w") ) == NULL ) {
     error("Failed to open file");
@@ -35,6 +78,9 @@ SEXP fourc_smoothing_mean(SEXP fnamer,SEXP chrs, SEXP poses, SEXP idxes, SEXP dm
     int l = length(vi);
     double d = 0;
     double *c = pm;
+    double v[m];
+    
+    memset(&v,0,n);
     
     fprintf(fp,"%s\t%d\t",CHAR(STRING_ELT(chrs,i)),pposes[i]);
     
@@ -48,11 +94,25 @@ SEXP fourc_smoothing_mean(SEXP fnamer,SEXP chrs, SEXP poses, SEXP idxes, SEXP dm
       
       d /= l;
       //v[i] = d;
+      if( statsonly ) {
+        v[i] = d;
+      } else {
+        if( j == (m-1) ) 
+          fprintf(fp,"%f\n",d);
+        else
+          fprintf(fp,"%f\t",d);
+      }
+    }
+    
+    if(statsonly) {
+      qsort(v,sizeof(double),m,&comp);
       
-      if( j == (m-1) ) 
-        fprintf(fp,"%f\n",d);
-      else
-        fprintf(fp,"%f\t",d);
+      double me = mean_helper(v,m);
+      double md = median_helper(v,m);
+      double lp = quantile_helper(v,m,.025);
+      double hp = quantile_helper(v,m,.975);
+      
+      fprintf(fp,"%f\t%f\t%f\t%f\n",me,md,lp,hp);
     }
   }
   

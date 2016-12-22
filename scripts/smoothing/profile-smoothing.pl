@@ -66,7 +66,7 @@ for( my $i = 0; $i < $nr; $i++ ) {
   print "\tSmoothing profile $name...\n";
   
   my $outtable = "$outputdir/$name.filtered.rpm.txt";
-  my $outtableb = "$outputdir/$name.filtered.rpm.bootstrap.txt";
+  my $outtableb = "$outputdir/$name.filtered.rpm.bootstrap.stats.txt";
 
   my $output = `Rscript $basedir/smooth-single-profile.r $basedir/../../lib/fourc-smoothing-routines.so $binsize $stepsize $chromsizes $smoothingmode $inputdir/$name.filtered.rpm.txt $inputdir/$name.filtered.rpm.bootstrap.txt $outtable $outtableb 2>&1`;
   
