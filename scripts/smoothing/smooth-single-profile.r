@@ -18,20 +18,15 @@ mean.proc <- function(idx,m) {
   r
 }
 
-mean.proc.c <- function(idxl,m) {
-  m <- m[,-c(1:3)]
+mean.proc.c <- function(fname,chrs,pos,idxl,m) {
+  if(ncol(m) > 4 ) {
+    m <- m[,-c(1:3)]
+  } else {
+    m <- matrix(m[,4],ncol=1)
+  }
   storage.mode(m) <- "double"
   idxl <- lapply(idxl,as.integer)
-  #.Call("fourc_smoothing_mean",lapply(idxl,as.integer),m,as.integer(dim(m)))
-  r <- lapply(1:ncol(m),function(i) .Call("fourc_smoothing_mean",idxl,m[,i]))
-  print("hmm")
-  rm(m,idxl)
-  gc()
-  print("mehh")
-  print(length(r))
-  print(length(r[[1]]))
-  #do.call(cbind,r)
-  r
+  .Call("fourc_smoothing_mean",as.character(fname),as.character(chrs),as.integer(pos),idxl,m,as.integer(dim(m)))
 }
 
 linear.proc <- function(idx,m) {
@@ -89,11 +84,9 @@ bootstrap <- read.table(bootstrap.file,sep='\t')
 write("debug 1\n",file=stderr())
 
 s <- GRanges(seqnames=as.character(signal[,1]),ranges=IRanges(signal[,2],width=1),strand='*')#,signal[,3],bootstrap[,-(1:2)])
-d <- cbind(signal[,3],as.matrix(bootstrap[,-c(1:2)]))
+#d <- cbind(signal[,3],as.matrix(bootstrap[,-c(1:2)]))
 
 ### clean up some memory as the next steps will take a lot
-rm(signal,bootstrap)
-gc()
 
 g <- unlist(GRangesList(lapply(1:nrow(chrom.sizes),function(i) {
   chr <- as.character(chrom.sizes[i,1])
@@ -110,39 +103,29 @@ write("debug 2\n",file=stderr())
 o <- findOverlaps(g,s)
 
 #m <- cbind(start(g)[queryHits(o)],1,start(s)[subjectHits(o)],d[subjectHits(o),])
-m <- cbind(1,1,start(s),d)
+ms <- cbind(1,1,start(s),signal[,3])
+mb <- cbind(1,1,start(s),as.matrix(bootstrap[,-c(1:2)]))
+
+rm(signal,bootstrap)
+gc()
+
 
 write("debug 3\n",file=stderr())
 
-idx <- split((1:nrow(m))[subjectHits(o)],queryHits(o))
-
-#r <- sapply(idx,proc,m=m)
-#r <- do.call(rbind,lapply(idx,proc,m=m))
-r <- proc(idx,m) 
-
-write("debug 4",file=stderr())
-save(r,file=output.file)
-
-#print(r)
-#save(r,file='tmp.Rdata')
-
+idx <- split((1:nrow(ms))[subjectHits(o)],queryHits(o))
 
 gs <- g[as.integer(names(idx))]
-
-### clean up some memory as the next step can take a lot of memory
-rm(g,m,o,idx)
-gc() 
-
-#df <- data.frame(seqnames(gs),start(gs),r)
-#df <- cbind(as.character(seqnames(gs)),start(gs),r)
-
-rs <- matrix(r[,1],ncol=1)
+rm(g)
 
 chrs <- as.character(seqnames(gs))
 pos <- as.integer(start(gs))
 
-#write.4c.table(output.file,chrs,pos,rs)
-#write.4c.table(output.bootstrap.file,chrs,pos,r[,-1])
+#r <- sapply(idx,proc,m=m)
+#r <- do.call(rbind,lapply(idx,proc,m=m))
+proc(output.file,chrs,pos,idx,ms)
+proc(output.bootstrap.file,chrs,pos,idx,mb) 
 
 
-#write.table(df,file=output.file,sep='\t',row.names=F,col.names=F,quote=F)
+write("debug 4",file=stderr())
+#save(r,file=output.file)
+
