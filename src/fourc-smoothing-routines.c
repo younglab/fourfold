@@ -80,7 +80,7 @@ SEXP fourc_smoothing_mean(SEXP fnamer,SEXP chrs, SEXP poses, SEXP idxes, SEXP dm
     double *c = pm;
     double v[m];
     
-    memset(&v,0,n);
+    memset(&v,0,m);
     
     fprintf(fp,"%s\t%d\t",CHAR(STRING_ELT(chrs,i)),pposes[i]);
     
@@ -95,7 +95,7 @@ SEXP fourc_smoothing_mean(SEXP fnamer,SEXP chrs, SEXP poses, SEXP idxes, SEXP dm
       d /= l;
       //v[i] = d;
       if( statsonly ) {
-        v[i] = d;
+        v[j] = d;
       } else {
         if( j == (m-1) ) 
           fprintf(fp,"%f\n",d);
