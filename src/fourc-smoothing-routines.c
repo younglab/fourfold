@@ -22,7 +22,7 @@ double median_helper(double *d,size_t n ) {
     double x = d[n/2-1];
     double y = d[n/2];
     
-    v = (x+y)/2;
+    v = (x+y)/2.0;
   } else {
     v = d[(int)(n/2)];
   }
@@ -32,7 +32,9 @@ double median_helper(double *d,size_t n ) {
 double quantile_helper(double *d,size_t n,double perc ) {
   double v = 0;
   
-  v = d[(int)((n-1)*perc)];
+  int i = (int)((n-1)*perc);
+  
+  v = d[i];
   
   return v;
 }
@@ -54,7 +56,6 @@ int comp(const void *a, const void *b) {
  * dim -- 2 integer vector of dm dimensions
  */
 SEXP fourc_smoothing_mean(SEXP fnamer,SEXP chrs, SEXP poses, SEXP idxes, SEXP dm, SEXP dim, SEXP statsv) {
-  //Rprintf("test\n");
   const char *fname = CHAR(STRING_ELT(fnamer,0));
   FILE *fp;
   int N = length(idxes);
@@ -62,10 +63,7 @@ SEXP fourc_smoothing_mean(SEXP fnamer,SEXP chrs, SEXP poses, SEXP idxes, SEXP dm
   int m = INTEGER(dim)[1];
   int *pposes = INTEGER(poses);
   int statsonly = INTEGER(statsv)[0]==1;
-  //SEXP r = PROTECT(allocVector(REALSXP,N));
-  //double *dmp = REAL(dm);
-  //double *pv = REAL(v);
-  //double *pr = REAL(r);
+
   double *pm = REAL(dm);
   
   if( ( fp = fopen(fname,"w") ) == NULL ) {
@@ -93,7 +91,7 @@ SEXP fourc_smoothing_mean(SEXP fnamer,SEXP chrs, SEXP poses, SEXP idxes, SEXP dm
       }
       
       d /= l;
-      //v[i] = d;
+      
       if( statsonly ) {
         v[j] = d;
       } else {
@@ -118,7 +116,6 @@ SEXP fourc_smoothing_mean(SEXP fnamer,SEXP chrs, SEXP poses, SEXP idxes, SEXP dm
   
   fclose(fp);
   
-  //UNPROTECT(1);
   return R_NilValue;
 }
 
