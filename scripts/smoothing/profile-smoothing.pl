@@ -71,7 +71,7 @@ for( my $i = 0; $i < $nr; $i++ ) {
   my $output = `Rscript $basedir/smooth-single-profile.r $basedir/../../lib/fourc-smoothing-routines.so $binsize $stepsize $chromsizes $smoothingmode $inputdir/$name.filtered.rpm.txt $inputdir/$name.filtered.rpm.bootstrap.txt $outtable $outtableb 2>&1`;
   
   die "Smoothing failed with an error: $output" unless( $? == 0 );
-  
+  `gzip $outtableb`; ## compress table since they tend to be large
   ### generate a WIG file
   
   my $outwig = "$outputdir/$name.filtered.rpm.wig";
