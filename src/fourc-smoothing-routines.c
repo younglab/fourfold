@@ -18,25 +18,41 @@ double mean_helper(double *d,size_t n ) {
 double median_helper(double *d,size_t n ) {
   double v = 0;
   
+  int i = n/2;
+  
   if( n % 2 == 0 ) { // even
-    double x = d[n/2-1];
-    double y = d[n/2];
+    double x = d[i];
+    double y = d[i+1];
     
     v = (x+y)/2.0;
   } else {
-    v = d[(int)(n/2)];
+    v = d[i+1];
   }
   return v;
 }
 
-double quantile_helper(double *d,size_t n,double perc ) {
-  double v = 0;
+void quantile_helper(double *d,size_t n,double perclo, double perchi, double *l, double *h ) {
+  int b = 0;
   
-  int i = (int)((n-1)*perc);
+  //int i = (int)((n-1)*perc);
   
-  v = d[i];
   
-  return v;
+  
+  //v = d[i];
+  
+  for( int i = 0; i < n; i++ ) {
+    double p = ((double)(i+1))/n;
+    
+    if(p>perclo && !b) {
+      *l = d[i];
+      b = 1;
+    }
+    
+    if(p>perchi) {
+      *h = d[i];
+      break;
+    }
+  }
 }
 
 int comp(const void *a, const void *b) {
@@ -107,8 +123,8 @@ SEXP fourc_smoothing_mean(SEXP fnamer,SEXP chrs, SEXP poses, SEXP idxes, SEXP dm
       
       double me = mean_helper(v,m);
       double md = median_helper(v,m);
-      double lp = quantile_helper(v,m,.025);
-      double hp = quantile_helper(v,m,.975);
+      double lp, hp;
+      quantile_helper(v,m,.025,.975,&lp,&hp);
       
       fprintf(fp,"%f\t%f\t%f\t%f\n",me,md,lp,hp);
     }
