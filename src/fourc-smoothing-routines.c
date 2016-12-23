@@ -34,21 +34,20 @@ double median_helper(double *d,size_t n ) {
 void quantile_helper(double *d,size_t n,double perclo, double perchi, double *l, double *h ) {
   int b = 0;
   
-  //int i = (int)((n-1)*perc);
-  
-  
-  
-  //v = d[i];
-  
+  //debugging
+  //Rprintf(">");
+  //for( int j = 0; j < n; j++ ) Rprintf("%f ",d[j]);
+  //Rprintf("\n");
+
   for( int i = 0; i < n; i++ ) {
-    double p = ((double)(i+1))/n;
+    double p = ((double)i)/(n-1);
     
-    if(p>perclo && !b) {
+    if(!b && p>=perclo) {
       *l = d[i];
       b = 1;
     }
     
-    if(p>perchi) {
+    if(p>=perchi) {
       *h = d[i];
       break;
     }
@@ -86,6 +85,8 @@ SEXP fourc_smoothing_mean(SEXP fnamer,SEXP chrs, SEXP poses, SEXP idxes, SEXP dm
     error("Failed to open file");
   }
   
+   //Rprintf("blah\n");
+  
   for( int i = 0; i < N; i++ ) {
     SEXP vi = VECTOR_ELT(idxes,i);
     int *idx = INTEGER(vi);
@@ -119,11 +120,12 @@ SEXP fourc_smoothing_mean(SEXP fnamer,SEXP chrs, SEXP poses, SEXP idxes, SEXP dm
     }
     
     if(statsonly) {
-      qsort(v,sizeof(double),m,&comp);
+      //Rprintf("hmm\n");
+      qsort(v,m,sizeof(v[0]),&comp);
       
       double me = mean_helper(v,m);
       double md = median_helper(v,m);
-      double lp, hp;
+      double lp = 0, hp = 0;
       quantile_helper(v,m,.025,.975,&lp,&hp);
       
       fprintf(fp,"%f\t%f\t%f\t%f\n",me,md,lp,hp);
