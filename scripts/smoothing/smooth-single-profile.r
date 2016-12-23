@@ -6,18 +6,6 @@ write.4c.table <- function(fname,chrs,pos,m) {
   .Call("fast_write",as.character(fname),as.character(chrs),as.integer(pos),m,as.integer(dim(m)))
 }
 
-mean.proc <- function(idx,m) {
-  
-  if(length(idx)>1) {
-    p <- m[idx,]
-    r <- as.vector(colMeans(m[,-c(1:3)]))
-  } else {
-    r <- m[idx,-c(1:3)]
-  }
-  
-  r
-}
-
 mean.proc.c <- function(fname,chrs,pos,idxl,m,stats=0,debug=NULL) {
   if(ncol(m) > 4 ) {
     m <- m[,-c(1:3)]

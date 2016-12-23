@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <malloc.h>
 #include <stdlib.h>
+#include <math.h>
 
 double mean_helper(double *d,size_t n ) {
   double v = 0;
@@ -12,6 +13,25 @@ double mean_helper(double *d,size_t n ) {
   for( int i = 0; i < n; i++ ) v += d[i];
   
   v /= n;
+  return v;
+}
+
+//assumes this is a sample and not the population
+double variance_helper(double *d,size_t n,const double *mean ) {
+  double v = 0;
+  double m = 0;
+  
+  
+  if(mean==NULL) {
+    for( int i = 0; i < n; i++ ) m += d[i];
+    m /= n;
+  } else {
+    m = *mean;
+  }
+  
+  for( int i = 0; i < n; i++ ) v += pow(d[i]-m,2);
+  
+  v /= (n-1);
   return v;
 }
 
@@ -124,11 +144,12 @@ SEXP fourc_smoothing_mean(SEXP fnamer,SEXP chrs, SEXP poses, SEXP idxes, SEXP dm
       qsort(v,m,sizeof(v[0]),&comp);
       
       double me = mean_helper(v,m);
+      double ve = variance_helper(v,m,&me);
       double md = median_helper(v,m);
       double lp = 0, hp = 0;
       quantile_helper(v,m,.025,.975,&lp,&hp);
       
-      fprintf(fp,"%f\t%f\t%f\t%f\n",me,md,lp,hp);
+      fprintf(fp,"%f\t%f\t%f\t%f\t%f\n",me,ve,md,lp,hp);
     }
   }
   
