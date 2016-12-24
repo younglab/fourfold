@@ -7,7 +7,7 @@ collapse.ranges <- function(gl,up) {
   v <- rep(0,length(up))
   
   o <- findOverlaps(up,gl[[1]])
-  v[queryHits(o)] <- dl[[2]]
+  v[queryHits(o)] <- gl[[2]]
   v
 }
 
@@ -15,7 +15,7 @@ collapse.ranges.mat <- function(gl,up) {
   v <- matrix(0,length(up),ncol(gl[[2]]))
   
   o <- findOverlaps(up,gl[[1]])
-  v[queryHits(o),] <- dl[[2]]
+  v[queryHits(o),] <- gl[[2]]
   v
 }
 
