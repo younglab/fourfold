@@ -96,10 +96,22 @@ bins <- unlist(GRangesList(lapply(1:nrow(chrom.sizes),function(i) {
   GRanges(seqnames=chrom.sizes[i,1],ranges=IRanges(pos,width=bin.size),strand='*')
 })))
 
+write("debug 1",file=stderr())
+
+
 o <- findOverlaps(bins,uniq.pos)
 
+write("debug 2",file=stderr())
+
+
 idx <- split((1:nrow(s.m))[subjectHits(o)],queryHits(o))
+
+write("debug 3",file=stderr())
+
 gs <- uniq.pos[as.integer(names(idx))]
+
+write("debug 4",file=stderr())
+
 
 #rm(g)
 
@@ -112,7 +124,7 @@ proc(output.file,chrs,pos,idx,s.m)
 proc(outputb.file,chrs,pos,idx,b.m,1) 
 
 
-write("debug 4",file=stderr())
+write("debug 5",file=stderr())
 
 #ms <- sapply(split(as.matrix(mcols(uniq.pos))[subjectHits(o),],queryHits(o)),mean)
 #             #function(m) {
