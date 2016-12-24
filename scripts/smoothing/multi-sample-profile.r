@@ -83,7 +83,7 @@ uniq.pos <- reduce(unlist(GRangesList(ss)))
 
 #mcols(uniq.pos) <- cbind(mcols(uniq.pos),DataFrame(do.call(cbind,s.v)))
 
-s.m <- cbind(1,1,start(uniq.pos),do.call(cbind,lapply(ss,collapse.ranges,up=uniq.pos)))
+s.m <- cbind(1,1,start(uniq.pos),rowMeans(do.call(cbind,lapply(ss,collapse.ranges,up=uniq.pos))))
 b.m <- cbind(1,1,start(uniq.pos),do.call(cbind,lapply(bs,collapse.ranges.mat,up=uniq.pos)))
 
 rm(ss,bs)
