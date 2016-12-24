@@ -69,7 +69,7 @@ bs <- lapply(b,function(df) list(GRanges(seqnames=as.character(df[,1]),ranges=IR
 
 #gs <- lapply(s,function(df) GRanges(seqnames=as.character(df[,1]),ranges=IRanges(df[,2],width=1),strand='*',signal=df[,3]))
 
-uniq.pos <- reduce(unlist(GRangesList(ss)))
+uniq.pos <- reduce(unlist(GRangesList(lapply(ss,function(l) l[[1]]))))
 
 #s.v <- lapply(gs,function(g) {
 #  v <- rep(0,length(uniq.pos))
