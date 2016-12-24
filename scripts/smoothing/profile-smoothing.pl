@@ -42,6 +42,9 @@ my $database = ReadData($sampletable);
 my $sheet = $database->[1]; ## get first spreadsheet
 my $nr = ${$sheet}{"maxrow"};
 
+
+my $rlib = "$basedir/../../lib/fourc-smoothing-routines.so";
+
 my %samplegroups;
 my %sampleorganism;
 
@@ -68,7 +71,7 @@ for( my $i = 0; $i < $nr; $i++ ) {
   my $outtable = "$outputdir/$name.filtered.rpm.txt";
   my $outtableb = "$outputdir/$name.filtered.rpm.bootstrap.stats.txt";
 
-  my $output = `Rscript $basedir/smooth-single-profile.r $basedir/../../lib/fourc-smoothing-routines.so $binsize $stepsize $chromsizes $smoothingmode $inputdir/$name.filtered.rpm.txt $inputdir/$name.filtered.rpm.bootstrap.txt $outtable $outtableb 2>&1`;
+  my $output = `Rscript $basedir/smooth-single-profile.r $rlib $binsize $stepsize $chromsizes $smoothingmode $inputdir/$name.filtered.rpm.txt $inputdir/$name.filtered.rpm.bootstrap.txt $outtable $outtableb 2>&1`;
   
   die "Smoothing failed with an error: $output" unless( $? == 0 );
   `gzip $outtableb`; ## compress table since they tend to be large
@@ -97,14 +100,18 @@ for my $group (keys(%samplegroups)) {
   my $sampleexe = join(" ",@tmp);
   
   my $outfile = "$outputdir/$celltype-$condition.filtered.rpm.txt";
+  my $outfileb = "$outputdir/$celltype-$condition.filtered.rpm.bootstrap.stats.txt";
+
   my $outfilewig = "$outputdir/$celltype-$condition.filtered.rpm.wig";
   my $outfilebw = "$outputdir/$celltype-$condition.filtered.rpm.bw";
 
   my $sid = "$celltype-$condition";
 
-  my $output = `Rscript $basedir/multi-sample-profile.r $outfile $binsize $stepsize $chromsizes $sampleexe 2>&1`;
+  my $output = `Rscript $basedir/multi-sample-profile.r $rlib $outfile $outfileb $binsize $stepsize $chromsizes $sampleexe 2>&1`;
   
   die "Smoothing of profile failed: $output" unless $? == 0;
+  
+  `gzip $outfileb`;
   
   writewigfile($outfile,$outfilewig,$sid);
   
