@@ -58,6 +58,7 @@ bootstrap.files <- args[seq(2,length(args),by=2)]
 
 dyn.load(library.file) ### 
 
+proc <- mean.proc.c ### update to allow more options in the future
 
 N <- length(signal.files)
 
@@ -110,7 +111,7 @@ write("debug 3",file=stderr())
 print(str(idx))
 print(str(s.m))
 
-gs <- uniq.pos[as.integer(names(idx))]
+gs <- bins[as.integer(names(idx))]
 
 write("debug 4",file=stderr())
 
