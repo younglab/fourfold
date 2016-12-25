@@ -106,10 +106,11 @@ for my $group (keys(%samplegroups)) {
   my $outfilebw = "$outputdir/$celltype-$condition.filtered.rpm.bw";
 
   my $sid = "$celltype-$condition";
+  my $args = "$basedir/multi-sample-profile.r $rlib $outfile $outfileb $binsize $stepsize $chromsizes $sampleexe";
 
-  my $output = `Rscript $basedir/multi-sample-profile.r $rlib $outfile $outfileb $binsize $stepsize $chromsizes $sampleexe 2>&1`;
+  my $output = `Rscript $args 2>&1`;
   
-  die "Smoothing of profile failed: $output" unless $? == 0;
+  die "Smoothing of profile failed (Rscript args $args): $output" unless $? == 0;
   
   `gzip $outfileb`;
   

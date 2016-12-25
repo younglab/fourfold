@@ -107,6 +107,8 @@ write("debug 2",file=stderr())
 idx <- split((1:nrow(s.m))[subjectHits(o)],queryHits(o))
 
 write("debug 3",file=stderr())
+print(str(idx))
+print(str(s.m))
 
 gs <- uniq.pos[as.integer(names(idx))]
 
