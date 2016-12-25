@@ -99,6 +99,9 @@ for my $group (keys(%samplegroups)) {
   push @tmp, join(" ",@{$_}) for (@samples);
   my $sampleexe = join(" ",@tmp);
   
+  print "\tSmoothing merged profile $group...\n";
+
+  
   my $outfile = "$outputdir/$celltype-$condition.filtered.rpm.txt";
   my $outfileb = "$outputdir/$celltype-$condition.filtered.rpm.bootstrap.stats.txt";
 
