@@ -2,11 +2,12 @@
 
 use strict;
 use Spreadsheet::Read;
+use FourCOpts::Utils qw(issamplein);
 
 
-die "Arguments: <template file> <organism database> <basedir> <genomic coordinates> <shading> <input dir> <output dir>" unless scalar(@ARGV)>=6;
+die "Arguments: <template file> <organism database> <basedir> <genomic coordinates> <shading> <input dir> <output dir> <files 1> [files 2...]" unless scalar(@ARGV)>=8;
 
-my ($sampletable,$organismdatabase,$basedir,$genomecoord, $shading,$inputdir,$outputdir) = @ARGV;
+my ($sampletable,$organismdatabase,$basedir,$genomecoord, $shading,$inputdir,$outputdir,@files) = @ARGV;
 
 die "Cannot find $sampletable!" unless -e $sampletable;
 die "Cannot find $organismdatabase" unless -e $organismdatabase;
@@ -31,7 +32,28 @@ for( my $i = 0; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
   
   next if $name =~ /^#/;
   
-  my $output = `Rscript $basedir/plot-4c-signal.r $inputdir/$name.filtered.rpm.txt $inputdir/$name.filtered.rpm.bootstrap.txt $shading $genomecoord $outputdir/$name.pdf $outputdir/$name.png 2>&1`;
+  next unless issamplein($name,\@files);
+  
+  my $signalfile = "$inputdir/$name.filtered.rpm.txt";
+  my $bootstrapfile = "";
+  
+  die "Cannot find signal file $signalfile" unless -e $signalfile;
+  
+  my $fullbootstrap = "$inputdir/$name.filtered.rpm.bootstrap.txt";
+  my $statsbootstrap = "$inputdir/$name.filtered.rpm.bootstrap.stats.txt.gz";
+  
+  my $statsfile = 0;
+  
+  if( -e $statsbootstrap ) {
+    $statsfile = 1;
+    $bootstrapfile = $statsbootstrap;
+  } elsif( -e $fullbootstrap ) {
+    $bootstrapfile = $fullbootstrap;
+  } else {
+    die "Cannot find bootstrap files, either $statsbootstrap or $fullbootstrap";
+  }
+  
+  my $output = `Rscript $basedir/plot-4c-signal.r $signalfile $bootstrapfile $statsfile $shading $genomecoord $outputdir/$name.pdf $outputdir/$name.png 2>&1`;
   
   die "Failed to generate output for $name, messages: $output" unless $? == 0;
 }

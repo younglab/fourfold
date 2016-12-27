@@ -2,6 +2,7 @@
 
 BASEDIR=$(dirname $0)
 SCRIPTDIR=$BASEDIR/../scripts/plots
+LIBDIR=$BASEDIR/../lib
 ORGANISMDATABASE=$BASEDIR/../db/organism-database.txt
 INPUTDIR=bootstrap
 SHADING=ci
@@ -12,7 +13,7 @@ function helpmenu() {
     echo "$@"
   fi
   
-  echo "Syntax: 4c-plots.sh [options] <template sample XLSX file> <genomic coordinates> <output dir>"
+  echo "Syntax: 4c-plots.sh [options] <template sample XLSX file> <genomic coordinates> <output dir> <files/pattern...>"
   echo "-h help menu"
   echo "-i DIR, --inputdir=DIR set input directory"
   echo "-s TYPE, --shading=TYPE set the shading type, one of confidence interval (ci), standard deviation (sd), or none (na)"
@@ -48,15 +49,18 @@ while [ $# -ge 1 ]; do
 	shift
 done
 
-if [ $# -lt 2 ];
+if [ $# -lt 4 ];
 then
-  echo "Syntax: 4c-plots.sh <template sample XLSX file> <genomic coordinates> <output dir>"
+  helpmenu "Not enough arguments"
   exit 1
 fi
 
 SAMPLETABLE="$1"
 COORDINATES="$2"
 OUTPUTDIR="$3"
+shift
+shift
+shift
 
 if [ ! -e "$SAMPLETABLE" ];
 then
@@ -77,7 +81,7 @@ fi
 
 
 # command
-$SCRIPTDIR/make-plots.pl $SAMPLETABLE $ORGANISMDATABASE $SCRIPTDIR $COORDINATES $INPUTDIR $OUTPUTDIR
+perl -I$LIBDIR $SCRIPTDIR/make-plots.pl $SAMPLETABLE $ORGANISMDATABASE $SCRIPTDIR $COORDINATES $SHADING $INPUTDIR $OUTPUTDIR $@
 
 if [ $? -ne 0 ];
 then
