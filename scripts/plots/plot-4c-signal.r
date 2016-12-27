@@ -21,8 +21,10 @@ conf.int <- function(x,y,m,isstatsfile) {
   else
     q <- rowQuantiles(m,probs=c(.025,.975))
 
-  polygon(c(x,rev(x)),c(q[,1],y),col=rgb(1,0,0,.5))
-  polygon(c(x,rev(x)),c(q[,2],y),col=rgb(1,0,0,.5))
+  polygon(c(x,rev(x)),c(q[,1],rev(y)),col=rgb(1,0,0,.5))
+  polygon(c(x,rev(x)),c(q[,2],rev(y)),col=rgb(1,0,0,.5))
+  #polygon(x,q[,1],col=rgb(1,0,0,.5))
+  #polygon(x,q[,2],col=rgb(1,0,0,.5))
 }
 
 int.sd <- function(x,y,m,isstatsfile) {
