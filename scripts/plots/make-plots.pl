@@ -23,6 +23,7 @@ if( !defined($sheet) || !defined($nr) ) {
   exit 1;
 }
 
+my %samplegroups;
 
 for( my $i = 0; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
 
@@ -33,6 +34,8 @@ for( my $i = 0; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
   next if $name =~ /^#/;
   
   next unless issamplein($name,\@files);
+  
+  my $skey = "$celltype-$condition";
   
   my $signalfile = "$inputdir/$name.filtered.rpm.txt";
   my $bootstrapfile = "";
@@ -56,5 +59,11 @@ for( my $i = 0; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
   my $output = `Rscript $basedir/plot-4c-signal.r $signalfile $bootstrapfile $statsfile $shading $genomecoord $outputdir/$name.pdf $outputdir/$name.png 2>&1`;
   
   die "Failed to generate output for $name, messages: $output" unless $? == 0;
+  
+  push @{$samplegroups{$skey}}, [$signalfile,$bootstrapfile];
+}
+
+for my $skey (keys(%samplegroups)) {
+  
 }
 
