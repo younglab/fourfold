@@ -64,6 +64,14 @@ for( my $i = 0; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
 }
 
 for my $skey (keys(%samplegroups)) {
+  my @fset = @{$samplegroups{$skey}};
+  
+  my $pdfoutput = "$outputdir/$skey.pdf";
+  my $pngoutput = "$outputdir/$skey.png";
+  
+  my $output = `Rscript $basedir/plot-joint-4c-signal.r $signalfile $bootstrapfile $statsfile $shading $genomecoord $pdfoutput $pngoutput 2>&1`;
+  
+  die "Failed to generate output for $name, messages: $output" unless $? == 0;
   
 }
 

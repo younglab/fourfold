@@ -60,35 +60,40 @@ make.plot <- function(x,y,bm,isstatsfile) {
 args <- commandArgs(T)
 
 if(length(args)<7) {
-  stop("Arguments: <signal table> <bootstrap table> <is stats file> <type> <region> <output PDF> <output PNG>")
+  stop("Arguments: <is stats file> <type> <region> <output PDF> <output PNG> [<signal table> <bootstrap table> reps] ")
 }
 
-st.file <- args[1]
-bt.file <- args[2]
-isstatsfile <- as.integer(args[3]) != 0
-c.type <- args[4]
-region <- convert.string.to.Granges(args[5])
-pdf.file <- args[6]
-png.file <- args[7]
+
+isstatsfile <- as.integer(args[1]) != 0
+c.type <- args[2]
+region <- convert.string.to.Granges(args[3])
+pdf.file <- args[4]
+png.file <- args[5]
+args <- args[-(1:5)]
+
+st.files <- args[seq(1,length(args),2)]
+bt.files <- args[seq(2,length(args),2)]
+
+if(!isstatsfile) {
+  stop("Currently only works on data sets with the stats bootstrap file!")
+}
 
 
-st <- read.table(st.file,sep='\t')
-bt <- read.table(bt.file,sep='\t')
+st <- lapply(st.files,read.table,sep='\t')
+bt <- lapply(bt.files,read.table,sep='\t')
 
-pos <- GRanges(seqnames=as.character(st[,1]),ranges=IRanges(st[,2],width=1),strand='*')
+
+pos <- GRanges(seqnames=as.character(st[[1]][,1]),ranges=IRanges(st[[1]][,2],width=1),strand='*')
 o <- findOverlaps(pos,region)
 
-st.v <- st[,3][queryHits(o)]
-bt.m <- as.matrix(bt[,-(1:2)])[queryHits(o),]
+st.v <- rowMeans(do.call(cbind,lapply(st,function(df) df[,3])))[queryHits(o)]
+bt.m <- do.call(cbind,lapply(3:7,function(i) rowMeans(do.call(cbind,lapply(bt,function(df) df[,i])))))
 
-#st.g <- GRanges(seqnames=as.character(st[,1]),ranges=IRanges(st[,2],width=1),strand='*',signal=st[,3],as.matrix(bt[,-c(1:2)]))
 
 pdf(pdf.file,width=12,height=6)
-#make.plot(subsetByOverlaps(st.g,region),isstatsfile)
 make.plot(start(pos)[queryHits(o)],st.v,bt.m,isstatsfile)
 dev.off()
 
 CairoPNG(png.file,width=1200,height=600)
-#make.plot(subsetByOverlaps(st.g,region),isstatsfile)
 make.plot(start(pos)[queryHits(o)],st.v,bt.m,isstatsfile)
 dev.off()
