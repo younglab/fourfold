@@ -60,18 +60,25 @@ for( my $i = 0; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
   
   die "Failed to generate output for $name, messages: $output" unless $? == 0;
   
-  push @{$samplegroups{$skey}}, [$signalfile,$bootstrapfile];
+  push @{$samplegroups{$skey}}, [$signalfile,$bootstrapfile,$statsfile];
 }
 
 for my $skey (keys(%samplegroups)) {
   my @fset = @{$samplegroups{$skey}};
   
+  my $statsfile = $fset[0]->[2]; ## assume that we are not mixing and matching stats files here
+  
+  my @samples;
+  
+  push @samples, join(" ",@{$_}[0..1]) for(@fset);
+  
+  my $files = join(" ",@samples);
   my $pdfoutput = "$outputdir/$skey.pdf";
   my $pngoutput = "$outputdir/$skey.png";
   
-  my $output = `Rscript $basedir/plot-joint-4c-signal.r $signalfile $bootstrapfile $statsfile $shading $genomecoord $pdfoutput $pngoutput 2>&1`;
+  my $output = `Rscript $basedir/plot-joint-4c-signal.r $statsfile $shading $genomecoord $pdfoutput $pngoutput $files 2>&1`;
   
-  die "Failed to generate output for $name, messages: $output" unless $? == 0;
+  die "Failed to generate output for $skey, messages: $output" unless $? == 0;
   
 }
 
