@@ -82,13 +82,35 @@ if(!isstatsfile) {
 st <- lapply(st.files,read.table,sep='\t')
 bt <- lapply(bt.files,read.table,sep='\t')
 
+uniq.pos <- reduce(unlist(GRangesList(lapply(st,function(df) GRanges(seqnames=as.character(df[,1]),ranges=IRanges(df[,2],width=1),strand='*')))))
 
-pos <- GRanges(seqnames=as.character(st[[1]][,1]),ranges=IRanges(st[[1]][,2],width=1),strand='*')
-o <- findOverlaps(pos,region)
 
-st.v <- rowMeans(do.call(cbind,lapply(st,function(df) df[,3])))[queryHits(o)]
-bt.m <- do.call(cbind,lapply(3:7,function(i) rowMeans(do.call(cbind,lapply(bt,function(df) df[,i])))))
+#pos <- GRanges(seqnames=as.character(st[[1]][,1]),ranges=IRanges(st[[1]][,2],width=1),strand='*')
+o <- findOverlaps(uniq.pos,region)
 
+st.v <- rowMeans(do.call(cbind,lapply(st,function(df) {
+  g <- GRanges(seqnames=as.character(df[,1]),ranges=IRanges(df[,2]),strand='*')
+  
+  x <- findOverlaps(uniq.pos,g)
+  
+  v <- rep(0,length(uniq.pos))
+  
+  v[queryHits(x)] <- df[,3][subjectHits(o)]
+  
+  v
+})))[queryHits(o)]
+
+bt.m <- do.call(cbind,lapply(3:7,function(i) rowMeans(do.call(cbind,lapply(st,function(df) {
+  g <- GRanges(seqnames=as.character(df[,1]),ranges=IRanges(df[,2]),strand='*')
+  
+  x <- findOverlaps(uniq.pos,g)
+  
+  v <- rep(0,length(uniq.pos))
+  
+  v[queryHits(x)] <- df[,i][subjectHits(o)]
+  
+  v
+})))))[queryHits(o),]
 
 pdf(pdf.file,width=12,height=6)
 make.plot(start(pos)[queryHits(o)],st.v,bt.m,isstatsfile)
