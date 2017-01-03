@@ -101,9 +101,6 @@ for( my $i = 0; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
   next if $name =~ /^$/;
   print "\tProcessing sample $name...\n";
 
-
-  #my $basefastqname = basename($fastq);
-  #my $tmpseqfile = ".tmp.$basefastqname.seq.fq";
   die "Somehow cannot find any temporary file for $name" unless defined($tmpfilemap{$name});
   my $tmpseqfile = $tmpfilemap{$name};
   die "Somehow the temporary file $tmpseqfile for $name disappeared" unless -e $tmpseqfile;
@@ -123,7 +120,7 @@ for( my $i = 0; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
   
   if($barcode ne "NA") {
     $test = qr/^$barcode$primer/i;
-    $barcodetest = qr/^$barcode/;
+    $barcodetest = qr/^$barcode/i;
     $trimlength = length($barcode) + length($primer) - length($e1s);
     $geotrimlength = length($barcode);
   } else {

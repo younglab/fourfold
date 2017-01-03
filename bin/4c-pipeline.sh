@@ -161,6 +161,7 @@ do
   gzip $PREFIX.trimmed.fq; \
   samtools view -Sb bamfiles/$PREFIX.sam > bamfiles/$PREFIX.bam; \
   samtools sort -@ 6 -Ttmp$PREFIX bamfiles/$PREFIX.bam > bamfiles/$PREFIX.sorted.bam; \
+  samtools index bamfiles/$PREFIX.sorted.bam; \
   rm bamfiles/$PREFIX.sam bamfiles/$PREFIX.bam;" &
 done
 
