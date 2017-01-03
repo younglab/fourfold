@@ -95,7 +95,7 @@ st.v <- rowMeans(do.call(cbind,lapply(st,function(df) {
   
   v <- rep(0,length(uniq.pos))
   
-  v[queryHits(x)] <- df[,3][subjectHits(o)]
+  v[queryHits(x)] <- df[,3][subjectHits(x)]
   
   v
 })))[queryHits(o)]
@@ -107,7 +107,7 @@ bt.m <- do.call(cbind,lapply(3:7,function(i) rowMeans(do.call(cbind,lapply(st,fu
   
   v <- rep(0,length(uniq.pos))
   
-  v[queryHits(x)] <- df[,i][subjectHits(o)]
+  v[queryHits(x)] <- df[,i][subjectHits(x)]
   
   v
 })))))[queryHits(o),]
