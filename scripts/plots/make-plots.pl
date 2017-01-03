@@ -5,9 +5,9 @@ use Spreadsheet::Read;
 use FourCOpts::Utils qw(issamplein);
 
 
-die "Arguments: <template file> <organism database> <basedir> <genomic coordinates> <shading> <input dir> <output dir> <files 1> [files 2...]" unless scalar(@ARGV)>=8;
+die "Arguments: <template file> <organism database> <basedir> <genomic coordinates> <shading> <input dir> <output dir> <group only> <ylim low> <ylim high> <files 1> [files 2...]" unless scalar(@ARGV)>=11;
 
-my ($sampletable,$organismdatabase,$basedir,$genomecoord, $shading,$inputdir,$outputdir,@files) = @ARGV;
+my ($sampletable,$organismdatabase,$basedir,$genomecoord, $shading,$inputdir,$outputdir,$grouponly,$ylimlow,$ylimhigh,@files) = @ARGV;
 
 die "Cannot find $sampletable!" unless -e $sampletable;
 die "Cannot find $organismdatabase" unless -e $organismdatabase;
@@ -25,7 +25,7 @@ if( !defined($sheet) || !defined($nr) ) {
 
 my %samplegroups;
 
-print "Making individual sample plots...\n";
+print "Making individual sample plots...\n" unless $grouponly;
 
 for( my $i = 0; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
 
@@ -68,10 +68,12 @@ for( my $i = 0; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
     $samplegroups{$skey} = [$ssf,$sbf,$statsfile];
   }
   
-  print "\tPlotting $name...\n";
-  my $output = `Rscript $basedir/plot-4c-signal.r $signalfile $bootstrapfile $statsfile $shading $genomecoord $outputdir/$name.pdf $outputdir/$name.png 2>&1`;
+  unless( $grouponly ) { ## skip plots if only grouponly is turned on
+    print "\tPlotting $name...\n";
+    my $output = `Rscript $basedir/plot-4c-signal.r $signalfile $bootstrapfile $statsfile $shading $genomecoord $ylimlow $ylimhigh $outputdir/$name.pdf $outputdir/$name.png 2>&1`;
   
-  die "Failed to generate output for $name, messages: $output" unless $? == 0;
+    die "Failed to generate output for $name, messages: $output" unless $? == 0;
+  }
 }
 
 print "Plotting combined sample group plots...\n";
@@ -83,7 +85,7 @@ for my $skey (keys(%samplegroups)) {
   my $pngoutput = "$outputdir/$skey.png";
   
   print "\tPlotting $skey...\n";
-  my $output = `Rscript $basedir/plot-4c-signal.r $signalfile $bootstrapfile $statsfile $shading $genomecoord $pdfoutput $pngoutput 2>&1`;
+  my $output = `Rscript $basedir/plot-4c-signal.r $signalfile $bootstrapfile $statsfile $shading $genomecoord $ylimlow $ylimhigh $pdfoutput $pngoutput 2>&1`;
 
   die "Failed to generate output for $skey, messages: $output" unless $? == 0;
 }

@@ -6,6 +6,9 @@ LIBDIR=$BASEDIR/../lib
 ORGANISMDATABASE=$BASEDIR/../db/organism-database.txt
 INPUTDIR=bootstrap
 SHADING=ci
+GROUPONLY=0
+YLIMLOW=NA
+YLIMHIGH=NA
 
 function helpmenu() {
   if [ $# -gt 0 ];
@@ -17,9 +20,12 @@ function helpmenu() {
   echo "-h help menu"
   echo "-i DIR, --inputdir=DIR set input directory"
   echo "-s TYPE, --shading=TYPE set the shading type, one of confidence interval (ci), standard deviation (sd), or none (na)"
+  echo "--group-only Skip making individual sample plots"
+  echo "--ylim-low=[numeric] Set the lower y-axis range value (must also set --ylim-high)"
+  echo "--ylim-high=[numeric] Set the upper y-axis range value (must also set --ylim-low)"
 }
 
-TEMP=`getopt -o hi: -l inputdir: -n '4cplots' -- "$@"`
+TEMP=`getopt -o hi: -l inputdir:,group-only,ylim-low:,ylim-high: -n '4cplots' -- "$@"`
 eval set -- "$TEMP"
 
 while [ $# -ge 1 ]; do
@@ -43,6 +49,17 @@ while [ $# -ge 1 ]; do
 	    ;;
 	  -s|--shading)
 	    SHADING="$2"
+	    shift
+	    ;;
+	  --group-only)
+	    GROUPONLY=1
+	    ;;
+	  --ylim-low)
+	    YLIMLOW="$2"
+	    shift
+	    ;;
+	  --ylim-high)
+	    YLIMHIGH="$2"
 	    shift
 	    ;;
 	esac
@@ -79,9 +96,14 @@ then
   exit 1
 fi
 
+if [[ ("$YLIMLOW" == "NA" && "$YLIMHIGH" != "NA") || ("$YLIMLOW" != "NA" && "$YLIMHIGH" == "NA") ]];
+then
+  helpmenu "Must set both --ylim-low and --ylim-high"
+  exit 1
+fi
 
-# command
-perl -I$LIBDIR $SCRIPTDIR/make-plots.pl $SAMPLETABLE $ORGANISMDATABASE $SCRIPTDIR $COORDINATES $SHADING $INPUTDIR $OUTPUTDIR $@
+
+perl -I$LIBDIR $SCRIPTDIR/make-plots.pl $SAMPLETABLE $ORGANISMDATABASE $SCRIPTDIR $COORDINATES $SHADING $INPUTDIR $OUTPUTDIR $GROUPONLY $YLIMLOW $YLIMHIGH $@
 
 if [ $? -ne 0 ];
 then

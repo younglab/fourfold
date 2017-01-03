@@ -23,8 +23,6 @@ conf.int <- function(x,y,m,isstatsfile) {
 
   polygon(c(x,rev(x)),c(q[,1],rev(y)),col=rgb(1,0,0,.5))
   polygon(c(x,rev(x)),c(q[,2],rev(y)),col=rgb(1,0,0,.5))
-  #polygon(x,q[,1],col=rgb(1,0,0,.5))
-  #polygon(x,q[,2],col=rgb(1,0,0,.5))
 }
 
 int.sd <- function(x,y,m,isstatsfile) {
@@ -42,25 +40,24 @@ polygon.ignore <- function(x,y,m,isstatsfile) {
 }
 
 #make.plot <- function(g) {
-make.plot <- function(x,y,bm,isstatsfile) {
-  #x <- start(g)
-  #y <- g$signal
+make.plot <- function(x,y,bm,isstatsfile,ylimlow,ylimhigh) {
   
-  plot(x,y,type='l',ylim=quantile(y,probs=c(0,.95)),xlab="Genomic Position",ylab="RPM")
+  ylim <- if(!is.na(ylimlow) && !is.na(ylimhigh)) c(ylimlow,ylimhigh) else quantile(y,probs=c(0,.95))
+  
+  plot(x,y,type='l',ylim=ylim,xlab="Genomic Position",ylab="RPM")
   
   f <- switch(c.type,
               ci=conf.int,
               sd=int.sd,
               na=polygon.ignore)
   
-  #f(x,y,as.matrix(mcols(g)[,-1]))
   f(x,y,bm,isstatsfile)
 }
 
 args <- commandArgs(T)
 
 if(length(args)<7) {
-  stop("Arguments: <signal table> <bootstrap table> <is stats file> <type> <region> <output PDF> <output PNG>")
+  stop("Arguments: <signal table> <bootstrap table> <is stats file> <type> <region> <ylim low> <ylim high> <output PDF> <output PNG>")
 }
 
 st.file <- args[1]
@@ -68,12 +65,14 @@ bt.file <- args[2]
 isstatsfile <- as.integer(args[3]) != 0
 c.type <- args[4]
 region <- convert.string.to.Granges(args[5])
-pdf.file <- args[6]
-png.file <- args[7]
+ylimlow <- as.integer(args[6])
+ylimhigh <- as.integer(args[7])
+pdf.file <- args[8]
+png.file <- args[9]
 
 
 st <- read.table(st.file,sep='\t')
-bt <- read.table(bt.file,sep='\t')
+bt <- if( isstatsfile ) read.table(bt.file,sep='\t',colClasses = c("factor","integer","numeric","numeric","numeric","numeric","numeric")) else read.table(bt.file,sep='\t')
 
 pos <- GRanges(seqnames=as.character(st[,1]),ranges=IRanges(st[,2],width=1),strand='*')
 o <- findOverlaps(pos,region)
@@ -81,14 +80,11 @@ o <- findOverlaps(pos,region)
 st.v <- st[,3][queryHits(o)]
 bt.m <- as.matrix(bt[,-(1:2)])[queryHits(o),]
 
-#st.g <- GRanges(seqnames=as.character(st[,1]),ranges=IRanges(st[,2],width=1),strand='*',signal=st[,3],as.matrix(bt[,-c(1:2)]))
 
 pdf(pdf.file,width=12,height=6)
-#make.plot(subsetByOverlaps(st.g,region),isstatsfile)
-make.plot(start(pos)[queryHits(o)],st.v,bt.m,isstatsfile)
+make.plot(start(pos)[queryHits(o)],st.v,bt.m,isstatsfile,ylimlow,ylimhigh)
 dev.off()
 
 CairoPNG(png.file,width=1200,height=600)
-#make.plot(subsetByOverlaps(st.g,region),isstatsfile)
-make.plot(start(pos)[queryHits(o)],st.v,bt.m,isstatsfile)
+make.plot(start(pos)[queryHits(o)],st.v,bt.m,isstatsfile,ylimlow,ylimhigh)
 dev.off()
