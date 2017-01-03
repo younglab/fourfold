@@ -25,6 +25,8 @@ if( !defined($sheet) || !defined($nr) ) {
 
 my %samplegroups;
 
+print "Making individual sample plots...\n";
+
 for( my $i = 0; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
 
   my @arr = Spreadsheet::Read::cellrow($sheet,$i+1);
@@ -56,29 +58,33 @@ for( my $i = 0; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
     die "Cannot find bootstrap files, either $statsbootstrap or $fullbootstrap";
   }
   
+  unless( defined($samplegroups{$skey})) { ## assume this hasn't changed from one iteration to the next if already there
+    my $ssf = "$inputdir/$skey.filtered.rpm.txt";
+    my $sbf = "$inputdir/$skey.filtered.rpm.bootstrap.txt";
+    $sbf = "$inputdir/$skey.filtered.rpm.bootstrap.stats.txt.gz" if $statsfile;
+  
+    die "Cannot find $ssf and $sbf for group plots for sample $skey" unless( -e $ssf && -e $sbf );
+    
+    $samplegroups{$skey} = [$ssf,$sbf,$statsfile];
+  }
+  
+  print "\tPlotting $name...\n";
   my $output = `Rscript $basedir/plot-4c-signal.r $signalfile $bootstrapfile $statsfile $shading $genomecoord $outputdir/$name.pdf $outputdir/$name.png 2>&1`;
   
   die "Failed to generate output for $name, messages: $output" unless $? == 0;
-  
-  push @{$samplegroups{$skey}}, [$signalfile,$bootstrapfile,$statsfile];
 }
 
+print "Plotting combined sample group plots...\n";
+
 for my $skey (keys(%samplegroups)) {
-  my @fset = @{$samplegroups{$skey}};
+  my ($signalfile, $bootstrapfile, $statsfile) = @{$samplegroups{$skey}};
   
-  my $statsfile = $fset[0]->[2]; ## assume that we are not mixing and matching stats files here
-  
-  my @samples;
-  
-  push @samples, join(" ",@{$_}[0..1]) for(@fset);
-  
-  my $files = join(" ",@samples);
   my $pdfoutput = "$outputdir/$skey.pdf";
   my $pngoutput = "$outputdir/$skey.png";
   
-  my $output = `Rscript $basedir/plot-joint-4c-signal.r $statsfile $shading $genomecoord $pdfoutput $pngoutput $files 2>&1`;
-  
+  print "\tPlotting $skey...\n";
+  my $output = `Rscript $basedir/plot-4c-signal.r $signalfile $bootstrapfile $statsfile $shading $genomecoord $pdfoutput $pngoutput 2>&1`;
+
   die "Failed to generate output for $skey, messages: $output" unless $? == 0;
-  
 }
 
