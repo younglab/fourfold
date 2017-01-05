@@ -5,9 +5,13 @@ library(limma)
 args <- commandArgs(T)
 
 outdir <- args[1]
+onlycis <- args[2]!="NA"
+cischrom <- args[2]
+
 output <- paste(outdir,"quantile-normalized-samples.txt",sep='/')
 outputb <- paste(outdir,"quantile-normalized-samples-bootstrap.txt",sep='/')
-args <- args[-1]
+
+args <- args[-(1:2)]
 
 if(length(args)<2) {
   stop("need samples")
@@ -29,6 +33,10 @@ bg <- lapply(bdf,function(d) {
 })
 
 uniq.sites <- reduce(unlist(GRangesList(g)))
+
+if(onlycis) {
+  uniq.sites <- uniq.sites[seqnames(uniq.sites)==cischrom]
+}
 
 sm <- do.call(cbind,lapply(g,function(x) {
   v <- rep(0,length(uniq.sites))

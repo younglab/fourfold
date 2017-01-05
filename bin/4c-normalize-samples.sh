@@ -5,11 +5,20 @@ SCRIPTDIR=$BASEDIR/../scripts/normalization
 LIBDIR=$BASEDIR/../lib
 ORGANISMDATABASE=$BASEDIR/../db/organism-database.txt
 
+function helpmenu() {
+  if [ $# -gt 0 ];
+  then
+    echo "$@"
+  fi
+  
+  echo "4c-normalize-samples.sh <sample table> <normalization type> <output dir> <samples...>"
+  echo "Valid normalization types are: quantile, quantile-cis"
+}
+
 
 if [ $# -lt 4 ];
 then
-  echo "4c-normalize-samples.sh <sample table> <normalization type> <output dir> <samples...>"
-  echo "Valid normalization types are: quantile"
+  helpmenu "Error: not enough arguments"
   exit 1
 fi
 
@@ -22,7 +31,7 @@ shift
 
 if [ ! -e "$SAMPLETABLE" ];
 then
-  echo "Cannot find $SAMPLETABLE!"
+  helpmenu "Error: cannot find $SAMPLETABLE!"
   exit 1
 fi
 
@@ -33,15 +42,18 @@ fi
 
 if [ ! -d "$OUTPUTDIR" ];
 then
-  echo "Error: $OUTPUTDIR is not a directory"
+  helpmenu "Error: $OUTPUTDIR is not a directory"
   exit 1
 fi
 
 case $NORMTYPE in
   quantile)
-    perl -I$LIBDIR $SCRIPTDIR/process-quantile-norm.pl $SAMPLETABLE $SCRIPTDIR $ORGANISMDATABASE $OUTPUTDIR $@
+    perl -I$LIBDIR $SCRIPTDIR/process-quantile-norm.pl $SAMPLETABLE $SCRIPTDIR $ORGANISMDATABASE $OUTPUTDIR 0 $@
     ;;
-  
+  quantile-cis)
+    perl -I$LIBDIR $SCRIPTDIR/process-quantile-norm.pl $SAMPLETABLE $SCRIPTDIR $ORGANISMDATABASE $OUTPUTDIR 1 $@
+    ;;
+    
   *)
     echo "Unknown normalization type"
     exit 1

@@ -27,10 +27,10 @@ sub in {
 
 #print "DEBUG: @ARGV\n";
 if(scalar(@ARGV) < 5) {
-  die "process-quantile-norm.pl <sample table> <basedir> <organism database> <output dir> <samples...>";
+  die "process-quantile-norm.pl <sample table> <basedir> <organism database> <output dir> <only cis positions?> <samples...>";
 }
 
-my ($sampletable,$basedir,$organismdatabase,$outputdir,@samples) = @ARGV;
+my ($sampletable,$basedir,$organismdatabase,$outputdir,$onlycis,@samples) = @ARGV;
 
 die "Cannot find $sampletable!" unless -e $sampletable;
 die "Cannot find $outputdir!" unless -e $outputdir;
@@ -44,6 +44,7 @@ my $nr = ${$sheet}{"maxrow"};
 my @norm;
 my %samplegroups;
 my $chromfile = "";
+my $vchrom = "NA";
 
 for( my $i = 0; $i < $nr; $i++ ) { 
   my @arr = Spreadsheet::Read::cellrow($sheet,$i+1);
@@ -56,6 +57,14 @@ for( my $i = 0; $i < $nr; $i++ ) {
     my $cfile = "bootstrap/$name.filtered.counts.txt";
     my $cbfile = "bootstrap/$name.filtered.counts.bootstrap.txt";
     push @norm, [$name,$cfile,$cbfile];
+    
+    if($cisonly) {
+      if( $vchrom eq "" ) {
+        $vchrom = $viewpointchrom;
+      } elsif( $vchrom ne $viewpointchrom ) {
+        die "The viewpoint chromsome is different across all samples when cis-only option is on!";
+      }
+    }
     
     my $samplekey = "$celltype-$condition";
     $samplegroups{$samplekey} = [] unless defined($samplegroups{$samplekey});
@@ -74,9 +83,9 @@ $exe .= join(" ",@{$_}) . " " for(@norm);
 my $qnormtmp = "$outputdir/quantile-normalized-samples.txt";
 my $qnormbtmp = "$outputdir/quantile-normalized-samples-bootstrap.txt";
 
-my $output = `Rscript $basedir/quantile-normalization.r $outputdir $exe 2>&1`;
+my $output = `Rscript $basedir/quantile-normalization.r $outputdir $vchrom $exe 2>&1`;
 
-die "Failed to normalize (cmd: Rscript $basedir/quantile-normalization.r $outputdir $exe): $output" unless $? == 0;
+die "Failed to normalize (cmd: Rscript $basedir/quantile-normalization.r $outputdir $onlycis $exe): $output" unless $? == 0;
 
 open(N,"<","$qnormtmp") or die "Cannot read normalized samples: $!";
 
