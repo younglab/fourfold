@@ -9,6 +9,9 @@ SHADING=ci
 GROUPONLY=0
 YLIMLOW=NA
 YLIMHIGH=NA
+ENHANCERFILE=NA
+PROMOTERFILE=NA
+
 
 function helpmenu() {
   if [ $# -gt 0 ];
@@ -20,12 +23,14 @@ function helpmenu() {
   echo "-h help menu"
   echo "-i DIR, --inputdir=DIR set input directory"
   echo "-s TYPE, --shading=TYPE set the shading type, one of confidence interval (ci), standard deviation (sd), or none (na)"
-  echo "--group-only Skip making individual sample plots"
+  echo "--group-only Skip output of individual sample plots"
   echo "--ylim-low=[numeric] Set the lower y-axis range value (must also set --ylim-high)"
   echo "--ylim-high=[numeric] Set the upper y-axis range value (must also set --ylim-low)"
+  echo "--add-enhancers=[BED file] Plot enhancers within plot in given BED file"
+  echo "--add-promoters=[BED file] Plot TSS of genes within BED file"
 }
 
-TEMP=`getopt -o hi: -l inputdir:,group-only,ylim-low:,ylim-high: -n '4cplots' -- "$@"`
+TEMP=`getopt -o hi: -l inputdir:,group-only,ylim-low:,ylim-high:,add-enhancers: -n '4cplots' -- "$@"`
 eval set -- "$TEMP"
 
 while [ $# -ge 1 ]; do
@@ -60,6 +65,28 @@ while [ $# -ge 1 ]; do
 	    ;;
 	  --ylim-high)
 	    YLIMHIGH="$2"
+	    shift
+	    ;;
+	  --add-enhancers)
+	    ENHANCERFILE="$2"
+	    
+	    if [ ! -e "$ENHANCERFILE" ];
+	    then
+	      helpmenu "Error: provided enhancer file $ENHANCERFILE does not exist!"
+	      exit 1
+	    fi
+	    
+	    shift
+	    ;;
+	   --add-promoters)
+	    PROMOTERFILE="$2"
+	    
+	    if [ ! -e "$PROMOTERFILE" ];
+	    then
+	      helpmenu "Error: provided enhancer file $PROMOTERFILE does not exist!"
+	      exit 1
+	    fi
+	    
 	    shift
 	    ;;
 	esac
@@ -103,7 +130,7 @@ then
 fi
 
 
-perl -I$LIBDIR $SCRIPTDIR/make-plots.pl $SAMPLETABLE $ORGANISMDATABASE $SCRIPTDIR $COORDINATES $SHADING $INPUTDIR $OUTPUTDIR $GROUPONLY $YLIMLOW $YLIMHIGH $@
+perl -I$LIBDIR $SCRIPTDIR/make-plots.pl $SAMPLETABLE $ORGANISMDATABASE $SCRIPTDIR $COORDINATES $SHADING $INPUTDIR $OUTPUTDIR $GROUPONLY $YLIMLOW $YLIMHIGH $ENHANCERFILE $PROMOTERFILE $@
 
 if [ $? -ne 0 ];
 then

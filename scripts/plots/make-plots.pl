@@ -5,14 +5,17 @@ use Spreadsheet::Read;
 use FourCOpts::Utils qw(issamplein);
 
 
-die "Arguments: <template file> <organism database> <basedir> <genomic coordinates> <shading> <input dir> <output dir> <group only> <ylim low> <ylim high> <files 1> [files 2...]" unless scalar(@ARGV)>=11;
+die "Arguments: <template file> <organism database> <basedir> <genomic coordinates> <shading> <input dir> <output dir> <group only> <ylim low> <ylim high> <enhancer file> <promoter file> <files 1> [files 2...]" unless scalar(@ARGV)>=13;
 
-my ($sampletable,$organismdatabase,$basedir,$genomecoord, $shading,$inputdir,$outputdir,$grouponly,$ylimlow,$ylimhigh,@files) = @ARGV;
+my ($sampletable,$organismdatabase,$basedir,$genomecoord, $shading,$inputdir,$outputdir,$grouponly,$ylimlow,$ylimhigh,$enhancerfile,$promoterfile,@files) = @ARGV;
 
 die "Cannot find $sampletable!" unless -e $sampletable;
 die "Cannot find $organismdatabase" unless -e $organismdatabase;
 die "Cannot find $inputdir" unless -e $inputdir;
 die "Cannot find $outputdir" unless -e $outputdir;
+die "Cannot find $enhancerfile" unless ($enhancerfile eq "NA" || -e $enhancerfile);
+die "Cannot find $promoterfile" unless ($promoterfile eq "NA" || -e $promoterfile);
+
 
 my $database = ReadData($sampletable);
 my $sheet = $database->[1]; ## get first spreadsheet
@@ -70,7 +73,7 @@ for( my $i = 0; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
   
   unless( $grouponly ) { ## skip plots if only grouponly is turned on
     print "\tPlotting $name...\n";
-    my $output = `Rscript $basedir/plot-4c-signal.r $signalfile $bootstrapfile $statsfile $shading $genomecoord $ylimlow $ylimhigh $outputdir/$name.pdf $outputdir/$name.png 2>&1`;
+    my $output = `Rscript $basedir/plot-4c-signal.r $signalfile $bootstrapfile $statsfile $shading $genomecoord $ylimlow $ylimhigh $enhancerfile $promoterfile $outputdir/$name.pdf $outputdir/$name.png 2>&1`;
   
     die "Failed to generate output for $name, messages: $output" unless $? == 0;
   }
@@ -85,7 +88,7 @@ for my $skey (keys(%samplegroups)) {
   my $pngoutput = "$outputdir/$skey.png";
   
   print "\tPlotting $skey...\n";
-  my $output = `Rscript $basedir/plot-4c-signal.r $signalfile $bootstrapfile $statsfile $shading $genomecoord $ylimlow $ylimhigh $pdfoutput $pngoutput 2>&1`;
+  my $output = `Rscript $basedir/plot-4c-signal.r $signalfile $bootstrapfile $statsfile $shading $genomecoord $ylimlow $ylimhigh $enhancerfile $promoterfile $pdfoutput $pngoutput 2>&1`;
 
   die "Failed to generate output for $skey, messages: $output" unless $? == 0;
 }
