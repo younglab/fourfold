@@ -42,8 +42,10 @@ polygon.ignore <- function(x,y,m,isstatsfile) {
 #make.plot <- function(g) {
 make.plot <- function(x,y,bm,isstatsfile,ylimlow,ylimhigh,enhancers,prom) {
   
+  xlim <- range(x)
   ylim <- if(!is.na(ylimlow) && !is.na(ylimhigh)) c(ylimlow,ylimhigh) else quantile(y,probs=c(0,.95))
   r <- (ylim[2]-ylim[1])*.05
+  d <- (xlim[2]-xlim[1])*.02
   
   plot(x,y,type='l',ylim=ylim,xlab="Genomic Position (bp)",ylab="RPM")
   
@@ -60,12 +62,8 @@ make.plot <- function(x,y,bm,isstatsfile,ylimlow,ylimhigh,enhancers,prom) {
   
   if(!is.na(prom)) {
     #for( i in 1:length(prom)) {
-    #  px <- c(start(prom)[i],end(prom)[i])
-    #  px <- c(px,rev(px))
-    #  
-    #  py <- c(ylim[1],ylim[1],r,r)
-    #  
-    #  polygon(px,py,col='red')
+    #  segments(start(prom)[i],ylim[1],start(prom)[1],r)
+    #  arrows(start(prom)[i],r,start(prom)[i]+d,r)
     #}
   }
   
@@ -119,6 +117,7 @@ prom <- NA
 if(promoterfile != "NA") {
   temp <- read.table(promoterfile,sep='\t')
   p <- GRanges(seqnames=as.character(temp[,1]),ranges=IRanges(temp[,2],temp[,3]),strand='*')
+  p <- promoters(p,1,1)
   
   x <- subsetByOverlaps(p,pos)
   if(length(x)>0) prom <- x

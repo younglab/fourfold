@@ -27,10 +27,10 @@ function helpmenu() {
   echo "--ylim-low=[numeric] Set the lower y-axis range value (must also set --ylim-high)"
   echo "--ylim-high=[numeric] Set the upper y-axis range value (must also set --ylim-low)"
   echo "--add-enhancers=[BED file] Plot enhancers within plot in given BED file"
-  echo "--add-promoters=[BED file] Plot TSS of genes within BED file"
+  #echo "--add-promoters=[BED file] Plot TSS of genes within BED file"
 }
 
-TEMP=`getopt -o hi: -l inputdir:,group-only,ylim-low:,ylim-high:,add-enhancers: -n '4cplots' -- "$@"`
+TEMP=`getopt -o hi: -l inputdir:,group-only,ylim-low:,ylim-high:,add-enhancers:,add-promoters: -n '4cplots' -- "$@"`
 eval set -- "$TEMP"
 
 while [ $# -ge 1 ]; do
