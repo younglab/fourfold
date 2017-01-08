@@ -9,6 +9,9 @@ die "Arguments: <template file> <organism database> <basedir> <genomic coordinat
 
 my ($sampletable,$organismdatabase,$basedir,$genomecoord, $shading,$inputdir,$outputdir,$grouponly,$ylimlow,$ylimhigh,$enhancerfile,$promoterfile,@files) = @ARGV;
 
+## transfer into adjustable parameters someday
+my ($linecolor,$shadingcolor,$transparencyperc) = ("black","red",50);
+
 die "Cannot find $sampletable!" unless -e $sampletable;
 die "Cannot find $organismdatabase" unless -e $organismdatabase;
 die "Cannot find $inputdir" unless -e $inputdir;
@@ -73,7 +76,11 @@ for( my $i = 0; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
   
   unless( $grouponly ) { ## skip plots if only grouponly is turned on
     print "\tPlotting $name...\n";
-    my $output = `Rscript $basedir/plot-4c-signal.r $signalfile $bootstrapfile $statsfile $shading $genomecoord $ylimlow $ylimhigh $enhancerfile $promoterfile $outputdir/$name.pdf $outputdir/$name.png 2>&1`;
+    
+    my $pdfoutput = "$outputdir/$name.pdf";
+    my $pngoutput = "$outputdir/$name.png";
+    
+    my $output = `Rscript $basedir/plot-4c-signal.r $genomecoord $shading $statsfile $ylimlow $ylimhigh $enhancerfile $promoterfile $pdfoutput $pngoutput $signalfile $bootstrapfile $linecolor $shadingcolor $transparencyperc 2>&1`;
   
     die "Failed to generate output for $name, messages: $output" unless $? == 0;
   }
@@ -88,7 +95,7 @@ for my $skey (keys(%samplegroups)) {
   my $pngoutput = "$outputdir/$skey.png";
   
   print "\tPlotting $skey...\n";
-  my $output = `Rscript $basedir/plot-4c-signal.r $signalfile $bootstrapfile $statsfile $shading $genomecoord $ylimlow $ylimhigh $enhancerfile $promoterfile $pdfoutput $pngoutput 2>&1`;
+  my $output = `Rscript $basedir/plot-4c-signal.r $genomecoord $shading $statsfile $ylimlow $ylimhigh $enhancerfile $promoterfile $pdfoutput $pngoutput $signalfile $bootstrapfile $linecolor $shadingcolor $transparencyperc 2>&1`;
 
   die "Failed to generate output for $skey, messages: $output" unless $? == 0;
 }
