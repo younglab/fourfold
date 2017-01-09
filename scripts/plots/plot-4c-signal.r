@@ -39,7 +39,7 @@ polygon.ignore <- function(...) { #x,y,m,isstatsfile,col) {
   
 }
 
-make.plot <- function(pl,sl,ylimlow,ylimhigh) {
+make.plot <- function(pl,sl,ylimlow,ylimhigh,coord) {
   xval <- unlist(pl)
   xlim <- range(xval)
   
@@ -49,7 +49,10 @@ make.plot <- function(pl,sl,ylimlow,ylimhigh) {
     ylim <- quantile(unlist(sl),probs=c(0,.95))
   }
   
-  plot(xval,rep(0,length(xval)),type='n',xlim=xlim,ylim=ylim,frame.plot = F,ylab="4C-seq signal (RPM)",xlab="Genomic Position (bp)")
+  plot(xval,rep(0,length(xval)),type='n',
+       xlim=xlim,ylim=ylim,frame.plot = F,
+       ylab="4C-seq signal (RPM)",xlab="Genomic Position (bp)",
+       main=coord)
   
   return(ylim)
 }
@@ -96,6 +99,7 @@ if(length(args)<13) {
   stop(paste("Arguments: <region> <type> <is stats file> <ylim low> <ylim high> <enhancer file> <promoter file> <output PDF> <output PNG> [<signal table> <bootstrap table> <line color> <shading color> <alpha transparency>]x. Saw ",paste(args)))
 }
 
+coord.str <- args[1]
 region <- convert.string.to.Granges(args[1])
 c.type <- args[2]
 isstatsfile <- as.integer(args[3]) != 0
@@ -147,14 +151,14 @@ background <- mapply(function(m,p) as.matrix(m[,-(1:2)])[queryHits(p),],bt,o,SIM
 allpos <- mapply(function(g,p) start(g)[queryHits(p)],pos,o,SIMPLIFY=F)
 
 pdf(pdf.file,width=12,height=6)
-ylim <- make.plot(allpos,signal,ylimlow,ylimhigh)
+ylim <- make.plot(allpos,signal,ylimlow,ylimhigh,coord.str)
 mapply(draw.sample,allpos,signal,background,as.list(rep(isstatsfile,length(allpos))),as.list(l.colors),as.list(s.colors),as.list(a.trans),SIMPLIFY=F)
 draw.enhancers.promoters(enhancers,prom,ylim)
 dev.off()
 
 
 CairoPNG(png.file,width=1200,height=600)
-ylim <- make.plot(allpos,signal,ylimlow,ylimhigh)
+ylim <- make.plot(allpos,signal,ylimlow,ylimhigh,coord.str)
 mapply(draw.sample,allpos,signal,background,as.list(rep(isstatsfile,length(allpos))),as.list(l.colors),as.list(s.colors),as.list(a.trans),SIMPLIFY=F)
 draw.enhancers.promoters(enhancers,prom,ylim)
 dev.off()
