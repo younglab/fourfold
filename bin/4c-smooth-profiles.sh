@@ -23,7 +23,7 @@ function helpmenu() {
   echo "-i|--input  Set input directory (default bootstrap)"
   echo "-m STR|--mode=STR Set smoothing mode (see below, default mean)"
   echo ""
-  echo "Modes of smoothing: mean, linear"
+  echo "Modes of smoothing: mean"
 }
 
 while [ $# -ge 1 ]; do
@@ -45,7 +45,7 @@ while [ $# -ge 1 ]; do
 	    SMOOTHINGMODE="$2"
 	    
 	    case "$SMOOTHINGMODE" in ## validate mode
-        mean|linear)
+        mean)
           ;;
         *)
           helpmenu "Error: invalid smoothing mode"
