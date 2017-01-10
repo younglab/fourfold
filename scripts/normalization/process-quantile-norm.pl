@@ -30,7 +30,7 @@ if(scalar(@ARGV) < 5) {
   die "process-quantile-norm.pl <sample table> <basedir> <organism database> <output dir> <only cis positions?> <samples...>";
 }
 
-my ($sampletable,$basedir,$organismdatabase,$outputdir,$onlycis,@samples) = @ARGV;
+my ($sampletable,$basedir,$organismdatabase,$outputdir,$cisonly,@samples) = @ARGV;
 
 die "Cannot find $sampletable!" unless -e $sampletable;
 die "Cannot find $outputdir!" unless -e $outputdir;
@@ -85,7 +85,7 @@ my $qnormbtmp = "$outputdir/quantile-normalized-samples-bootstrap.txt";
 
 my $output = `Rscript $basedir/quantile-normalization.r $outputdir $vchrom $exe 2>&1`;
 
-die "Failed to normalize (cmd: Rscript $basedir/quantile-normalization.r $outputdir $onlycis $exe): $output" unless $? == 0;
+die "Failed to normalize (cmd: Rscript $basedir/quantile-normalization.r $outputdir $cisonly $exe): $output" unless $? == 0;
 
 open(N,"<","$qnormtmp") or die "Cannot read normalized samples: $!";
 
