@@ -23,15 +23,17 @@ function helpmenu() {
     echo "$@"
   fi
   
-  echo "Syntax: process-4c.sh <sample XSLX table>"
-  echo "-h Help menu (this menu)"
-  echo "-n INT, --bowtie-n=INT Sets bowtie 1 -n parameter to INT"
-  echo "-m INT, --bowtie-m=INT sets bowtie 1 -m parameter to INT"
-  echo "-k INT, --bowtie-k=INT sets bowtie 1 -k parameter to INT"
-  echo "--validate-table-only exits after running XSLX table validation"
-  echo "--skip-table-validation skips table validation step"
-  echo "--lsf-queue=STR sets the LSF queue to dispatch on (default 'normal')"
-  echo "--geo Save GEO-uploadable files"
+  printf "Syntax: 4c-pipeline.sh [options] <4C sample XLSX table>\n"
+  printf "\tThis command takes the 4C-seq samples within the XSLX spreadsheet and will trim, align, and plot the 4C signal in WIG files\n"
+  printf "\nThe following options are supported:\n"
+  (printf " %s\t%s\n" "-h" "print this help menu and exit"
+   printf " %s\t%s\n" "-n INT, --bowtie-n=INT" "sets -n parameter for bowtie 1 to INT (INT must be positive)"
+   printf " %s\t%s\n" "-m INT, --bowtie-m=INT" "sets -m parameter for bowtie 1 to INT (INT must be positive)"
+   printf " %s\t%s\n" "-k INT, --bowtie-k=INT" "sets -k parameter for bowtie 1 to INT (INT must be positive)"
+   printf " %s\t%s\n" "--validate-table-only" "checks the 4C sample file for correctness and then exits, skips further processing"
+   printf " %s\t%s\n" "--skip-table-validation" "skips table validation step"
+   printf " %s\t%s\n" "--lsf-queue=STR" "sets the name of the LSF queue to dispatch alignment jobs in parallel on (default 'normal')"
+   printf " %s\t%s\n" "--geo" "generates GEO-ready FASTQ files for upload with corresponding MD5SUM files") | column -t -s $'\t'
 }
 
 
