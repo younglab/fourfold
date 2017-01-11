@@ -19,14 +19,15 @@ function helpmenu() {
     echo "$@"
   fi
   
-  echo "Syntax: 4c-plots.sh [options] <template sample XLSX file> <genomic coordinates> <output dir> <files/pattern...>"
-  echo "-h help menu"
-  echo "-i DIR, --inputdir=DIR set input directory"
-  echo "-s TYPE, --shading=TYPE set the shading type, one of confidence interval (ci), standard deviation (sd), or none (na)"
-  echo "--group-only Skip output of individual sample plots"
-  echo "--ylim-low=[numeric] Set the lower y-axis range value (must also set --ylim-high)"
-  echo "--ylim-high=[numeric] Set the upper y-axis range value (must also set --ylim-low)"
-  echo "--add-enhancers=[BED file] Plot enhancers within plot in given BED file"
+  printf "Syntax: 4c-plots.sh [options] <template sample XLSX file> <genomic coordinates> <output dir> <files/pattern...>\n"
+  printf "\n"
+  (printf " %s\t%s\n" "-h" "print help menu and exit"
+  printf " %s\t%s\n" "-i DIR, --inputdir=DIR" "sets input directory to read from (default bootstrap)"
+  printf " %s\t%s\n" "-s TYPE, --shading=TYPE" "set the shading type, one of confidence interval (ci), standard deviation (sd), or none (na)"
+  printf " %s\t%s\n" "--group-only" "skips the plotting of individual replicates per cell type and condition"
+  printf " %s\t%s\n" "--ylim-low=[numeric]" "set the value of the bottom of the y-axis range (must also set --ylim-high)"
+  printf " %s\t%s\n" "--ylim-high=[numeric]" "set the value of the top of the y-axis range (must also set --ylim-low)"
+  printf " %s\t%s\n" "--add-enhancers=[BED file]" "plot any enhancers in the BED file are in the range of the genomic coordinates") | column -t -s $'\t'
   #echo "--add-promoters=[BED file] Plot TSS of genes within BED file"
 }
 
