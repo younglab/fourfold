@@ -34,6 +34,9 @@ my %tmpfilemap;
 my %tmpfilesize;
 
 ### unpack sequences first
+
+print "\tRetrieving raw FASTQ files...\n";
+
 for( my $i = 0; $i < $nr; $i++ ) { 
 
   my @arr = Spreadsheet::Read::cellrow($sheet,$i+1);
@@ -99,7 +102,7 @@ for( my $i = 0; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
   
   next if $name =~ /^#/;
   next if $name =~ /^$/;
-  print "\tProcessing sample $name...\n";
+  print "\tProcessing reads for sample $name...\n";
 
   die "Somehow cannot find any temporary file for $name" unless defined($tmpfilemap{$name});
   my $tmpseqfile = $tmpfilemap{$name};
