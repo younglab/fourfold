@@ -15,7 +15,7 @@ wait
 $BIN4C/4c-normalize-samples.sh ../k562-example-4c-data.xlsx quantile quantile-norm K562.*
 
 ### smoothes quantile normalized profiles (remove --input=quantile-norm to smooth the unnormalized profiles)
-$BIN4C/4c-smooth-profiles.sh --input=quantile-norm ../k562-example-4c-data.xlsx smoothed-profiles 10000 50 K562.*
+$BIN4C/4c-smooth-profiles.sh --inputdir=quantile-norm ../k562-example-4c-data.xlsx smoothed-profiles 10000 50 K562.*
 
 ### make individual replicate and per condition plots of K562 super-enhancers in MYC TAD
 $BIN4C/4c-plots.sh --inputdir=smoothed-profiles --ylim-low=0 --ylim-high=800 --add-enhancers=../k562-se.bed ../k562-example-4c-data.xlsx chr8:130500000-130770818 sample-plots K562.* 
