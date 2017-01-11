@@ -7,24 +7,27 @@ ORGANISMDATABASE=$BASEDIR/../db/organism-database.txt
 INPUTDIR="bootstrap"
 SMOOTHINGMODE=mean
 
-TEMP=`getopt -o hm:i: -l input-dir:,mode: -n '4csmoothing' -- "$@"`
-eval set -- "$TEMP"
-
 function helpmenu() {
   if [ $# -gt 0 ];
   then
     echo "$@"
   fi
   
-  echo "Syntax: 4c-smooth-profiles.sh [options] <XSLX table> <output dir> <bin size> <step size> [sample names]"
-  echo "If no sample names (from the Excel table) are given, then all samples within the Excel table are smoothed"
-  echo "Options:"
-  echo "-h  Help menu"
-  echo "-i|--input  Set input directory (default bootstrap)"
-  echo "-m STR|--mode=STR Set smoothing mode (see below, default mean)"
-  echo ""
-  echo "Modes of smoothing: mean"
+  printf "Syntax: 4c-smooth-profiles.sh [options] <XLSX table> <output dir> <bin size> <step size> [sample names]\n"
+  printf "If no sample names (from the Excel table) are given, then all samples within the Excel table are smoothed\n"
+  printf "\n"
+  (printf "Available options are:\n"
+  printf " %s\t%s\n" "-h" "print this help menu and exit"
+  printf " %s\t%s\n" "-i DIR, --inputdir=DIR" "sets the input directory to read fromt (default bootstrap)"
+  printf " %s\t%s\n" "-m STR, --mode=STR" "sets smoothing mode (see below, default mean)"
+  printf "\n"""
+  printf "Modes of smoothing: mean\n") | column -t -s $'\t'
 }
+
+TEMP=`getopt -o hm:i: -l input-dir:,inputdir:,mode: -n '4csmoothing' -- "$@"`
+eval set -- "$TEMP"
+
+
 
 while [ $# -ge 1 ]; do
 	case "$1" in
@@ -32,7 +35,7 @@ while [ $# -ge 1 ]; do
 	    shift
 	    break
 	    ;;
-	  -i|--input-dir)
+	  -i|--input-dir|--inputdir) ## input-dir is a former long name for this options, inputdir is to be more consistent across other scripts
 	    INPUTDIR="$2"
 	    shift
 	    ;;
