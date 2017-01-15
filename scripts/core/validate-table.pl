@@ -71,7 +71,7 @@ for( my $i = 0; $i < $nr; $i++ ) {
     my $basename = basename($fastq);
     
     my $cmd = "wget --spider $fastq 2>&1";
-    $cmd = "wget --spider $fastq &> logs/$basename.wget.validate.txt" unless $validateonly;
+    $cmd = "wget --spider $fastq >logs/$basename.wget.validate.txt 2>&1" unless $validateonly;
     
     my $output = `$cmd`;
     die "$name does not seem to exist at $fastq (output: $output)" unless $? == 0;

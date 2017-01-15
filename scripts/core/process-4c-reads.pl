@@ -116,7 +116,7 @@ for( my $i = 0; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
   }
   
   my $test;
-  my $barcodetest = qr/NA/;
+  my $barcodetest = qr/INVALID1234/;
   my $trimlength;
   my $geotrimlength;
   my ($nbarcode,$nprimer) = (0,0);
