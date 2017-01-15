@@ -5,11 +5,11 @@ use File::Basename;
 use Spreadsheet::Read;
 use FourCOpts::OrganismDatabase qw(loadorgdatabase);
 
-if(scalar(@ARGV)<2) {
-  die "Syntax: ./validate-table.pl <sample table> <organism database>";
+if(scalar(@ARGV)<3) {
+  die "Syntax: ./validate-table.pl <sample table> <organism database> <validate only>";
 }
 
-my ($sampletable,$organismdatabase) = @ARGV;
+my ($sampletable,$organismdatabase,$validateonly) = @ARGV;
 
 die "Cannot find $sampletable!" unless -e $sampletable;
 die "Cannot find $organismdatabase!" unless -e $organismdatabase;
@@ -37,6 +37,8 @@ for( my $i = 0; $i < $nr; $i++ ) {
   
   next if $name =~ /^#/;
   next if $name =~ /^$/;
+  
+  print "\tChecking $name...\n";
   
   die "$name is duplicated in the table, line " . ($i+1) . "!" if defined($names{$name});
   $names{$name} = 1;
@@ -67,8 +69,12 @@ for( my $i = 0; $i < $nr; $i++ ) {
   my $origfastq = $fastq;
   if( $fastq =~ /^ftp:\/\//i ) {
     my $basename = basename($fastq);
-    `wget --spider $fastq &> logs/$basename.wget.validate.txt`;
-    die "$name does not seem to exist at $fastq" unless $? == 0;
+    
+    my $cmd = "wget --spider $fastq 2>&1";
+    $cmd = "wget --spider $fastq &> logs/$basename.wget.validate.txt" unless $validateonly;
+    
+    my $output = `$cmd`;
+    die "$name does not seem to exist at $fastq (output: $output)" unless $? == 0;
   } else {
     $fastq =~ s/\\\\WI-FILES/\/nfs/;
     $fastq =~ s/\\\\WI-HTDATA/\/lab/;

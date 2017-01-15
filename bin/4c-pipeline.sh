@@ -123,7 +123,7 @@ if [ $SKIPVALIDATION -eq 0 ];
 then
   echo "Validating sample table..."
 
-  perl -I$LIBDIR $SCRIPTDIR/validate-table.pl $SAMPLETABLE $ORGANISMDATABASE
+  perl -I$LIBDIR $SCRIPTDIR/validate-table.pl $SAMPLETABLE $ORGANISMDATABASE $ENDAFTERVALIDATION
 
   if [ $? -ne 0 ];
   then
