@@ -31,7 +31,7 @@ function helpmenu() {
   #echo "--add-promoters=[BED file] Plot TSS of genes within BED file"
 }
 
-TEMP=`getopt -o hi: -l inputdir:,group-only,ylim-low:,ylim-high:,add-enhancers:,add-promoters: -n '4cplots' -- "$@"`
+TEMP=`getopt -o hi:s: -l inputdir:,group-only,ylim-low:,ylim-high:,add-enhancers:,add-promoters:,shading: -n '4cplots' -- "$@"`
 eval set -- "$TEMP"
 
 while [ $# -ge 1 ]; do

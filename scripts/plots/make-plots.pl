@@ -86,6 +86,10 @@ for( my $i = 0; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
   }
 }
 
+if(scalar(keys(%samplegroups))==0) {
+  die "No samples matched the list of sample IDs passed!";
+}
+
 print "Plotting combined sample group plots...\n";
 
 for my $skey (keys(%samplegroups)) {
