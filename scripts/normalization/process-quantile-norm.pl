@@ -44,7 +44,7 @@ my $nr = ${$sheet}{"maxrow"};
 my @norm;
 my %samplegroups;
 my $chromfile = "";
-my $vchrom = "NA";
+my $vchrom = "";
 
 for( my $i = 0; $i < $nr; $i++ ) { 
   my @arr = Spreadsheet::Read::cellrow($sheet,$i+1);
