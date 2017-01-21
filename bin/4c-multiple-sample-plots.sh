@@ -11,6 +11,8 @@ YLIMLOW=NA
 YLIMHIGH=NA
 ENHANCERFILE=NA
 PROMOTERFILE=NA
+VERTLINES=NA
+
 
 
 function helpmenu() {
@@ -26,7 +28,9 @@ function helpmenu() {
   printf " %s\t%s\n" "-s TYPE, --shading=TYPE" "set the shading type, one of confidence interval (ci), standard deviation (sd), or none (na)"
   printf " %s\t%s\n" "--ylim-low=[numeric]" "set the value of the bottom of the y-axis range (must also set --ylim-high)"
   printf " %s\t%s\n" "--ylim-high=[numeric]" "set the value of the top of the y-axis range (must also set --ylim-low)"
-  printf " %s\t%s\n" "--add-enhancers=[BED file]" "plot any enhancers in the BED file are in the range of the genomic coordinates") | column -t -s $'\t'
+  printf " %s\t%s\n" "--add-enhancers=[BED file]" "plot any enhancers in the BED file are in the range of the genomic coordinates"
+  printf " %s\t%s\n" "--add-vertical-line=[POS1,POS2,...]" "plot black vertical line at positions POS1[,POS2,...], must be comma-delimited") | column -t -s $'\t'
+
 }
 
 TEMP=`getopt -o hi: -l inputdir:,group-only,ylim-low:,ylim-high:,add-enhancers:,add-promoters: -n '4cmultiplots' -- "$@"`
@@ -88,6 +92,10 @@ while [ $# -ge 1 ]; do
 	    
 	    shift
 	    ;;
+	   --add-vertical-line)
+	    VERTLINES="$2"
+	    shift
+	    ;;
 	esac
 	shift
 done
@@ -137,7 +145,7 @@ then
 fi
 
 
-perl -I$LIBDIR $SCRIPTDIR/make-multiple-sample-plots.pl $SAMPLETABLE $MULTITABLE $ORGANISMDATABASE $SCRIPTDIR $COORDINATES $SHADING $INPUTDIR $OUTPUTDIR $YLIMLOW $YLIMHIGH $ENHANCERFILE $PROMOTERFILE
+perl -I$LIBDIR $SCRIPTDIR/make-multiple-sample-plots.pl $SAMPLETABLE $MULTITABLE $ORGANISMDATABASE $SCRIPTDIR $COORDINATES $SHADING $INPUTDIR $OUTPUTDIR $YLIMLOW $YLIMHIGH $ENHANCERFILE $PROMOTERFILE $VERTLINES
 
 if [ $? -ne 0 ];
 then

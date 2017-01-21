@@ -93,10 +93,18 @@ draw.enhancers.promoters <- function(enhancers,prom,ylim) {
   }
 }
 
+draw.lines <- function(vertlines) {
+  if(vertlines=="NA") return(NULL)
+  
+  i <- as.integer(unlist(strsplit(vertlines,split=',')))
+  
+  abline(v=i)
+}
+
 args <- commandArgs(T)
 
 if(length(args)<13) {
-  stop(paste("Arguments: <region> <type> <is stats file> <ylim low> <ylim high> <enhancer file> <promoter file> <output PDF> <output PNG> [<signal table> <bootstrap table> <line color> <shading color> <alpha transparency>]x. Saw ",paste(args)))
+  stop(paste("Arguments: <region> <type> <is stats file> <ylim low> <ylim high> <enhancer file> <promoter file> <verticle line coordinates> <output PDF> <output PNG> [<signal table> <bootstrap table> <line color> <shading color> <alpha transparency>]x. Saw ",paste(args)))
 }
 
 coord.str <- args[1]
@@ -107,10 +115,11 @@ ylimlow <- as.integer(args[4])
 ylimhigh <- as.integer(args[5])
 enhancerfile <- args[6]
 promoterfile <- args[7]
-pdf.file <- args[8]
-png.file <- args[9]
+vertlines <- args[8]
+pdf.file <- args[9]
+png.file <- args[10]
 
-args <- args[-(1:9)]
+args <- args[-(1:10)]
 
 st.file <- args[seq(1,length(args),5)]
 bt.file <- args[seq(2,length(args),5)]
@@ -154,6 +163,7 @@ pdf(pdf.file,width=12,height=6)
 ylim <- make.plot(allpos,signal,ylimlow,ylimhigh,coord.str)
 mapply(draw.sample,allpos,signal,background,as.list(rep(isstatsfile,length(allpos))),as.list(l.colors),as.list(s.colors),as.list(a.trans),SIMPLIFY=F)
 draw.enhancers.promoters(enhancers,prom,ylim)
+draw.lines(vertlines)
 dev.off()
 
 
@@ -161,4 +171,5 @@ CairoPNG(png.file,width=1200,height=600)
 ylim <- make.plot(allpos,signal,ylimlow,ylimhigh,coord.str)
 mapply(draw.sample,allpos,signal,background,as.list(rep(isstatsfile,length(allpos))),as.list(l.colors),as.list(s.colors),as.list(a.trans),SIMPLIFY=F)
 draw.enhancers.promoters(enhancers,prom,ylim)
+draw.lines(vertlines)
 dev.off()

@@ -5,9 +5,9 @@ use Spreadsheet::Read;
 use FourCOpts::Utils qw(issamplein);
 
 
-die "Arguments: <template file> <organism database> <basedir> <genomic coordinates> <shading> <input dir> <output dir> <group only> <ylim low> <ylim high> <enhancer file> <promoter file> <files 1> [files 2...]" unless scalar(@ARGV)>=13;
+die "Arguments: <template file> <organism database> <basedir> <genomic coordinates> <shading> <input dir> <output dir> <group only> <ylim low> <ylim high> <enhancer file> <promoter file> <verticle line coordinates> <files 1> [files 2...]" unless scalar(@ARGV)>=13;
 
-my ($sampletable,$organismdatabase,$basedir,$genomecoord, $shading,$inputdir,$outputdir,$grouponly,$ylimlow,$ylimhigh,$enhancerfile,$promoterfile,@files) = @ARGV;
+my ($sampletable,$organismdatabase,$basedir,$genomecoord, $shading,$inputdir,$outputdir,$grouponly,$ylimlow,$ylimhigh,$enhancerfile,$promoterfile,$vertlines,@files) = @ARGV;
 
 ## transfer into adjustable parameters someday
 my ($linecolor,$shadingcolor,$transparencyperc) = ("black","red",50);
@@ -80,7 +80,7 @@ for( my $i = 0; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
     my $pdfoutput = "$outputdir/$name.pdf";
     my $pngoutput = "$outputdir/$name.png";
     
-    my $output = `Rscript $basedir/plot-4c-signal.r $genomecoord $shading $statsfile $ylimlow $ylimhigh $enhancerfile $promoterfile $pdfoutput $pngoutput $signalfile $bootstrapfile $linecolor $shadingcolor $transparencyperc 2>&1`;
+    my $output = `Rscript $basedir/plot-4c-signal.r $genomecoord $shading $statsfile $ylimlow $ylimhigh $enhancerfile $promoterfile $vertlines $pdfoutput $pngoutput $signalfile $bootstrapfile $linecolor $shadingcolor $transparencyperc 2>&1`;
   
     die "Failed to generate output for $name, messages: $output" unless $? == 0;
   }
@@ -99,7 +99,7 @@ for my $skey (keys(%samplegroups)) {
   my $pngoutput = "$outputdir/$skey.png";
   
   print "\tPlotting $skey...\n";
-  my $output = `Rscript $basedir/plot-4c-signal.r $genomecoord $shading $statsfile $ylimlow $ylimhigh $enhancerfile $promoterfile $pdfoutput $pngoutput $signalfile $bootstrapfile $linecolor $shadingcolor $transparencyperc 2>&1`;
+  my $output = `Rscript $basedir/plot-4c-signal.r $genomecoord $shading $statsfile $ylimlow $ylimhigh $enhancerfile $promoterfile $vertlines $pdfoutput $pngoutput $signalfile $bootstrapfile $linecolor $shadingcolor $transparencyperc 2>&1`;
 
   die "Failed to generate output for $skey, messages: $output" unless $? == 0;
 }
