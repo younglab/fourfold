@@ -12,6 +12,7 @@ LSFQUEUE=normal
 BOWTIEK=1
 BOWTIEM=1
 BOWTIEN=1
+BOOTSTRAPITERATIONS=1000
 
 function cleanproc() {
   rm -rf wigfiles stats bamfiles logs bootstrap *.fq.gz .tmp*
@@ -27,17 +28,20 @@ function helpmenu() {
   printf "\tThis command takes the 4C-seq samples within the XSLX spreadsheet and will trim, align, and plot the 4C signal in WIG files\n"
   printf "\nThe following options are supported:\n"
   (printf " %s\t%s\n" "-h" "print this help menu and exit"
-   printf " %s\t%s\n" "-n INT, --bowtie-n=INT" "sets -n parameter for bowtie 1 to INT (INT must be positive)"
-   printf " %s\t%s\n" "-m INT, --bowtie-m=INT" "sets -m parameter for bowtie 1 to INT (INT must be positive)"
-   printf " %s\t%s\n" "-k INT, --bowtie-k=INT" "sets -k parameter for bowtie 1 to INT (INT must be positive)"
+   printf " %s\t%s\n" "-r [INT], --resampling=[INT]" "sets the number of bootstrap iterations to generate (default 1000)"
+   printf " %s\t%s\n" "-n [INT], --bowtie-n=[INT]" "sets -n parameter for bowtie 1 to INT (INT must be positive)"
+   printf " %s\t%s\n" "-m [INT], --bowtie-m=[INT]" "sets -m parameter for bowtie 1 to INT (INT must be positive)"
+   printf " %s\t%s\n" "-k [INT], --bowtie-k=[INT]" "sets -k parameter for bowtie 1 to INT (INT must be positive)"
    printf " %s\t%s\n" "--validate-table-only" "checks the 4C sample file for correctness and then exits, skips further processing"
    printf " %s\t%s\n" "--skip-table-validation" "skips table validation step"
    printf " %s\t%s\n" "--lsf-queue=STR" "sets the name of the LSF queue to dispatch alignment jobs in parallel on (default 'normal')"
    printf " %s\t%s\n" "--geo" "generates GEO-ready FASTQ files for upload with corresponding MD5SUM files") | column -t -s $'\t'
+  printf "\n"
+  
 }
 
 
-TEMP=`getopt -o hk:m:v: -l validate-table-only,lsf-queue:,bowtie-m:,bowtie-k:,bowtie-v:,skip-table-validation,geo -n '4cpipeline' -- "$@"`
+TEMP=`getopt -o hk:m:v:r: -l validate-table-only,lsf-queue:,bowtie-m:,bowtie-k:,bowtie-v:,skip-table-validation,geo,resampling: -n '4cpipeline' -- "$@"`
 eval set -- "$TEMP"
 
 while [ $# -ge 1 ]; do
@@ -57,6 +61,12 @@ while [ $# -ge 1 ]; do
 	  -k|--bowtie-k)
 	    BOWTIEK="$2"
 	    shift
+	    ;;
+	  -r|--resampling)
+	    BOOTSTRAPITERATIONS="$2"
+	    shift
+	    
+	    echo "WARNING: setting number of resamplings not yet implemented"
 	    ;;
 	  -h)
 	    helpmenu
@@ -187,7 +197,7 @@ fi
 
 echo "Mapping to fragments..."
 
-perl -I$LIBDIR $SCRIPTDIR/map-to-fragments.pl $SAMPLETABLE $BASEDIR $SCRIPTDIR $ORGANISMDATABASE
+perl -I$LIBDIR $SCRIPTDIR/map-to-fragments.pl $SAMPLETABLE $BASEDIR $SCRIPTDIR $ORGANISMDATABASE $BOOTSTRAPITERATIONS
 
 if [ $? -ne 0 ];
 then

@@ -85,42 +85,27 @@ sub tomegabaserpm {
 }
 
 sub executebootstrap {
-  my ($basedir,$infile,$outfile,$num) = @_;
+  my ($basedir,$infile,$outfile,$num,$bi) = @_;
   
-  my $output = `Rscript $basedir/bootstrap.r $infile $outfile $num`;
+  my $output = `Rscript $basedir/bootstrap.r $infile $outfile $num $bi`;
   die "Failed to run bootstrap script: $output" unless $? == 0;
 }
 
-if(scalar(@ARGV)<4) {
-  die "map-to-fragments.pl <sample table> <basedir> <scriptdir> <organism database>";
+if(scalar(@ARGV)<5) {
+  die "map-to-fragments.pl <sample table> <basedir> <scriptdir> <organism database> <bootstrap iterations>";
 }
 
 
-my ($sampletable,$basedir,$scriptdir,$organismdatabase) = @ARGV;
+my ($sampletable,$basedir,$scriptdir,$organismdatabase,$bootstrapiter) = @ARGV;
 
 die "Cannot find $sampletable!" unless -e $sampletable;
 die "Cannot find $organismdatabase!" unless -e $organismdatabase;
 
+die "The number of bootstrap iterations must be a integer!" unless( $bootstrapiter =~ /^\d+$/ );
+die "The number of bootstrap iterations must be positive!" unless( $bootstrapiter >= 1);
+
+
 my %organisms = %{loadorgdatabase($organismdatabase)};
-
-#open(D,"<","$organismdatabase") or die "Cannot read $organismdatabase: $!";
-
-#while(<D>) {
-#  chomp;
-  
-#  my ($id,$bowtie,$fasta,$chromsizes) = split /\t/;
-  
-#  next if $id =~ /^$/;
-  
-#  die "In organism database, cannot find bowtie index for $id!" unless -e "$bowtie.1.ebwt";
-#  die "In organism database, cannot find FASTA file for $id!" unless -e $fasta;
-#  die "In organism database, cannot find chromosome sizes file for $id!" unless -e $chromsizes;
-  
-#  for(split(/,/,$id)) {
-#    $organisms{lc $_} = [$bowtie,$fasta,$chromsizes];
-#  }
-#}
-#close(D);
 
 my $database = ReadData($sampletable);
 my $sheet = $database->[1]; ## get first spreadsheet
@@ -171,10 +156,10 @@ for( my $i = 0; $i < $nr; $i++ ) {
 #  tomegabaserpm("wigfiles/$name.raw.wig","wigfiles/$name.raw.MB.rpm.wig",$viewpointchrom,$viewpointstart,$viewpointend);
 #  tomegabaserpm("wigfiles/$name.filtered.wig","wigfiles/$name.filtered.MB.rpm.wig",$viewpointchrom,$viewpointstart,$viewpointend);
   
-  executebootstrap($scriptdir,"bootstrap/$name.raw.counts.txt","bootstrap/$name.raw.counts.bootstrap.txt",1);
-  executebootstrap($scriptdir,"bootstrap/$name.filtered.counts.txt","bootstrap/$name.filtered.counts.bootstrap.txt",1);
-  executebootstrap($scriptdir,"bootstrap/$name.raw.counts.txt","bootstrap/$name.raw.rpm.bootstrap.txt",$num);
-  executebootstrap($scriptdir,"bootstrap/$name.filtered.counts.txt", "bootstrap/$name.filtered.rpm.bootstrap.txt", $num);
+  executebootstrap($scriptdir,"bootstrap/$name.raw.counts.txt","bootstrap/$name.raw.counts.bootstrap.txt",1,$bootstrapiter);
+  executebootstrap($scriptdir,"bootstrap/$name.filtered.counts.txt","bootstrap/$name.filtered.counts.bootstrap.txt",1,$bootstrapiter);
+  executebootstrap($scriptdir,"bootstrap/$name.raw.counts.txt","bootstrap/$name.raw.rpm.bootstrap.txt",$num,$bootstrapiter);
+  executebootstrap($scriptdir,"bootstrap/$name.filtered.counts.txt", "bootstrap/$name.filtered.rpm.bootstrap.txt",$num,$bootstrapiter);
   
   `wigToBigWig wigfiles/$name.raw.wig $chromsizes wigfiles/$name.raw.bw`;
   `wigToBigWig wigfiles/$name.filtered.wig $chromsizes wigfiles/$name.filtered.bw`;
