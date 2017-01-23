@@ -65,8 +65,6 @@ while [ $# -ge 1 ]; do
 	  -r|--resampling)
 	    BOOTSTRAPITERATIONS="$2"
 	    shift
-	    
-	    echo "WARNING: setting number of resamplings not yet implemented"
 	    ;;
 	  -h)
 	    helpmenu
