@@ -2,7 +2,7 @@
 
 use strict;
 use Spreadsheet::Read;
-use FourCOpts::Utils qw(issamplein);
+use FourCOpts::Utils qw(issamplein convertcoordinatestring);
 
 
 die "Arguments: <template file> <multiple sample template file> <organism database> <basedir> <genomic coordinates> <shading> <input dir> <output dir> <ylim low> <ylim high> <enhancer file> <promoter file> <vertlines>" unless scalar(@ARGV)>=11;
@@ -19,6 +19,9 @@ die "Cannot find $inputdir" unless -e $inputdir;
 die "Cannot find $outputdir" unless -e $outputdir;
 die "Cannot find $enhancerfile" unless ($enhancerfile eq "NA" || -e $enhancerfile);
 die "Cannot find $promoterfile" unless ($promoterfile eq "NA" || -e $promoterfile);
+
+$genomecoord = convertcoordinatestring($genomecoord);
+die "$genomecoord is an invalid genomic coordinate string!" unless $genomecoord ne "";
 
 
 my $database = ReadData($sampletable);
