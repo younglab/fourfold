@@ -15,17 +15,17 @@ convert.string.to.Granges <- function(s) {
   GRanges(seqnames=v[1],ranges=IRanges(as.integer(v[2]),as.integer(v[3])),strand='*')
 }
 
-conf.int <- function(x,y,m,isstatsfile,col) {
+conf.int <- function(x,y,m,isstatsfile,col,alpha) {
   if( isstatsfile) 
     q <- m[,4:5]
   else
-    q <- rowQuantiles(m,probs=c(.025,.975))
+    q <- rowQuantiles(m,probs=c(alpha/2,1-alpha/2))
 
   polygon(c(x,rev(x)),c(q[,1],rev(y)),col=col,border=NA)
   polygon(c(x,rev(x)),c(q[,2],rev(y)),col=col,border=NA)
 }
 
-int.sd <- function(x,y,m,isstatsfile,col) {
+int.sd <- function(x,y,m,isstatsfile,col,alpha) {
   if( isstatsfile ) 
     q <- sqrt(m[,2])
   else
@@ -57,7 +57,7 @@ make.plot <- function(pl,sl,ylimlow,ylimhigh,coord) {
   return(ylim)
 }
   
-draw.sample <- function(x,y,bm,isstatsfile,l.col,s.col,a.trans) {
+draw.sample <- function(x,y,bm,isstatsfile,l.col,s.col,a.trans,alpha) {
   lines(x,y,col=l.col,lwd=2)
   
   f <- switch(c.type,
@@ -68,7 +68,7 @@ draw.sample <- function(x,y,bm,isstatsfile,l.col,s.col,a.trans) {
   v <- as.vector(col2rgb(s.col))
   col <- rgb(v[1]/255,v[2]/255,v[3]/255,a.trans)
   
-  f(x,y,bm,isstatsfile,col)
+  f(x,y,bm,isstatsfile,col,alpha)
 }
 
 draw.enhancers.promoters <- function(enhancers,prom,ylim) {
@@ -103,8 +103,8 @@ draw.lines <- function(vertlines) {
 
 args <- commandArgs(T)
 
-if(length(args)<13) {
-  stop(paste("Arguments: <region> <type> <is stats file> <ylim low> <ylim high> <enhancer file> <promoter file> <verticle line coordinates> <output PDF> <output PNG> [<signal table> <bootstrap table> <line color> <shading color> <alpha transparency>]x. Saw ",paste(args)))
+if(length(args)<14) {
+  stop(paste("Arguments: <region> <type> <is stats file> <ylim low> <ylim high> <enhancer file> <promoter file> <verticle line coordinates> <output PDF> <output PNG> <ci alpha> [<signal table> <bootstrap table> <line color> <shading color> <alpha transparency>]x. Saw ",paste(args)))
 }
 
 coord.str <- args[1]
@@ -118,6 +118,7 @@ promoterfile <- args[7]
 vertlines <- args[8]
 pdf.file <- args[9]
 png.file <- args[10]
+ci.alpha <- as.numeric(args[[1]])
 
 args <- args[-(1:10)]
 
@@ -161,7 +162,7 @@ allpos <- mapply(function(g,p) start(g)[queryHits(p)],pos,o,SIMPLIFY=F)
 
 pdf(pdf.file,width=12,height=6)
 ylim <- make.plot(allpos,signal,ylimlow,ylimhigh,coord.str)
-mapply(draw.sample,allpos,signal,background,as.list(rep(isstatsfile,length(allpos))),as.list(l.colors),as.list(s.colors),as.list(a.trans),SIMPLIFY=F)
+mapply(draw.sample,allpos,signal,background,as.list(rep(isstatsfile,length(allpos))),as.list(l.colors),as.list(s.colors),as.list(a.trans),as.list(rep(alpha,length(allpos))),SIMPLIFY=F)
 draw.enhancers.promoters(enhancers,prom,ylim)
 draw.lines(vertlines)
 dev.off()
@@ -169,7 +170,7 @@ dev.off()
 
 CairoPNG(png.file,width=1200,height=600)
 ylim <- make.plot(allpos,signal,ylimlow,ylimhigh,coord.str)
-mapply(draw.sample,allpos,signal,background,as.list(rep(isstatsfile,length(allpos))),as.list(l.colors),as.list(s.colors),as.list(a.trans),SIMPLIFY=F)
+mapply(draw.sample,allpos,signal,background,as.list(rep(isstatsfile,length(allpos))),as.list(l.colors),as.list(s.colors),as.list(a.trans),as.list(rep(alpha,length(allpos))),SIMPLIFY=F)
 draw.enhancers.promoters(enhancers,prom,ylim)
 draw.lines(vertlines)
 dev.off()

@@ -5,9 +5,9 @@ use Spreadsheet::Read;
 use FourCOpts::Utils qw(issamplein convertcoordinatestring);
 
 
-die "Arguments: <template file> <organism database> <basedir> <genomic coordinates> <shading> <input dir> <output dir> <group only> <ylim low> <ylim high> <enhancer file> <promoter file> <verticle line coordinates> <files 1> [files 2...]" unless scalar(@ARGV)>=13;
+die "Arguments: <template file> <organism database> <basedir> <genomic coordinates> <shading> <input dir> <output dir> <group only> <ylim low> <ylim high> <enhancer file> <promoter file> <verticle line coordinates> <CI alpha> <files 1> [files 2...]" unless scalar(@ARGV)>=13;
 
-my ($sampletable,$organismdatabase,$basedir,$genomecoord, $shading,$inputdir,$outputdir,$grouponly,$ylimlow,$ylimhigh,$enhancerfile,$promoterfile,$vertlines,@files) = @ARGV;
+my ($sampletable,$organismdatabase,$basedir,$genomecoord, $shading,$inputdir,$outputdir,$grouponly,$ylimlow,$ylimhigh,$enhancerfile,$promoterfile,$vertlines,$cialpha,@files) = @ARGV;
 
 ## transfer into adjustable parameters someday
 my ($linecolor,$shadingcolor,$transparencyperc) = ("black","red",50);
@@ -18,6 +18,8 @@ die "Cannot find $inputdir" unless -e $inputdir;
 die "Cannot find $outputdir" unless -e $outputdir;
 die "Cannot find $enhancerfile" unless ($enhancerfile eq "NA" || -e $enhancerfile);
 die "Cannot find $promoterfile" unless ($promoterfile eq "NA" || -e $promoterfile);
+
+die "CI is not an appropriate fractional number in (0,1]!" unless ($cialpha eq "1" || $cialpha =~ m/^0?[.]\d+$/);
 
 $genomecoord = convertcoordinatestring($genomecoord);
 die "$genomecoord is an invalid genomic coordinate string!" unless $genomecoord ne "";
@@ -82,7 +84,7 @@ for( my $i = 0; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
     my $pdfoutput = "$outputdir/$name.pdf";
     my $pngoutput = "$outputdir/$name.png";
     
-    my $output = `Rscript $basedir/plot-4c-signal.r $genomecoord $shading $statsfile $ylimlow $ylimhigh $enhancerfile $promoterfile $vertlines $pdfoutput $pngoutput $signalfile $bootstrapfile $linecolor $shadingcolor $transparencyperc 2>&1`;
+    my $output = `Rscript $basedir/plot-4c-signal.r $genomecoord $shading $statsfile $ylimlow $ylimhigh $enhancerfile $promoterfile $vertlines $pdfoutput $pngoutput $cialpha $signalfile $bootstrapfile $linecolor $shadingcolor $transparencyperc 2>&1`;
   
     die "Failed to generate output for $name, messages: $output" unless $? == 0;
   }
@@ -101,7 +103,7 @@ for my $skey (keys(%samplegroups)) {
   my $pngoutput = "$outputdir/$skey.png";
   
   print "\tPlotting $skey...\n";
-  my $output = `Rscript $basedir/plot-4c-signal.r $genomecoord $shading $statsfile $ylimlow $ylimhigh $enhancerfile $promoterfile $vertlines $pdfoutput $pngoutput $signalfile $bootstrapfile $linecolor $shadingcolor $transparencyperc 2>&1`;
+  my $output = `Rscript $basedir/plot-4c-signal.r $genomecoord $shading $statsfile $ylimlow $ylimhigh $enhancerfile $promoterfile $vertlines $pdfoutput $pngoutput $cialpha $signalfile $bootstrapfile $linecolor $shadingcolor $transparencyperc  2>&1`;
 
   die "Failed to generate output for $skey, messages: $output" unless $? == 0;
 }

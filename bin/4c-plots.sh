@@ -12,6 +12,7 @@ YLIMHIGH=NA
 ENHANCERFILE=NA
 PROMOTERFILE=NA
 VERTLINES=NA
+CIALPHA=0.95
 
 
 function helpmenu() {
@@ -25,15 +26,18 @@ function helpmenu() {
   (printf " %s\t%s\n" "-h" "print help menu and exit"
   printf " %s\t%s\n" "-i DIR, --inputdir=DIR" "sets input directory to read from (default bootstrap)"
   printf " %s\t%s\n" "-s TYPE, --shading=TYPE" "set the shading type, one of confidence interval (ci), standard deviation (sd), or none (na)"
+  printf " %s\t%s\n" "--ci-alpha=[PERC]" "set the alpha for the CI, needs to be in the range (0,1] (default is .95)"
   printf " %s\t%s\n" "--group-only" "skips the plotting of individual replicates per cell type and condition"
   printf " %s\t%s\n" "--ylim-low=[numeric]" "set the value of the bottom of the y-axis range (must also set --ylim-high)"
   printf " %s\t%s\n" "--ylim-high=[numeric]" "set the value of the top of the y-axis range (must also set --ylim-low)"
   printf " %s\t%s\n" "--add-enhancers=[BED file]" "plot any enhancers in the BED file are in the range of the genomic coordinates"
   printf " %s\t%s\n" "--add-vertical-line=[POS1,POS2,...]" "plot black vertical line at positions POS1[,POS2,...], must be comma-delimited") | column -t -s $'\t'
   #echo "--add-promoters=[BED file] Plot TSS of genes within BED file"
+  
+  printf "\n"
 }
 
-TEMP=`getopt -o hi:s: -l inputdir:,group-only,ylim-low:,ylim-high:,add-enhancers:,add-promoters:,shading:,add-vertical-line: -n '4cplots' -- "$@"`
+TEMP=`getopt -o hi:s: -l inputdir:,group-only,ylim-low:,ylim-high:,add-enhancers:,add-promoters:,shading:,add-vertical-line:,ci-alpha: -n '4cplots' -- "$@"`
 eval set -- "$TEMP"
 
 while [ $# -ge 1 ]; do
@@ -96,6 +100,10 @@ while [ $# -ge 1 ]; do
 	    VERTLINES="$2"
 	    shift
 	    ;;
+	  --ci-alpha)
+	    CIALPHA="$2"
+	    shift
+	    ;;
 	esac
 	shift
 done
@@ -137,7 +145,7 @@ then
 fi
 
 
-perl -I$LIBDIR $SCRIPTDIR/make-plots.pl $SAMPLETABLE $ORGANISMDATABASE $SCRIPTDIR $COORDINATES $SHADING $INPUTDIR $OUTPUTDIR $GROUPONLY $YLIMLOW $YLIMHIGH $ENHANCERFILE $PROMOTERFILE $VERTLINES $@
+perl -I$LIBDIR $SCRIPTDIR/make-plots.pl $SAMPLETABLE $ORGANISMDATABASE $SCRIPTDIR $COORDINATES $SHADING $INPUTDIR $OUTPUTDIR $GROUPONLY $YLIMLOW $YLIMHIGH $ENHANCERFILE $PROMOTERFILE $VERTLINES $CIALPHA $@
 
 if [ $? -ne 0 ];
 then
