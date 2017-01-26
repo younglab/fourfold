@@ -83,9 +83,10 @@ $exe .= join(" ",@{$_}) . " " for(@norm);
 my $qnormtmp = "$outputdir/quantile-normalized-samples.txt";
 my $qnormbtmp = "$outputdir/quantile-normalized-samples-bootstrap.txt";
 
+$vchrom = "NA" unless $cisonly;
 my $output = `Rscript $basedir/quantile-normalization.r $outputdir $vchrom $exe 2>&1`;
 
-die "Failed to normalize (cmd: Rscript $basedir/quantile-normalization.r $outputdir $cisonly $exe): $output" unless $? == 0;
+die "Failed to normalize (cmd: Rscript $basedir/quantile-normalization.r $outputdir $vchrom $exe): $output" unless $? == 0;
 
 open(N,"<","$qnormtmp") or die "Cannot read normalized samples: $!";
 

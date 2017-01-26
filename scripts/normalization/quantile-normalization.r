@@ -4,6 +4,8 @@ library(limma)
 
 args <- commandArgs(T)
 
+print(paste("DEBUG: args length:",length(args)))
+
 outdir <- args[1]
 onlycis <- args[2]!="NA"
 cischrom <- args[2]
@@ -20,6 +22,15 @@ if(length(args)<2) {
 sample.names <- args[seq(1,length(args),3)]
 files <- args[seq(2,length(args),3)]
 bfiles <- args[seq(3,length(args),3)]
+
+print(paste("DEBUG: outdir:",outdir))
+print(paste("DEBUG: onlycis:",onlycis))
+print(paste("DEBUG: cischrom:",cischrom))
+print(paste("DEBUG: name:",sample.names))
+print(paste("DEBUG: files:",files))
+print(paste("DEBUG: bfiles:",bfiles))
+
+
   
 df <- lapply(files,read.table,sep='\t')
 bdf <- lapply(bfiles,read.table,sep='\t')
