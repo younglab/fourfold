@@ -118,9 +118,9 @@ promoterfile <- args[7]
 vertlines <- args[8]
 pdf.file <- args[9]
 png.file <- args[10]
-ci.alpha <- as.numeric(args[[1]])
+ci.alpha <- as.numeric(args[11])
 
-args <- args[-(1:10)]
+args <- args[-(1:11)]
 
 st.file <- args[seq(1,length(args),5)]
 bt.file <- args[seq(2,length(args),5)]
