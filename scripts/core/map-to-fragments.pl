@@ -147,6 +147,7 @@ for( my $i = 0; $i < $nr; $i++ ) {
   open(O,"<","stats/$name.txt") or die "Cannot read stats file! $!";
   <O>; <O>; <O>; <O>; <O>; <O>; <O>; <O>; <O>; # skip the 9 lines
   my $l = <O>; ## only need 10th line (# of mapped reads)
+  chomp $l;
   my (undef,$num) = split /: /, $l;
   close(O);
   
