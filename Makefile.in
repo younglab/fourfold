@@ -27,3 +27,6 @@ cleaninstall: quantification
 	rm -rf ${prefix}
 	$(MAKE) install
 
+tarexamples:
+	tar -czf 4c-pipeline-examples.tgz examples
+
