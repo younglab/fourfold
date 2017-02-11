@@ -35,6 +35,8 @@ print(paste("DEBUG: bfiles:",bfiles))
 df <- lapply(files,read.table,sep='\t')
 bdf <- lapply(bfiles,read.table,sep='\t')
 
+cat("DEBUG: read in files\n")
+
 g <- lapply(df,function(d) {
   GRanges(seqnames=as.character(d[,1]),ranges=IRanges(d[,2],width=1),strand='*',signal=d[,3])
 })
@@ -45,6 +47,9 @@ bg <- lapply(bdf,function(d) {
 
 rm(df,bdf)
 gc() ### clean up some memory
+
+cat("DEBUG: converted to GRanges\n")
+
 
 uniq.sites <- reduce(unlist(GRangesList(g)))
 
@@ -61,6 +66,9 @@ sm <- do.call(cbind,lapply(g,function(x) {
   v
 }))
 
+rm(g)
+gc()
+
 bsm <- lapply(bg,function(x) {
   v <- matrix(0,nrow=length(uniq.sites),ncol=ncol(mcols(x)))
   
@@ -69,6 +77,12 @@ bsm <- lapply(bg,function(x) {
   v[queryHits(o),] <- as.matrix(mcols(x))[subjectHits(o),]
   v
 })
+
+rm(bg)
+gc()
+
+cat("DEBUG: converted into matrices\n")
+
 
 ### change quantile 
 
@@ -88,10 +102,17 @@ bnsm <- do.call(cbind,lapply(1:ncol(bsm[[1]]),function(i) {
 rm(bsm)
 gc()
 
+cat("DEBUG: normalized\n")
+
+
 out <- data.frame(seqnames(uniq.sites),start(uniq.sites),nsm)
+
+rm(nsm)
+gc()
+
 outb <- data.frame(seqnames(uniq.sites),start(uniq.sites),bnsm)
 
-rm(nsm,bnsm)
+rm(bnsm)
 gc()
 
 colnames(out) <- c("chr","pos",sample.names)
@@ -99,6 +120,9 @@ rownames(out) <- NULL
 
 colnames(outb) <- c("chr","pos",rep(sample.names,ncol(bsm[[1]])))
 rownames(outb) <- NULL
+
+cat("DEBUG: converted into table\n")
+
 
 write.table(out,file=output,col.names=T,row.names=F,quote=F,sep='\t')
 write.table(outb,file=outputb,col.names=T,row.names=F,quote=F,sep='\t')
