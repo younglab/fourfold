@@ -24,7 +24,7 @@ function helpmenu() {
     echo "$@"
   fi
   
-  printf "Syntax: 4c-pipeline.sh [options] <4C sample XLSX table>\n"
+  printf "Syntax: 4c-read-processing.sh [options] <4C sample XLSX table>\n"
   printf "\tThis command takes the 4C-seq samples within the XSLX spreadsheet and will trim, align, and plot the 4C signal in WIG files\n"
   printf "\nThe following options are supported:\n"
   (printf " %s\t%s\n" "-h" "print this help menu and exit"
