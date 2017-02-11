@@ -3,29 +3,8 @@
 use strict;
 use Spreadsheet::Read;
 use FourCOpts::OrganismDatabase qw(loadorgdatabase);
+use FourCOpts::Utils qw(issamplein);
 
-
-sub in {
-  my ($test,$ref) = @_;
-  
-  my $ret = 0;
-  
-  if(scalar(@{$ref})==1) {
-    $ret = 1 if ($ref->[0] eq "all" || $test =~ m/$ref->[0]/);
-  } else {
-  
-    for(@{$ref}) {
-      if($test eq $_) {
-        $ret = 1;
-        last;
-      }
-    }
-  }
-  
-  return $ret;
-}
-
-#print "DEBUG: @ARGV\n";
 if(scalar(@ARGV) < 5) {
   die "process-quantile-norm.pl <sample table> <basedir> <organism database> <output dir> <only cis positions?> <samples...>";
 }
@@ -53,7 +32,7 @@ for( my $i = 0; $i < $nr; $i++ ) {
   
   next if $name =~ /^#/;
   
-  if(in($name,\@samples)) {
+  if(issamplein($name,\@samples)) {
     my $cfile = "bootstrap/$name.filtered.counts.txt";
     my $cbfile = "bootstrap/$name.filtered.counts.bootstrap.txt";
     push @norm, [$name,$cfile,$cbfile];
