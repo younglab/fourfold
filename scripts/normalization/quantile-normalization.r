@@ -43,6 +43,9 @@ bg <- lapply(bdf,function(d) {
   GRanges(seqnames=as.character(d[,1]),ranges=IRanges(d[,2],width=1),strand='*',as.matrix(d[,-(1:2)]))
 })
 
+rm(df,bdf)
+gc() ### clean up some memory
+
 uniq.sites <- reduce(unlist(GRangesList(g)))
 
 if(onlycis) {
@@ -71,6 +74,9 @@ bsm <- lapply(bg,function(x) {
 
 nsm <- normalizeQuantiles(sm)
 
+rm(sm)
+gc()
+
 bnsm <- do.call(cbind,lapply(1:ncol(bsm[[1]]),function(i) {
   #ml <- lapply(bg,function(g) as.matrix(mcols(g)))
   
@@ -79,8 +85,14 @@ bnsm <- do.call(cbind,lapply(1:ncol(bsm[[1]]),function(i) {
   normalizeQuantiles(m)
 }))
 
+rm(bsm)
+gc()
+
 out <- data.frame(seqnames(uniq.sites),start(uniq.sites),nsm)
 outb <- data.frame(seqnames(uniq.sites),start(uniq.sites),bnsm)
+
+rm(nsm,bnsm)
+gc()
 
 colnames(out) <- c("chr","pos",sample.names)
 rownames(out) <- NULL
