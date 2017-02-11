@@ -4,6 +4,11 @@ use strict;
 use Spreadsheet::Read;
 use File::Copy;
 
+sub makeerror {
+  print "$_\n";
+  exit 1;
+}
+
 die "Arguments: <base dir> <run all?> <template file>" unless scalar(@ARGV) >= 3;
 
 my ($basedir,$runall,$templatefile) = @ARGV;
@@ -20,7 +25,7 @@ my $nr = ${$sheet}{"maxrow"};
 
 my %basicoptions;
 
-for( my $i = 0; $i < nr; $i++ ) {
+for( my $i = 0; $i < $nr; $i++ ) {
   my @arr = Spreadsheet::Read::cellrow($sheet,$i+1);
   
   my ($key,$value) = @arr;
@@ -48,7 +53,7 @@ unless( !$runall && -e "bootstrap") { ## skip if already present
 
   my $output = `$basedir/4c-read-processing.sh $samplefile`;
 
-  die "Failed to trim 4c-seq reads properly: $output" unless $? == 0;
+  makeerror "failed to trim 4c-seq reads properly: $output" unless $? == 0;
   print "finished\n";
 } else {
   print "skipping\n";
@@ -58,12 +63,12 @@ unless( !$runall && -e "bootstrap") { ## skip if already present
 
 print "Step 2: Reading sample groups... ";
 
-$sheet = $database->[1];
+$sheet = $database->[2];
 $nr = ${$sheet}{"maxrow"};
 
 my %samplegroups;
 
-for( my $i = 0; $i < nr; $i++ ) {
+for( my $i = 0; $i < $nr; $i++ ) {
   my @arr = Spreadsheet::Read::cellrow($sheet,$i+1);
   
   my ($groupid,$value) = @arr;
@@ -84,4 +89,52 @@ print "done\n";
 
 print "Step 3: Normalizing sample groups... ";
 
+$sheet = $database->[3];
+$nr = ${$sheet}{"maxrow"};
+
+
+my $tot = 0;
+my $skipped = 0;
+
+for( my $i = 0; $i < $nr; $i++ ) {
+  my @arr = Spreadsheet::Read::cellrow($sheet,$i+1);
+  
+  my ($groupid,$normtype) = @arr;
+  
+  next if $key =~ /^#/; ## skip commented lines
+  
+  $tot++;
+  
+  my $outputdir = "$groupid-$normtype-norm";
+  
+  if( -e $outputdir && !$runall ) {
+    $skipped++;
+    next;
+  }
+  
+  makeerror "Unknown sample group $groupid!" unless( defined($samplegroups{$groupid}));
+  
+  my $samples = $samplegroups{$groupid};
+  
+  my $output = `$basedir/4c-normalize-samples.sh $templatefile $normtype $outputdir $samples`;
+  
+  makeerror "Failed to normalize group $groupid\nError messages: $output" unless $? == 0;
+}
+
+print "done ($skipped/$total, " . sprintf("%.3f%%",$skipped/$total) . ", skipped)\n";
+
+####
+
+print "Step 4"
+
+$sheet = $database->[4];
+$nr = ${$sheet}{"maxrow"};
+
+####
+
+
+print "Step 5"
+
+$sheet = $database->[5];
+$nr = ${$sheet}{"maxrow"};
 
