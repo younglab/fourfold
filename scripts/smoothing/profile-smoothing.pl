@@ -4,6 +4,7 @@ use strict;
 use Spreadsheet::Read;
 use FourCOpts::OrganismDatabase qw(loadorgdatabase);
 use FourCOpts::WigFile qw(writewigfile);
+use FourCOpts::Utils qw(issamplein);
 
 sub in {
   my ($test,$ref) = @_;
@@ -55,9 +56,7 @@ for( my $i = 0; $i < $nr; $i++ ) {
   
   next if $name =~ /^#/;
   
-  unless( $samples[0] eq "all") {
-    next unless in($name,\@samples);
-  }
+  next unless issamplein($name,\@samples);
   
   my $key ="$celltype:$condition";
   
