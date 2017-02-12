@@ -63,9 +63,31 @@ my $qnormtmp = "$outputdir/quantile-normalized-samples.txt";
 my $qnormbtmp = "$outputdir/quantile-normalized-samples-bootstrap.txt";
 
 $vchrom = "NA" unless $cisonly;
-my $output = `Rscript $basedir/quantile-normalization.r $outputdir $vchrom $exe 2>&1`;
+#my $output = `Rscript $basedir/quantile-normalization.r $outputdir $vchrom $exe 2>&1`;
 
-die "Failed to normalize (cmd: Rscript $basedir/quantile-normalization.r $outputdir $vchrom $exe): $output" unless $? == 0;
+my $output = `Rscript $basedir/quantile-norm-matrix.r $outputdir $vchrom $exe 2>&1`;
+
+die "Failed to build data matrices (cmd: Rscript $basedir/quantile-norm-matrix.r $outputdir $vchrom $exe): $output" unless $? == 0;
+
+opendir(my $dh,"$outputdir") or die "Cannot read $outputdir directory: $!";
+
+while(readdir($dh)) {
+  next unless /matrix-tmp/;
+  
+  my $sf = "no";
+  
+  $sf = "yes" if /signal/;
+  
+  my $datafile = "$outputdir/$_";
+  
+  my $output = `Rscript $basedir/quantile-norm-run.r $datafile $sf`;
+  
+  die "Failed to normalize (cmd: Rscript $basedir/quantile-norm-run.r $datafile $sf): $output" unless $? == 0;
+}
+
+closedir($dh);
+
+exit 0;
 
 open(N,"<","$qnormtmp") or die "Cannot read normalized samples: $!";
 
