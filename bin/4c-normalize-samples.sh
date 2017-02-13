@@ -46,6 +46,8 @@ then
   exit 1
 fi
 
+echo "Running normalization process: $NORMTYPE"
+
 case $NORMTYPE in
   quantile)
     perl -I$LIBDIR $SCRIPTDIR/process-quantile-norm.pl $SAMPLETABLE $SCRIPTDIR $ORGANISMDATABASE $OUTPUTDIR 0 $@
@@ -55,7 +57,7 @@ case $NORMTYPE in
     ;;
     
   *)
-    echo "Unknown normalization type"
+    echo "Error: Unknown normalization type"
     exit 1
     ;;
 esac

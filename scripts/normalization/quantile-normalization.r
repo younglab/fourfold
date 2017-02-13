@@ -2,6 +2,56 @@ library(affy)
 library(GenomicRanges)
 library(limma)
 
+read.signal.file <- function(fname) {
+  d <- read.table(fname,sep='\t')
+  
+  GRanges(seqnames=as.character(d[,1]),ranges=IRanges(d[,2],width=1),strand='*',signal=Rle(d[,3]))
+}
+
+read.bootstrap.file <- function(fname) {
+  d <- read.table(fname,sep='\t')
+  
+  GRanges(seqnames=as.character(d[,1]),ranges=IRanges(d[,2],width=1),strand='*',as.matrix(d[,-(1:2)]))
+}
+
+signal.normalization <- function(gsl,uniq.sites) {
+  sm <- do.call(cbind,lapply(gsl,function(x) {
+    v <- rep(0,length(uniq.sites))
+    
+    o <- findOverlaps(uniq.sites,x)
+    
+    v[queryHits(o)] <- as.vector(x$signal)[subjectHits(o)]
+    v
+  }))
+  
+  normalizeQuantiles(sm)
+}
+
+background.normalization <- function(gsl,uniq.sites) {
+  bsm <- lapply(gsl,function(x) {
+    v <- matrix(0,nrow=length(uniq.sites),ncol=ncol(mcols(x)))
+    
+    o <- findOverlaps(uniq.sites,x)
+    
+    v[queryHits(o),] <- as.matrix(mcols(x))[subjectHits(o),]
+    v
+  })
+
+  
+  cat("DEBUG: converted bg into matrices\n")
+  
+  
+  
+  do.call(cbind,lapply(1:ncol(bsm[[1]]),function(i) {
+    m <- do.call(cbind,lapply(bsm,function(x) x[,i]))
+    
+    normalizeQuantiles(m)
+  }))
+  
+}
+
+####
+
 args <- commandArgs(T)
 
 print(paste("DEBUG: args length:",length(args)))
@@ -30,26 +80,10 @@ print(paste("DEBUG: name:",sample.names))
 print(paste("DEBUG: files:",files))
 print(paste("DEBUG: bfiles:",bfiles))
 
+g <- lapply(files,read.signal.file)
+bg <- lapply(bfiles,read.bootstrap.file)
 
-  
-df <- lapply(files,read.table,sep='\t')
-bdf <- lapply(bfiles,read.table,sep='\t')
-
-cat("DEBUG: read in files\n")
-
-g <- lapply(df,function(d) {
-  GRanges(seqnames=as.character(d[,1]),ranges=IRanges(d[,2],width=1),strand='*',signal=d[,3])
-})
-
-bg <- lapply(bdf,function(d) {
-  GRanges(seqnames=as.character(d[,1]),ranges=IRanges(d[,2],width=1),strand='*',as.matrix(d[,-(1:2)]))
-})
-
-rm(df,bdf)
-gc() ### clean up some memory
-
-cat("DEBUG: converted to GRanges\n")
-
+cat("DEBUG: read in files, converted to GRanges\n")
 
 uniq.sites <- reduce(unlist(GRangesList(g)))
 
@@ -57,61 +91,30 @@ if(onlycis) {
   uniq.sites <- uniq.sites[seqnames(uniq.sites)==cischrom]
 }
 
-sm <- do.call(cbind,lapply(g,function(x) {
-  v <- rep(0,length(uniq.sites))
-  
-  o <- findOverlaps(uniq.sites,x)
-  
-  v[queryHits(o)] <- x$signal[subjectHits(o)]
-  v
-}))
+nsm <- signal.normalization(g,uniq.sites)
 
+g <- NULL
 rm(g)
 gc()
 
-bsm <- lapply(bg,function(x) {
-  v <- matrix(0,nrow=length(uniq.sites),ncol=ncol(mcols(x)))
-  
-  o <- findOverlaps(uniq.sites,x)
-  
-  v[queryHits(o),] <- as.matrix(mcols(x))[subjectHits(o),]
-  v
-})
+bnsm <- background.normalization(bg,uniq.sites)
 
+bg <- NULL
 rm(bg)
 gc()
 
-cat("DEBUG: converted into matrices\n")
-
-
-### change quantile 
-
-nsm <- normalizeQuantiles(sm)
-
-rm(sm)
-gc()
-
-bnsm <- do.call(cbind,lapply(1:ncol(bsm[[1]]),function(i) {
-  #ml <- lapply(bg,function(g) as.matrix(mcols(g)))
-  
-  m <- do.call(cbind,lapply(bsm,function(x) x[,i]))
-  
-  normalizeQuantiles(m)
-}))
-
-rm(bsm)
-gc()
-
-cat("DEBUG: normalized\n")
+cat("DEBUG: normalized signal\n")
 
 
 out <- data.frame(seqnames(uniq.sites),start(uniq.sites),nsm)
 
+nsm <- NULL
 rm(nsm)
 gc()
 
 outb <- data.frame(seqnames(uniq.sites),start(uniq.sites),bnsm)
 
+bnsm <- NULL
 rm(bnsm)
 gc()
 
