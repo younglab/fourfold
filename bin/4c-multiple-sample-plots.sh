@@ -35,7 +35,7 @@ function helpmenu() {
 
 }
 
-TEMP=`getopt -o hi: -l inputdir:,group-only,ylim-low:,ylim-high:,add-enhancers:,add-promoters: -n '4cmultiplots' -- "$@"`
+TEMP=`getopt -o hi:s: -l inputdir:,group-only,ylim-low:,ylim-high:,add-enhancers:,add-promoters:,shading:,ci-alpha: -n '4cmultiplots' -- "$@"`
 eval set -- "$TEMP"
 
 while [ $# -ge 1 ]; do
