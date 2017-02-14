@@ -5,9 +5,9 @@ use Spreadsheet::Read;
 use FourCOpts::Utils qw(issamplein convertcoordinatestring);
 
 
-die "Arguments: <template file> <multiple sample template file> <organism database> <basedir> <genomic coordinates> <shading> <input dir> <output dir> <ylim low> <ylim high> <enhancer file> <promoter file> <vertlines>" unless scalar(@ARGV)>=11;
+die "Arguments: <template file> <multiple sample template file> <organism database> <basedir> <genomic coordinates> <shading> <input dir> <output dir> <ylim low> <ylim high> <enhancer file> <promoter file> <vertlines> <CI alpha>" unless scalar(@ARGV)>=11;
 
-my ($sampletable,$multisampletable,$organismdatabase,$basedir,$genomecoord,$shading,$inputdir,$outputdir,$ylimlow,$ylimhigh,$enhancerfile,$promoterfile,$vertlines) = @ARGV;
+my ($sampletable,$multisampletable,$organismdatabase,$basedir,$genomecoord,$shading,$inputdir,$outputdir,$ylimlow,$ylimhigh,$enhancerfile,$promoterfile,$vertlines,$cialpha) = @ARGV;
 
 ## transfer into adjustable parameters someday
 #my ($linecolor,$shadingcolor,$transparencyperc) = ("black","red",50);
@@ -99,8 +99,8 @@ for( my $i = 0; $i < $nr; $i++ ) {
   
   my $fileargs = "$signalfile1 $bootstrapfile1 $lc1 $sc1 $at1 $signalfile2 $bootstrapfile2 $lc2 $sc2 $at2";
   
-  my $output = `Rscript $basedir/plot-4c-signal.r $genomecoord $shading $statsfile $ylimlow $ylimhigh $enhancerfile $promoterfile $vertlines $pdfoutput $pngoutput $fileargs 2>&1`;
+  my $output = `Rscript $basedir/plot-4c-signal.r $genomecoord $shading $statsfile $ylimlow $ylimhigh $enhancerfile $promoterfile $vertlines $pdfoutput $pngoutput $cialpha $fileargs 2>&1`;
 
-  die "Failed to generate output for $jointkey (arguments $genomecoord $shading $statsfile $ylimlow $ylimhigh $enhancerfile $promoterfile $vertlines $pdfoutput $pngoutput $fileargs), messages: $output" unless $? == 0;
+  die "Failed to generate output for $jointkey (arguments $genomecoord $shading $statsfile $ylimlow $ylimhigh $enhancerfile $promoterfile $vertlines $pdfoutput $pngoutput $cialpha $fileargs), messages: $output" unless $? == 0;
 }
 
