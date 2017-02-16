@@ -9,16 +9,20 @@ sub makeerror {
   exit 1;
 }
 
-die "Arguments: <base dir> <run all?> <template file>" unless scalar(@ARGV) >= 3;
+die "Arguments: <base dir> <run all?> <data template file> <output dir> <template file>" unless scalar(@ARGV) >= 3;
 
-my ($basedir,$runall,$templatefile) = @ARGV;
+my ($basedir,$runall,$samplefile,$outputdir,$templatefile) = @ARGV;
 
 die "Cannot find base directory $basedir" unless -e $basedir;
+die "Cannot find data file $samplefile" unless -e $samplefile;
+die "Cannot find output directory $outputdir" unless -e $outputdir;
 die "Cannot find template file $templatefile" unless -e $templatefile;
 
 my $database = ReadData($templatefile);
 
-### Step 1: read processing
+### Step 1
+
+print "Step 1: Reading basic options and sample groups... ";
 
 my $sheet = $database->[1];
 my $nr = ${$sheet}{"maxrow"};
@@ -31,37 +35,10 @@ for( my $i = 0; $i < $nr; $i++ ) {
   my ($key,$value) = @arr;
   
   next if $key =~ /^#/; ## skip commented lines
+  next if $key =~ /^$/;
   
   $basicoptions{$key} = $value;
 }
-
-die "Need to have template file information!" unless defined($basicoptions{"Template File"});
-die "Need to specify the output directory" unless defined($basicoptions{"Output Directory"});
-
-my $samplefile = $basicoptions{"Template File"};
-my $outputdir = $basicoptions{"Output Directory"};
-
-die "Cannot find 4C template file $samplefile!" unless -e $samplefile;
-
-print "Step 1: Processing 4C-seq reads... ";
-unless( !$runall && -e "bootstrap") { ## skip if already present 
-  unless($outputdir eq '.') {
-    mkdir($outputdir);
-    copy($samplefile,$outputdir) or die "Cannot copy 4C template file to new output directory!";
-    chdir($outputdir);
-  }
-
-  my $output = `$basedir/4c-read-processing.sh $samplefile`;
-
-  makeerror "failed to trim 4c-seq reads properly: $output" unless $? == 0;
-  print "finished\n";
-} else {
-  print "skipping\n";
-}
-
-### Step 2
-
-print "Step 2: Reading sample groups... ";
 
 $sheet = $database->[2];
 $nr = ${$sheet}{"maxrow"};
@@ -74,6 +51,7 @@ for( my $i = 0; $i < $nr; $i++ ) {
   my ($groupid,$value) = @arr;
   
   next if $key =~ /^#/; ## skip commented lines
+  next if $key =~ /^$/;
   
   $samplegroups{$groupid} = $value;
 }
@@ -83,7 +61,32 @@ unless(scalar(keys(%samplegroups))>0) {
   exit 1;
 }
 
-print "done\n";
+### Step 2: read processing
+
+
+print "Step 2: Processing 4C-seq reads... ";
+unless( !$runall && -e "bootstrap") { ## skip if already present 
+  unless($outputdir eq '.') {
+    mkdir($outputdir);
+    copy($samplefile,$outputdir) or die "Cannot copy 4C template file to new output directory!";
+    chdir($outputdir);
+  }
+  
+  my $args = "";
+  
+  $args .= "-n " . $basicoptions{"Bowtie -n Option"} . " " if defined($basicoptions{"Bowtie -n Option"});
+  $args .= "-k " . $basicoptions{"Bowtie -k Option"} . " " if defined($basicoptions{"Bowtie -k Option"});
+  $args .= "-m " . $basicoptions{"Bowtie -m Option"} . " " if defined($basicoptions{"Bowtie -m Option"});
+  $args .= "-r " . $basicoptions{"Number of Bootstrap Iterations"} . " " if defined($basicoptions{"Number of Bootstrap Iterations"});
+  $args .= "--lsf-queue=" . $basicoptions{"LSF Queue"} . " " if defined($basicoptions{"LSF Queue"});
+
+  my $output = `$basedir/4c-read-processing.sh $args $samplefile`;
+
+  makeerror "failed to trim 4c-seq reads properly (arguments $args $samplefile): $output" unless $? == 0;
+  print "finished\n";
+} else {
+  print "skipping\n";
+}
 
 #### Step 3
 
@@ -102,6 +105,7 @@ for( my $i = 0; $i < $nr; $i++ ) {
   my ($groupid,$normtype) = @arr;
   
   next if $key =~ /^#/; ## skip commented lines
+  next if $key =~ /^$/;
   
   $tot++;
   
@@ -129,6 +133,8 @@ print "Step 4"
 
 $sheet = $database->[4];
 $nr = ${$sheet}{"maxrow"};
+
+
 
 ####
 

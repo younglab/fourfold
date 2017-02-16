@@ -150,8 +150,6 @@ fi
 
 ### process reads
 
-echo "4C analysis launced in $PWD by $USER" | mail -s "[4C] Analysis Pipeline Started" dsday@wi.mit.edu
-
 echo "Processing reads..."
 
 perl -I$LIBDIR $SCRIPTDIR/process-4c-reads.pl $SAMPLETABLE $ORGANISMDATABASE $BOWTIEN $BOWTIEK $BOWTIEM $GEO
