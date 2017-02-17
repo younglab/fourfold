@@ -97,10 +97,6 @@ print "Step 3: Normalizing sample groups... ";
 $sheet = $database->[3];
 $nr = ${$sheet}{"maxrow"};
 
-print "DEBUG: $sheet\n";
-print "DEBUG: $nr\n";
-
-
 my $tot = 0;
 my $skipped = 0;
 
@@ -126,11 +122,6 @@ for( my $i = 0; $i < $nr; $i++ ) {
   makeerror "Unknown sample group $groupid!" unless( defined($samplegroups{$groupid}));
   
   my $samples = $samplegroups{$groupid};
-  
-  print "DEBUG: $samplefile\n";
-  print "DEBUG: $normtype\n";
-  print "DEBUG: $outputdir\n";
-  print "DEBUG: $samples\n";
   
   my $output = `$basedir/4c-normalize-samples.sh $samplefile $normtype $outputdir $samples`;
   
