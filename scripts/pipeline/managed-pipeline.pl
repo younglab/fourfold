@@ -19,6 +19,7 @@ die "Cannot find output directory $outputdir" unless -e $outputdir;
 die "Cannot find template file $templatefile" unless -e $templatefile;
 
 my $database = ReadData($templatefile);
+my $sdatabase = ReadData($samplefile);
 
 ### Step 1
 
@@ -153,12 +154,8 @@ for( my $i = 0; $i < $nr; $i++ ) {
   next if $groupid =~ /^#/;
   next if $groupid =~ /^$/;
   
-  print "DEBUG: " . join(" ",@arr) . "\n";
-  
-  makeerror "unknown group type $groupid\n" unless defined($normtypes{$groupid});
-  
-  print "DEBUG: 0\n";
 
+  makeerror "unknown group type $groupid\n" unless defined($normtypes{$groupid});
   
   my $samples = $samplegroups{$groupid};
   
@@ -167,7 +164,6 @@ for( my $i = 0; $i < $nr; $i++ ) {
     
     my $ndir = "$groupid-$normtype-norm";
     
-    print "DEBUG: 1, $ndir, $outputdir\n";
 
     makeerror "missing directory\nCannot find directory for associated normalization $normtype and $groupid\n" unless -e $ndir;
 
@@ -180,8 +176,7 @@ for( my $i = 0; $i < $nr; $i++ ) {
       next;
     }
     
-    print "DEBUG: $ndir, $outputdir\n";
-    
+
     my $output = `$basedir/4c-smooth-profiles.sh --inputdir=$ndir --mode=$smoothtype $samplefile $outputdir $windowsize $stepsize $samples`;
     
     makeerror "error in smoothing\nSee error messages: $output\n" unless $? == 0; 
@@ -194,9 +189,46 @@ print "done ($skipped/$tot, " . sprintf("%.3f%%",$skipped/$tot) . ", skipped)\n"
 ####
 
 
-print "Step 5\n";
+print "Step 5: Drawing plots... ";
 
 $sheet = $database->[5];
 $nr = ${$sheet}{"maxrow"};
 
-0;
+$tot = 0;
+$skipped = 0;
+
+for( my $i = 0; $i < $nr; $i++ ) {
+  my @arr = Spreadsheet::Read::cellrow($sheet,$i+1);
+  
+  my ($groupid,$region,$shading,$ylow,$yhigh,$vpos,$efile) = @arr;
+  
+  makeerror "unknown group id $groupid\n" unless defined($smoothtypes{$groupid});
+  
+  my $samples = $samplegroups{$groupid};
+  
+  for my $sdir (@{$smoothtypes{$groupid}}) {
+    $tot++;
+    
+    makeerror "missing directory\nCannot find directory for smoothed data $sdir\n" unless -e $sdir;
+    
+    my $outputdir = "$sdir-plots-row1";
+    
+    #    push @{$smoothtypes{$groupid}}, $outputdir;
+
+    #if( !$runall && -e $outputdir ) {
+    #  $skipped++;
+    #  next;
+    #}
+    
+    my $extraopt = "";
+    
+    $extraopt .= "--add-enhancers=$efile " if defined($efile);
+    $extraopt .= "--add-vertical-lines=$vpos " if deifned($vpos);
+    
+    my $output = `$basedir/4c-plots.sh --inputdir=$sdir --shading=$shading --ylim-low=$ylow --ylim-high=$yhigh $extraopt $samplefile $region $outputdir $samples`;
+    
+    makeerror "error in smoothing\nSee error messages: $output\n" unless $? == 0; 
+  }
+}
+
+print "done\n";
