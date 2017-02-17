@@ -5,7 +5,7 @@ use Spreadsheet::Read;
 use File::Copy;
 
 sub makeerror {
-  print "$_\n";
+  print join(" ",@_) . "\n";
   exit 1;
 }
 
@@ -94,6 +94,8 @@ unless( !$runall && -e "bootstrap") { ## skip if already present
 
 print "Step 3: Normalizing sample groups... ";
 
+my %normtypes;
+
 $sheet = $database->[3];
 $nr = ${$sheet}{"maxrow"};
 
@@ -105,8 +107,6 @@ for( my $i = 0; $i < $nr; $i++ ) {
   
   my ($groupid,$normtype) = @arr;
   
-  print "DEBUG: " . join(" ",@arr) . "\n";
-  
   next if $groupid =~ /^#/; ## skip commented lines
   next if $groupid =~ /^$/;
   
@@ -114,6 +114,8 @@ for( my $i = 0; $i < $nr; $i++ ) {
   
   my $outputdir = "$groupid-$normtype-norm";
   
+  push @{$normtypes{$groupid}}, $normtype;
+
   if( -e $outputdir && !$runall ) {
     $skipped++;
     next;
@@ -132,11 +134,61 @@ print "done ($skipped/$tot, " . sprintf("%.3f%%",$skipped/$tot) . ", skipped)\n"
 
 ####
 
-print "Step 4\n";
+print "Step 4: Smoothing samples... ";
 
 $sheet = $database->[4];
 $nr = ${$sheet}{"maxrow"};
 
+my %smoothtypes;
+
+
+$tot = 0;
+$skipped = 0;
+
+for( my $i = 0; $i < $nr; $i++ ) {
+  my @arr = Spreadsheet::Read::cellrow($sheet,$i+1);
+  
+  my ($groupid,$smoothtype,$windowsize,$stepsize) = @arr;
+  
+  next if $groupid =~ /^#/;
+  next if $groupid =~ /^$/;
+  
+  print "DEBUG: " . join(" ",@arr) . "\n";
+  
+  makeerror "unknown group type $groupid\n" unless defined($normtypes{$groupid});
+  
+  print "DEBUG: 0\n";
+
+  
+  my $samples = $samplegroups{$groupid};
+  
+  for my $normtype (@{$normtypes{$groupid}}) {
+    $tot++;
+    
+    my $ndir = "$groupid-$normtype-norm";
+    
+    print "DEBUG: 1, $ndir, $outputdir\n";
+
+    makeerror "missing directory\nCannot find directory for associated normalization $normtype and $groupid\n" unless -e $ndir;
+
+    my $outputdir = "$groupid-$normtype-$smoothtype-$windowsize-$stepsize";
+    
+    push @{$smoothtypes{$groupid}}, $outputdir;
+
+    if( !$runall && -e $outputdir ) {
+      $skipped++;
+      next;
+    }
+    
+    print "DEBUG: $ndir, $outputdir\n";
+    
+    my $output = `$basedir/4c-smooth-profiles.sh --inputdir=$ndir --mode=$smoothtype $samplefile $outputdir $windowsize $stepsize $samples`;
+    
+    makeerror "error in smoothing\nSee error messages: $output\n" unless $? == 0; 
+  }
+}
+
+print "done ($skipped/$tot, " . sprintf("%.3f%%",$skipped/$tot) . ", skipped)\n";
 
 
 ####
@@ -147,3 +199,4 @@ print "Step 5\n";
 $sheet = $database->[5];
 $nr = ${$sheet}{"maxrow"};
 
+0;
