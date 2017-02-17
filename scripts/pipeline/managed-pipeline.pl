@@ -202,6 +202,9 @@ for( my $i = 0; $i < $nr; $i++ ) {
   
   my ($groupid,$region,$shading,$ylow,$yhigh,$vpos,$efile) = @arr;
   
+  next if $groupid =~ /^#/;
+  next if $groupid =~ /^$/;
+  
   makeerror "unknown group id $groupid\n" unless defined($smoothtypes{$groupid});
   
   my $samples = $samplegroups{$groupid};
