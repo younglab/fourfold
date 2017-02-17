@@ -82,7 +82,7 @@ unless( !$runall && -e "bootstrap") { ## skip if already present
   $args .= "-r " . $basicoptions{"Number of Bootstrap Iterations"} . " " if defined($basicoptions{"Number of Bootstrap Iterations"});
   $args .= "--lsf-queue=" . $basicoptions{"LSF Queue"} . " " if defined($basicoptions{"LSF Queue"});
 
-  my $output = `$basedir/4c-read-processing.sh $args $samplefile`;
+  my $output = `$basedir/4c-read-processing.sh $args $samplefile 2>&1`;
 
   makeerror "failed to trim 4c-seq reads properly (arguments $args $samplefile): $output" unless $? == 0;
   print "finished\n";
@@ -97,6 +97,9 @@ print "Step 3: Normalizing sample groups... ";
 $sheet = $database->[3];
 $nr = ${$sheet}{"maxrow"};
 
+print "DEBUG: $sheet\n";
+print "DEBUG: $nr\n";
+
 
 my $tot = 0;
 my $skipped = 0;
@@ -105,6 +108,8 @@ for( my $i = 0; $i < $nr; $i++ ) {
   my @arr = Spreadsheet::Read::cellrow($sheet,$i+1);
   
   my ($groupid,$normtype) = @arr;
+  
+  print "DEBUG: " . join(" ",@arr) . "\n";
   
   next if $groupid =~ /^#/; ## skip commented lines
   next if $groupid =~ /^$/;
@@ -122,7 +127,12 @@ for( my $i = 0; $i < $nr; $i++ ) {
   
   my $samples = $samplegroups{$groupid};
   
-  my $output = `$basedir/4c-normalize-samples.sh $templatefile $normtype $outputdir $samples`;
+  print "DEBUG: $samplefile\n";
+  print "DEBUG: $normtype\n";
+  print "DEBUG: $outputdir\n";
+  print "DEBUG: $samples\n";
+  
+  my $output = `$basedir/4c-normalize-samples.sh $samplefile $normtype $outputdir $samples`;
   
   makeerror "Failed to normalize group $groupid\nError messages: $output" unless $? == 0;
 }
