@@ -50,8 +50,8 @@ for( my $i = 0; $i < $nr; $i++ ) {
   
   my ($groupid,$value) = @arr;
   
-  next if $key =~ /^#/; ## skip commented lines
-  next if $key =~ /^$/;
+  next if $groupid =~ /^#/; ## skip commented lines
+  next if $groupid =~ /^$/;
   
   $samplegroups{$groupid} = $value;
 }
@@ -60,6 +60,8 @@ unless(scalar(keys(%samplegroups))>0) {
   print "error!\nNo sample groups detected!\n";
   exit 1;
 }
+
+print "completed\n";
 
 ### Step 2: read processing
 
@@ -104,8 +106,8 @@ for( my $i = 0; $i < $nr; $i++ ) {
   
   my ($groupid,$normtype) = @arr;
   
-  next if $key =~ /^#/; ## skip commented lines
-  next if $key =~ /^$/;
+  next if $groupid =~ /^#/; ## skip commented lines
+  next if $groupid =~ /^$/;
   
   $tot++;
   
@@ -125,11 +127,11 @@ for( my $i = 0; $i < $nr; $i++ ) {
   makeerror "Failed to normalize group $groupid\nError messages: $output" unless $? == 0;
 }
 
-print "done ($skipped/$total, " . sprintf("%.3f%%",$skipped/$total) . ", skipped)\n";
+print "done ($skipped/$tot, " . sprintf("%.3f%%",$skipped/$tot) . ", skipped)\n";
 
 ####
 
-print "Step 4"
+print "Step 4\n";
 
 $sheet = $database->[4];
 $nr = ${$sheet}{"maxrow"};
@@ -139,7 +141,7 @@ $nr = ${$sheet}{"maxrow"};
 ####
 
 
-print "Step 5"
+print "Step 5\n";
 
 $sheet = $database->[5];
 $nr = ${$sheet}{"maxrow"};

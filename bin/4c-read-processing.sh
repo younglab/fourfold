@@ -41,7 +41,7 @@ function helpmenu() {
 }
 
 
-TEMP=`getopt -o hk:m:v:r: -l validate-table-only,lsf-queue:,bowtie-m:,bowtie-k:,bowtie-v:,skip-table-validation,geo,resampling: -n '4cpipeline' -- "$@"`
+TEMP=`getopt -o hn:k:m:v:r: -l validate-table-only,lsf-queue:,bowtie-n:,bowtie-m:,bowtie-k:,bowtie-v:,skip-table-validation,geo,resampling: -n '4cpipeline' -- "$@"`
 eval set -- "$TEMP"
 
 while [ $# -ge 1 ]; do
