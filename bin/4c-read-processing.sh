@@ -201,11 +201,4 @@ then
   exit 1
 fi
 
-### generate reports
-
-#mkdir reports
-
-echo "4C analysis finished in $PWD by $USER" | mail -s "[4C] Analysis Pipeline Finished" dsday@wi.mit.edu
-
-
 echo "Done"
