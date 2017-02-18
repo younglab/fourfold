@@ -88,7 +88,7 @@ unless( !$runall && -e "bootstrap") { ## skip if already present
   makeerror "failed to trim 4c-seq reads properly (arguments $args $samplefile): $output" unless $? == 0;
   print "finished\n";
 } else {
-  print "skipping\n";
+  print "skipping (reads already processed)\n";
 }
 
 #### Step 3
@@ -131,7 +131,7 @@ for( my $i = 0; $i < $nr; $i++ ) {
   makeerror "Failed to normalize group $groupid\nError messages: $output" unless $? == 0;
 }
 
-print "done ($skipped/$tot, " . sprintf("%.3f%%",$skipped/$tot) . ", skipped)\n";
+print "done ($skipped/$tot, " . sprintf("%.2f%%",$skipped/$tot*100) . ", skipped)\n";
 
 ####
 
@@ -183,7 +183,7 @@ for( my $i = 0; $i < $nr; $i++ ) {
   }
 }
 
-print "done ($skipped/$tot, " . sprintf("%.3f%%",$skipped/$tot) . ", skipped)\n";
+print "done ($skipped/$tot, " . sprintf("%.2f%%",$skipped/$tot*100) . ", skipped)\n";
 
 
 ####
