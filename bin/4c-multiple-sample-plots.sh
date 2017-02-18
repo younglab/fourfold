@@ -128,8 +128,13 @@ fi
 
 if [ ! -e "$MULTITABLE" ];
 then
-  echo "Cannot find $MULTITABLE!"
-  exit 1
+  if [ "$MULTITABLE" != "all" ];
+  then
+    echo "Cannot find $MULTITABLE!"
+    exit 1
+  else
+    echo "WARNING: all mode still experimental"
+  fi
 fi
 
 
