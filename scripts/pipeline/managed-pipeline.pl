@@ -167,7 +167,7 @@ for( my $i = 0; $i < $nr; $i++ ) {
 
     makeerror "missing directory\nCannot find directory for associated normalization $normtype and $groupid\n" unless -e $ndir;
 
-    my $outputdir = "$groupid-$normtype-$smoothtype-$windowsize-$stepsize";
+    my $outputdir = "$groupid-$normtype-$smoothtype-$windowsize-$stepsize-smoothing";
     
     push @{$smoothtypes{$groupid}}, $outputdir;
 
@@ -214,7 +214,7 @@ for( my $i = 0; $i < $nr; $i++ ) {
     
     makeerror "missing directory\nCannot find directory for smoothed data $sdir\n" unless -e $sdir;
     
-    my $outputdir = "$sdir-plots-row1";
+    my $outputdir = "$sdir-row$i-plots";
     
     #    push @{$smoothtypes{$groupid}}, $outputdir;
 
@@ -226,7 +226,7 @@ for( my $i = 0; $i < $nr; $i++ ) {
     my $extraopt = "";
     
     $extraopt .= "--add-enhancers=$efile " if defined($efile);
-    $extraopt .= "--add-vertical-lines=$vpos " if deifned($vpos);
+    $extraopt .= "--add-vertical-lines=$vpos " if defined($vpos);
     
     my $output = `$basedir/4c-plots.sh --inputdir=$sdir --shading=$shading --ylim-low=$ylow --ylim-high=$yhigh $extraopt $samplefile $region $outputdir $samples`;
     
