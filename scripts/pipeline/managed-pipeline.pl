@@ -230,7 +230,11 @@ for( my $i = 0; $i < $nr; $i++ ) {
     
     my $output = `$basedir/4c-plots.sh --inputdir=$sdir --shading=$shading --ylim-low=$ylow --ylim-high=$yhigh $extraopt $samplefile $region $outputdir $samples`;
     
-    makeerror "error in smoothing\nSee error messages: $output\n" unless $? == 0; 
+    makeerror "error in generating single profile plots\nSee error messages: $output\n" unless $? == 0;
+    
+    $output = `$basedir/4c-multiple-sample-plots.sh --inputdir=$sdir --ylim-low=$ylow --ylim-high=$yhigh $extraopt $samplefile all $region $outputdir`;
+    
+    makeerror "error in generating multi profile plots\nSee error messages: $output\n" unless $? == 0; 
   }
 }
 

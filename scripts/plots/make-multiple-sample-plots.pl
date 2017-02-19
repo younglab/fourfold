@@ -4,16 +4,90 @@ use strict;
 use Spreadsheet::Read;
 use FourCOpts::Utils qw(issamplein convertcoordinatestring);
 
+sub runfromtemplate {
+  my ($multisampletable,$basedir,$genomecoord,$shading,$inputdir,$outputdir,$ylimlow,$ylimhigh,$enhancerfile,$promoterfile,$vertlines,$cialpha,$sgref) = @_;
+  
+  my %samplegroups = %{$sgref};
+  my $database = ReadData($multisampletable);
+  my $sheet = $database->[1]; ## get first spreadsheet
+  my $nr = ${$sheet}{"maxrow"};
+
+  if( !defined($sheet) || !defined($nr) ) {
+    print "ERROR: Cannot seem to read $multisampletable as an Excel file\n";
+    exit 1;
+  }
+
+  for( my $i = 0; $i < $nr; $i++ ) {
+    my @arr = Spreadsheet::Read::cellrow($sheet,$i+1);
+  
+    my ($st1,$c1,$st2,$c2,$lc1,$sc1,$at1,$lc2,$sc2,$at2) = @arr;
+  
+    next if $st1 =~ /^#/;
+  
+    my $skey1 = "$st1-$c1";
+    my $skey2 = "$st2-$c2";
+    my $jointkey = "$skey1-$skey2";
+  
+    die "Cannot find cell type $st1 and condition $c1 in the sample template file!" unless defined($samplegroups{$skey1});
+    die "Cannot find cell type $st2 and condition $c2 in the sample template file!" unless defined($samplegroups{$skey2});
+  
+    my ($signalfile1, $bootstrapfile1, $statsfile) = @{$samplegroups{$skey1}};
+    my ($signalfile2, $bootstrapfile2) = @{$samplegroups{$skey2}};
+
+  
+    my $pdfoutput = "$outputdir/$jointkey.pdf";
+    my $pngoutput = "$outputdir/$jointkey.png";
+  
+    print "\tPlotting $jointkey...\n";
+  
+    my $fileargs = "$signalfile1 $bootstrapfile1 $lc1 $sc1 $at1 $signalfile2 $bootstrapfile2 $lc2 $sc2 $at2";
+  
+    my $output = `Rscript $basedir/plot-4c-signal.r $genomecoord $shading $statsfile $ylimlow $ylimhigh $enhancerfile $promoterfile $vertlines $pdfoutput $pngoutput $cialpha $fileargs 2>&1`;
+
+    die "Failed to generate output for $jointkey (arguments $genomecoord $shading $statsfile $ylimlow $ylimhigh $enhancerfile $promoterfile $vertlines $pdfoutput $pngoutput $cialpha $fileargs), messages: $output" unless $? == 0;
+  }
+
+}
+
+sub runallsets {
+  my ($basedir,$genomecoord,$shading,$inputdir,$outputdir,$ylimlow,$ylimhigh,$enhancerfile,$promoterfile,$vertlines,$cialpha,$sgref) = @_;
+  
+  my %samplegroups = %{$sgref};
+  
+  my @groups = keys(%samplegroups);
+  my $ngroups = scalar(@groups);
+  
+  for( my $i = 0; $i < $ngroups; $i++ ) {
+    for( my $j = $i+1; $j < $ngroups; $j++ ) {
+      my ($g1,$g2) = ($groups[$i],$groups[$j]);
+      
+      my $jointkey = "$g1-$g2";
+      
+      my ($signalfile1, $bootstrapfile1, $statsfile) = @{$samplegroups{$g1}};
+      my ($signalfile2, $bootstrapfile2) = @{$samplegroups{$g2}};
+      
+      my $pdfoutput = "$outputdir/$jointkey.pdf";
+      my $pngoutput = "$outputdir/$jointkey.png";
+  
+      print "\tPlotting $jointkey...\n";
+  
+      my $fileargs = "$signalfile1 $bootstrapfile1 red red 50 $signalfile2 $bootstrapfile2 blue blue 50";
+  
+      my $output = `Rscript $basedir/plot-4c-signal.r $genomecoord $shading $statsfile $ylimlow $ylimhigh $enhancerfile $promoterfile $vertlines $pdfoutput $pngoutput $cialpha $fileargs 2>&1`;
+
+      die "Failed to generate output for $jointkey (arguments $genomecoord $shading $statsfile $ylimlow $ylimhigh $enhancerfile $promoterfile $vertlines $pdfoutput $pngoutput $cialpha $fileargs), messages: $output" unless $? == 0;
+
+    }
+  }
+}
+
 
 die "Arguments: <template file> <multiple sample template file> <organism database> <basedir> <genomic coordinates> <shading> <input dir> <output dir> <ylim low> <ylim high> <enhancer file> <promoter file> <vertlines> <CI alpha>" unless scalar(@ARGV)>=11;
 
 my ($sampletable,$multisampletable,$organismdatabase,$basedir,$genomecoord,$shading,$inputdir,$outputdir,$ylimlow,$ylimhigh,$enhancerfile,$promoterfile,$vertlines,$cialpha) = @ARGV;
 
-## transfer into adjustable parameters someday
-#my ($linecolor,$shadingcolor,$transparencyperc) = ("black","red",50);
-
 die "Cannot find $sampletable!" unless -e $sampletable;
-die "Cannot find $multisampletable!" unless -e $multisampletable;
+die "Cannot find $multisampletable!" unless (-e $multisampletable || $multisampletable eq "all");
 die "Cannot find $organismdatabase" unless -e $organismdatabase;
 die "Cannot find $inputdir" unless -e $inputdir;
 die "Cannot find $outputdir" unless -e $outputdir;
@@ -65,42 +139,8 @@ for( my $i = 0; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
 
 print "Making plots...\n";
 
-my $database = ReadData($multisampletable);
-my $sheet = $database->[1]; ## get first spreadsheet
-my $nr = ${$sheet}{"maxrow"};
-
-if( !defined($sheet) || !defined($nr) ) {
-  print "ERROR: Cannot seem to read $sampletable as an Excel file\n";
-  exit 1;
+if( $multisampletable eq "all") {
+  runallsets($multisampletable,$basedir,$genomecoord,$shading,$inputdir,$outputdir,$ylimlow,$ylimhigh,$enhancerfile,$promoterfile,$vertlines,$cialpha,\%samplegroups);
+} else {
+  runfromtemplate($basedir,$genomecoord,$shading,$inputdir,$outputdir,$ylimlow,$ylimhigh,$enhancerfile,$promoterfile,$vertlines,$cialpha,\%samplegroups);
 }
-
-for( my $i = 0; $i < $nr; $i++ ) {
-  my @arr = Spreadsheet::Read::cellrow($sheet,$i+1);
-  
-  my ($st1,$c1,$st2,$c2,$lc1,$sc1,$at1,$lc2,$sc2,$at2) = @arr;
-  
-  next if $st1 =~ /^#/;
-  
-  my $skey1 = "$st1-$c1";
-  my $skey2 = "$st2-$c2";
-  my $jointkey = "$skey1-$skey2";
-  
-  die "Cannot find cell type $st1 and condition $c1 in the sample template file!" unless defined($samplegroups{$skey1});
-  die "Cannot find cell type $st2 and condition $c2 in the sample template file!" unless defined($samplegroups{$skey2});
-  
-  my ($signalfile1, $bootstrapfile1, $statsfile) = @{$samplegroups{$skey1}};
-  my ($signalfile2, $bootstrapfile2) = @{$samplegroups{$skey2}};
-
-  
-  my $pdfoutput = "$outputdir/$jointkey.pdf";
-  my $pngoutput = "$outputdir/$jointkey.png";
-  
-  print "\tPlotting $jointkey...\n";
-  
-  my $fileargs = "$signalfile1 $bootstrapfile1 $lc1 $sc1 $at1 $signalfile2 $bootstrapfile2 $lc2 $sc2 $at2";
-  
-  my $output = `Rscript $basedir/plot-4c-signal.r $genomecoord $shading $statsfile $ylimlow $ylimhigh $enhancerfile $promoterfile $vertlines $pdfoutput $pngoutput $cialpha $fileargs 2>&1`;
-
-  die "Failed to generate output for $jointkey (arguments $genomecoord $shading $statsfile $ylimlow $ylimhigh $enhancerfile $promoterfile $vertlines $pdfoutput $pngoutput $cialpha $fileargs), messages: $output" unless $? == 0;
-}
-
