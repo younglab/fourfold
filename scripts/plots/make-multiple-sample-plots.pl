@@ -105,6 +105,7 @@ sub runallsets {
 
         die "Failed to generate output for $jointkey (arguments $genomecoord $shading $statsfile $ylimlow $ylimhigh $enhancerfile $promoterfile $vertlines $pdfoutput $pngoutput $cialpha $fileargs), messages: $output" unless $? == 0;
 
+      }
     }
   }
 }
