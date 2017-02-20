@@ -214,7 +214,8 @@ for( my $i = 0; $i < $nr; $i++ ) {
     
     makeerror "missing directory\nCannot find directory for smoothed data $sdir\n" unless -e $sdir;
     
-    my $outputdir = "$sdir-row$i-plots";
+    my $idx = $i+1;
+    my $outputdir = "$sdir-row$idx-plots";
     
     #    push @{$smoothtypes{$groupid}}, $outputdir;
 
