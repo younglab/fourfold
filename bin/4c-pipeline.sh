@@ -6,6 +6,7 @@ LIBDIR=$BASEDIR/../lib
 ORGANISMDATABASE=$BASEDIR/../db/organism-database.txt
 RUNALL=0
 OUTPUTDIR=.
+LAUNCHLSF=no
 
 function helpmenu() {
   if [ $# -gt 0 ];
@@ -17,13 +18,14 @@ function helpmenu() {
   printf "\n"
   printf "\nThe following options are supported:\n"
   (printf " %s\t%s\n" "-h" "print this help menu and exits"
+   printf " %s\t%s\n" "-l, --launch-lsf" "launches 4C pipeline as a separate LSF job"  
    printf " %s\t%s\n" "-a, --run-all" "ignores whether any files already exist, starts the pipeline from the beginning"
    printf " %s\t%s\n" "-o, --output" "sets the output directory (default to generate output in current directory)") | column -t -s $'\t'
   printf "\n"
   
 }
 
-TEMP=`getopt -o hao: -l run-all,output: -n '4cpipeline' -- "$@"`
+TEMP=`getopt -o hao:l -l run-all,output:,launch-lsf -n '4cpipeline' -- "$@"`
 eval set -- "$TEMP"
 
 while [ $# -ge 1 ]; do
@@ -35,6 +37,9 @@ while [ $# -ge 1 ]; do
 	  -h)
 	    helpmenu
 	    exit 0
+	    ;;
+	  -l|--launch-lsf)
+	    LAUNCHLSF=14
 	    ;;
 	  -a|--run-all)
 	    RUNALL=1
@@ -55,6 +60,7 @@ fi
 
 DATAFILE="$1"
 PIPELINEFILE="$2"
+
 
 if [ ! -e "$DATAFILE" ];
 then
@@ -82,6 +88,12 @@ if [ ! -e "$PIPELINEFILE" ];
 then
   helpmenu "Error: $PIPELINEFILE does not exist!"
   exit 1
+fi
+
+if [ "$LAUNCHLSF" != "no" ];
+then
+  bsub -q $LAUNCHLSF -J 4cpipeline $BASEDIR/4c-pipeline.sh $DATAFILE $PIPELINEFILE
+  exit 0
 fi
 
 $SCRIPTDIR/managed-pipeline.pl $BASEDIR $RUNALL $DATAFILE $OUTPUTDIR $PIPELINEFILE
