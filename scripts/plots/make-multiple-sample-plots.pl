@@ -40,7 +40,7 @@ sub runfromtemplate {
   
     print "\tPlotting $jointkey...\n";
   
-    my $fileargs = "$signalfile1 $bootstrapfile1 $lc1 $sc1 $at1 $signalfile2 $bootstrapfile2 $lc2 $sc2 $at2";
+    my $fileargs = "$skey1 $signalfile1 $bootstrapfile1 $lc1 $sc1 $at1 $skey2 $signalfile2 $bootstrapfile2 $lc2 $sc2 $at2";
   
     my $output = `Rscript $basedir/plot-4c-signal.r $genomecoord $shading $statsfile $ylimlow $ylimhigh $enhancerfile $promoterfile $vertlines $pdfoutput $pngoutput $cialpha $fileargs 2>&1`;
 
@@ -71,7 +71,7 @@ sub runallsets {
   
       print "\tPlotting $jointkey...\n";
   
-      my $fileargs = "$signalfile1 $bootstrapfile1 red red 50 $signalfile2 $bootstrapfile2 blue blue 50";
+      my $fileargs = "$g1 $signalfile1 $bootstrapfile1 red red 50 $g2 $signalfile2 $bootstrapfile2 blue blue 50";
   
       my $output = `Rscript $basedir/plot-4c-signal.r $genomecoord $shading $statsfile $ylimlow $ylimhigh $enhancerfile $promoterfile $vertlines $pdfoutput $pngoutput $cialpha $fileargs 2>&1`;
 

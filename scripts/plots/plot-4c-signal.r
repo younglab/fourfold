@@ -101,6 +101,10 @@ draw.lines <- function(vertlines) {
   abline(v=i)
 }
 
+draw.legend <- function(sn,colv) {
+  legend("topright",legend=sn,col=colv,lty=1)
+}
+
 args <- commandArgs(T)
 
 if(length(args)<14) {
@@ -122,15 +126,17 @@ ci.alpha <- as.numeric(args[11])
 
 args <- args[-(1:11)]
 
-st.file <- args[seq(1,length(args),5)]
-bt.file <- args[seq(2,length(args),5)]
-l.colors <- args[seq(3,length(args),5)]
-s.colors <- args[seq(4,length(args),5)]
-a.trans <- sapply(args[seq(5,length(args),5)],function(ch) as.numeric(ch)/100)
+sample.names <- args[seq(1,length(args),6)]
+st.file <- args[seq(2,length(args),6)]
+bt.file <- args[seq(3,length(args),6)]
+l.colors <- args[seq(4,length(args),6)]
+s.colors <- args[seq(5,length(args),6)]
+a.trans <- sapply(args[seq(6,length(args),6)],function(ch) as.numeric(ch)/100)
 
 
 st <- lapply(st.file,read.table,sep='\t')
-bt <- if( isstatsfile ) lapply(bt.file,read.table,sep='\t',colClasses = c("factor","integer","numeric","numeric","numeric","numeric","numeric")) else lapply(bt.file,read.table,sep='\t')
+bt <- if( isstatsfile ) lapply(bt.file,read.table,sep='\t',
+                               colClasses = c("factor","integer","numeric","numeric","numeric","numeric","numeric")) else lapply(bt.file,read.table,sep='\t')
 
 enhancers <- NA
 
@@ -161,16 +167,18 @@ background <- mapply(function(m,p) as.matrix(m[,-(1:2)])[queryHits(p),],bt,o,SIM
 allpos <- mapply(function(g,p) start(g)[queryHits(p)],pos,o,SIMPLIFY=F)
 
 pdf(pdf.file,width=12,height=6)
-ylim <- make.plot(allpos,signal,ylimlow,ylimhigh,coord.str)
+ylim <- make.plot(allpos,signal,sample.names,ylimlow,ylimhigh,coord.str)
 mapply(draw.sample,allpos,signal,background,as.list(rep(isstatsfile,length(allpos))),as.list(l.colors),as.list(s.colors),as.list(a.trans),as.list(rep(ci.alpha,length(allpos))),SIMPLIFY=F)
 draw.enhancers.promoters(enhancers,prom,ylim)
 draw.lines(vertlines)
+draw.legend(sample.names,l.colors)
 dev.off()
 
 
 CairoPNG(png.file,width=1200,height=600)
-ylim <- make.plot(allpos,signal,ylimlow,ylimhigh,coord.str)
+ylim <- make.plot(allpos,signal,sample.names,ylimlow,ylimhigh,coord.str)
 mapply(draw.sample,allpos,signal,background,as.list(rep(isstatsfile,length(allpos))),as.list(l.colors),as.list(s.colors),as.list(a.trans),as.list(rep(ci.alpha,length(allpos))),SIMPLIFY=F)
 draw.enhancers.promoters(enhancers,prom,ylim)
 draw.lines(vertlines)
+draw.legend(sample.names,l.colors)
 dev.off()
