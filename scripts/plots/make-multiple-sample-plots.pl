@@ -79,6 +79,34 @@ sub runallsets {
 
     }
   }
+  
+  ### need to simplify this...
+  
+  for( my $i = 0; $i < $ngroups; $i++ ) {
+    for( my $j = $i+1; $j < $ngroups; $j++ ) {
+      for( my $k = $j+1; $k < $ngroups; $k++) {
+        my ($g1,$g2,$g3) = ($groups[$i],$groups[$j],$groups[$k]);
+      
+        my $jointkey = "$g1-$g2-$g3";
+      
+        my ($signalfile1, $bootstrapfile1, $statsfile) = @{$samplegroups{$g1}};
+        my ($signalfile2, $bootstrapfile2) = @{$samplegroups{$g2}};
+        my ($signalfile3, $bootstrapfile3) = @{$samplegroups{$g3}};
+
+      
+        my $pdfoutput = "$outputdir/$jointkey.pdf";
+        my $pngoutput = "$outputdir/$jointkey.png";
+  
+        print "\tPlotting $jointkey...\n";
+  
+        my $fileargs = "$g1 $signalfile1 $bootstrapfile1 red red 50 $g2 $signalfile2 $bootstrapfile2 blue blue 50 $g3 $signalfile3 $bootstrapfile3 green green 50";
+  
+        my $output = `Rscript $basedir/plot-4c-signal.r $genomecoord $shading $statsfile $ylimlow $ylimhigh $enhancerfile $promoterfile $vertlines $pdfoutput $pngoutput $cialpha $fileargs 2>&1`;
+
+        die "Failed to generate output for $jointkey (arguments $genomecoord $shading $statsfile $ylimlow $ylimhigh $enhancerfile $promoterfile $vertlines $pdfoutput $pngoutput $cialpha $fileargs), messages: $output" unless $? == 0;
+
+    }
+  }
 }
 
 
