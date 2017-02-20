@@ -167,7 +167,7 @@ background <- mapply(function(m,p) as.matrix(m[,-(1:2)])[queryHits(p),],bt,o,SIM
 allpos <- mapply(function(g,p) start(g)[queryHits(p)],pos,o,SIMPLIFY=F)
 
 pdf(pdf.file,width=12,height=6)
-ylim <- make.plot(allpos,signal,sample.names,ylimlow,ylimhigh,coord.str)
+ylim <- make.plot(allpos,signal,ylimlow,ylimhigh,coord.str)
 mapply(draw.sample,allpos,signal,background,as.list(rep(isstatsfile,length(allpos))),as.list(l.colors),as.list(s.colors),as.list(a.trans),as.list(rep(ci.alpha,length(allpos))),SIMPLIFY=F)
 draw.enhancers.promoters(enhancers,prom,ylim)
 draw.lines(vertlines)
@@ -176,7 +176,7 @@ dev.off()
 
 
 CairoPNG(png.file,width=1200,height=600)
-ylim <- make.plot(allpos,signal,sample.names,ylimlow,ylimhigh,coord.str)
+ylim <- make.plot(allpos,signal,ylimlow,ylimhigh,coord.str)
 mapply(draw.sample,allpos,signal,background,as.list(rep(isstatsfile,length(allpos))),as.list(l.colors),as.list(s.colors),as.list(a.trans),as.list(rep(ci.alpha,length(allpos))),SIMPLIFY=F)
 draw.enhancers.promoters(enhancers,prom,ylim)
 draw.lines(vertlines)
