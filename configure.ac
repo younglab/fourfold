@@ -1,4 +1,4 @@
-AC_INIT([4C],[0.1])
+AC_INIT([fourfold],[0.2])
 
 AC_CONFIG_FILES([Makefile])
 
