@@ -30,3 +30,5 @@ cleaninstall: quantification
 tarexamples:
 	tar -czf 4c-pipeline-examples.tgz examples
 
+dist:
+	tar -czf fourfold.tgz *
