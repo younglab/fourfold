@@ -4,7 +4,7 @@ BASEDIR=$(dirname $0)
 SCRIPTDIR=$BASEDIR/../scripts/pipeline
 LIBDIR=$BASEDIR/../lib
 ORGANISMDATABASE=$BASEDIR/../db/organism-database.txt
-RUNALL=0
+RUNALL=no
 OUTPUTDIR=.
 LAUNCHLSF=no
 
@@ -42,7 +42,7 @@ while [ $# -ge 1 ]; do
 	    LAUNCHLSF=14
 	    ;;
 	  -a|--run-all)
-	    RUNALL=1
+	    RUNALL=yes
 	    ;;
 	  -o|--output)
 	    OUTPUTDIR="$2"

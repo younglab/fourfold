@@ -11,7 +11,7 @@ sub makeerror {
 
 die "Arguments: <base dir> <run all?> <data template file> <output dir> <template file>" unless scalar(@ARGV) >= 3;
 
-my ($basedir,$runall,$samplefile,$outputdir,$templatefile) = @ARGV;
+my ($basedir,$runallarg,$samplefile,$outputdir,$templatefile) = @ARGV;
 
 die "Cannot find base directory $basedir" unless -e $basedir;
 die "Cannot find data file $samplefile" unless -e $samplefile;
@@ -20,6 +20,10 @@ die "Cannot find template file $templatefile" unless -e $templatefile;
 
 my $database = ReadData($templatefile);
 my $sdatabase = ReadData($samplefile);
+
+my $runall = 0;
+
+$runall = 1 if $runallarg eq "yes";
 
 ### Step 1
 
@@ -68,7 +72,7 @@ print "completed\n";
 
 
 print "Step 2: Processing 4C-seq reads... ";
-unless( !$runall && -e "bootstrap") { ## skip if already present 
+unless( !$runall && -e "$outputdir/bootstrap") { ## skip if already present 
   unless($outputdir eq '.') {
     mkdir($outputdir);
     copy($samplefile,$outputdir) or die "Cannot copy 4C template file to new output directory!";
@@ -89,6 +93,7 @@ unless( !$runall && -e "bootstrap") { ## skip if already present
   print "finished\n";
 } else {
   print "skipping (reads already processed)\n";
+  chdir($outputdir) unless $outputdir eq ".";
 }
 
 #### Step 3
