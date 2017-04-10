@@ -80,7 +80,7 @@ for( my $i = 0; $i < $nr; $i++ ) {
     $fastq =~ s/\\\\WI-HTDATA/\/lab/;
     $fastq =~ s/\\/\//g;
     die "Cannot find file $fastq (original name $origfastq)!" unless -e $fastq;
-    die "$fastq appears to be a directory, not a file (original name $origfastq)!" if -d $fastq;
+    die "$fastq appears to be a directory, not a FASTQ file (original name $origfastq)!" if -d $fastq;
   }
   
   die "Barcode of $name doesn't only contain DNA characters or NA" unless ($barcode =~ /^[ACTG]+$/i || $barcode eq "NA");
