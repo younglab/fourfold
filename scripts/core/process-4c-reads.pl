@@ -85,6 +85,8 @@ for( my $i = 0; $i < $nr; $i++ ) {
     `cat $fastq > $tmpseqfile`;
   }
   
+  die "Failed to extract FASTQ data from $fastq, see error messages" unless $? == 0;
+  
   push @tmpfiles, $tmpseqfile;
   my $nlines = `wc -l $tmpseqfile`;
   chomp $nlines;
