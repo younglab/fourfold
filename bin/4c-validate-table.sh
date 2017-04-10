@@ -26,4 +26,4 @@ then
   exit 1
 fi
 
-$BASEDIR/4c-pipeline.sh --validate-table-only $SAMPLETABLE
+$BASEDIR/4c-read-processing.sh --validate-table-only $SAMPLETABLE
