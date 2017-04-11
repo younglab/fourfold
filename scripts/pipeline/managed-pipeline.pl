@@ -231,8 +231,8 @@ for( my $i = 0; $i < $nr; $i++ ) {
     
     my $extraopt = "";
     
-    $extraopt .= "--add-enhancers=$efile " if (defined($efile) && $efile ne "NA");
-    $extraopt .= "--add-vertical-line=$vpos " if (defined($vpos) && $vpos ne "NA");
+    $extraopt .= "--add-enhancers=$efile " if (defined($efile) && $efile ne "NA" && $efile ne "" );
+    $extraopt .= "--add-vertical-line=$vpos " if (defined($vpos) && $vpos ne "NA" && $vpos ne "" );
     
     my $output = `$basedir/4c-plots.sh --inputdir=$sdir --shading=$shading --ylim-low=$ylow --ylim-high=$yhigh $extraopt $samplefile $region $outputdir $samples`;
     
