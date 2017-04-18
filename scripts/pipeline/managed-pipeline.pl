@@ -68,6 +68,40 @@ unless(scalar(keys(%samplegroups))>0) {
 
 print "completed\n";
 
+print "Step 2: Validating pipeline table consistency (this may not catch all possible errors)... ";
+
+$sheet = $database->[3];
+
+for( my $i = 0; $i < $nr; $i++ ) {
+  my @arr = Spreadsheet::Read::cellrow($sheet,$i+1);
+  
+  my ($groupid) = @arr;
+  
+  makeerror "Cannot find group $groupid that is listed in the smoothing tab" unless defined($samplegroups{$groupid});
+}
+
+$sheet = $database->[4];
+
+for( my $i = 0; $i < $nr; $i++ ) {
+  my @arr = Spreadsheet::Read::cellrow($sheet,$i+1);
+  
+  my ($groupid) = @arr;
+  
+  makeerror "Cannot find group $groupid that is listed in the normalization tab" unless defined($samplegroups{$groupid});
+}
+
+$sheet = $database->[5];
+
+for( my $i = 0; $i < $nr; $i++ ) {
+  my @arr = Spreadsheet::Read::cellrow($sheet,$i+1);
+  
+  my ($groupid) = @arr;
+  
+  makeerror "Cannot find group $groupid that is listed in the plots tab" unless defined($samplegroups{$groupid});
+}
+
+print "completed\n";
+
 ### Step 2: read processing
 
 
