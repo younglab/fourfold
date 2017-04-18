@@ -71,6 +71,7 @@ print "completed\n";
 print "Step 2: Validating pipeline table consistency (this may not catch all possible errors)... ";
 
 $sheet = $database->[3];
+$nr = ${$sheet}{"maxrow"};
 
 for( my $i = 0; $i < $nr; $i++ ) {
   my @arr = Spreadsheet::Read::cellrow($sheet,$i+1);
@@ -81,6 +82,7 @@ for( my $i = 0; $i < $nr; $i++ ) {
 }
 
 $sheet = $database->[4];
+$nr = ${$sheet}{"maxrow"};
 
 for( my $i = 0; $i < $nr; $i++ ) {
   my @arr = Spreadsheet::Read::cellrow($sheet,$i+1);
@@ -91,6 +93,7 @@ for( my $i = 0; $i < $nr; $i++ ) {
 }
 
 $sheet = $database->[5];
+$nr = ${$sheet}{"maxrow"};
 
 for( my $i = 0; $i < $nr; $i++ ) {
   my @arr = Spreadsheet::Read::cellrow($sheet,$i+1);
