@@ -78,6 +78,9 @@ for( my $i = 0; $i < $nr; $i++ ) {
   
   my ($groupid) = @arr;
   
+  next if $groupid =~ /^#/;
+  next if $groupid =~ /^$/;
+  
   makeerror "Cannot find group $groupid that is listed in the smoothing tab" unless defined($samplegroups{$groupid});
 }
 
@@ -89,6 +92,9 @@ for( my $i = 0; $i < $nr; $i++ ) {
   
   my ($groupid) = @arr;
   
+  next if $groupid =~ /^#/;
+  next if $groupid =~ /^$/;
+
   makeerror "Cannot find group $groupid that is listed in the normalization tab" unless defined($samplegroups{$groupid});
 }
 
@@ -99,6 +105,9 @@ for( my $i = 0; $i < $nr; $i++ ) {
   my @arr = Spreadsheet::Read::cellrow($sheet,$i+1);
   
   my ($groupid) = @arr;
+  
+  next if $groupid =~ /^#/;
+  next if $groupid =~ /^$/;
   
   makeerror "Cannot find group $groupid that is listed in the plots tab" unless defined($samplegroups{$groupid});
 }
