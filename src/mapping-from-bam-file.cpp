@@ -124,8 +124,8 @@ int main(int argv,char **argc) {
   }
   
   BamAlignment align;
-  int curchr;
-  std::string curchrs;
+  int curchr = -1;
+  std::string curchrs = "deadbeef";
   int curidx = 0;
   int cutlen = -1;
   int readlen = -1;
@@ -203,6 +203,12 @@ int main(int argv,char **argc) {
       } else {
         transreads++;
       }
+    }
+    
+    //sanity check
+    if( curchrs == "deadbeef" || curchr == -1 ) {
+      std::cerr << "Somehow the chromosome index is not valid at this point" << std::endl;
+      return EXIT_FAILURE;
     }
   }
   
