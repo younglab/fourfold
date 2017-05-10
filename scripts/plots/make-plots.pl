@@ -85,7 +85,7 @@ for( my $i = 0; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
     my $pdfoutput = "$outputdir/$name.pdf";
     my $pngoutput = "$outputdir/$name.png";
     
-    my $output = `Rscript $basedir/plot-4c-signal.r $genomecoord $shading $statsfile $ylimlow $ylimhigh $enhancerfile $promoterfile $vertlines $pdfoutput $pngoutput $cialpha $name $signalfile $bootstrapfile $linecolor $shadingcolor $transparencyperc $usecairopng 2>&1`;
+    my $output = `Rscript $basedir/plot-4c-signal.r $genomecoord $shading $statsfile $ylimlow $ylimhigh $enhancerfile $promoterfile $vertlines $pdfoutput $pngoutput $cialpha $usecairopng $name $signalfile $bootstrapfile $linecolor $shadingcolor $transparencyperc 2>&1`;
   
     die "Failed to generate output for $name, messages: $output" unless $? == 0;
   }
@@ -104,7 +104,7 @@ for my $skey (keys(%samplegroups)) {
   my $pngoutput = "$outputdir/$skey.png";
   
   print "\tPlotting $skey...\n";
-  my $output = `Rscript $basedir/plot-4c-signal.r $genomecoord $shading $statsfile $ylimlow $ylimhigh $enhancerfile $promoterfile $vertlines $pdfoutput $pngoutput $cialpha $skey $signalfile $bootstrapfile $linecolor $shadingcolor $transparencyperc $usecairopng 2>&1`;
+  my $output = `Rscript $basedir/plot-4c-signal.r $genomecoord $shading $statsfile $ylimlow $ylimhigh $enhancerfile $promoterfile $vertlines $pdfoutput $pngoutput $cialpha $usecairopng $skey $signalfile $bootstrapfile $linecolor $shadingcolor $transparencyperc 2>&1`;
 
   die "Failed to generate output for $skey, messages: $output" unless $? == 0;
 }
