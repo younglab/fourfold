@@ -5,7 +5,7 @@ use Spreadsheet::Read;
 use FourCOpts::Utils qw(issamplein convertcoordinatestring);
 
 sub runfromtemplate {
-  my ($multisampletable,$basedir,$genomecoord,$shading,$inputdir,$outputdir,$ylimlow,$ylimhigh,$enhancerfile,$promoterfile,$vertlines,$cialpha,$sgref) = @_;
+  my ($multisampletable,$basedir,$genomecoord,$shading,$inputdir,$outputdir,$ylimlow,$ylimhigh,$enhancerfile,$promoterfile,$vertlines,$cialpha,$usecairopng,$sgref) = @_;
   
   my %samplegroups = %{$sgref};
   my $database = ReadData($multisampletable);
@@ -42,7 +42,7 @@ sub runfromtemplate {
   
     my $fileargs = "$skey1 $signalfile1 $bootstrapfile1 $lc1 $sc1 $at1 $skey2 $signalfile2 $bootstrapfile2 $lc2 $sc2 $at2";
   
-    my $output = `Rscript $basedir/plot-4c-signal.r $genomecoord $shading $statsfile $ylimlow $ylimhigh $enhancerfile $promoterfile $vertlines $pdfoutput $pngoutput $cialpha $fileargs 2>&1`;
+    my $output = `Rscript $basedir/plot-4c-signal.r $genomecoord $shading $statsfile $ylimlow $ylimhigh $enhancerfile $promoterfile $vertlines $pdfoutput $pngoutput $cialpha $usecairopng $fileargs 2>&1`;
 
     die "Failed to generate output for $jointkey (arguments $genomecoord $shading $statsfile $ylimlow $ylimhigh $enhancerfile $promoterfile $vertlines $pdfoutput $pngoutput $cialpha $fileargs), messages: $output" unless $? == 0;
   }
@@ -50,7 +50,7 @@ sub runfromtemplate {
 }
 
 sub runallsets {
-  my ($basedir,$genomecoord,$shading,$inputdir,$outputdir,$ylimlow,$ylimhigh,$enhancerfile,$promoterfile,$vertlines,$cialpha,$sgref) = @_;
+  my ($basedir,$genomecoord,$shading,$inputdir,$outputdir,$ylimlow,$ylimhigh,$enhancerfile,$promoterfile,$vertlines,$cialpha,$usecairopng,$sgref) = @_;
   
   my %samplegroups = %{$sgref};
   
@@ -73,9 +73,9 @@ sub runallsets {
   
       my $fileargs = "$g1 $signalfile1 $bootstrapfile1 red red 50 $g2 $signalfile2 $bootstrapfile2 blue blue 50";
   
-      my $output = `Rscript $basedir/plot-4c-signal.r $genomecoord $shading $statsfile $ylimlow $ylimhigh $enhancerfile $promoterfile $vertlines $pdfoutput $pngoutput $cialpha $fileargs 2>&1`;
+      my $output = `Rscript $basedir/plot-4c-signal.r $genomecoord $shading $statsfile $ylimlow $ylimhigh $enhancerfile $promoterfile $vertlines $pdfoutput $pngoutput $cialpha $usecairopng $fileargs 2>&1`;
 
-      die "Failed to generate output for $jointkey (arguments $genomecoord $shading $statsfile $ylimlow $ylimhigh $enhancerfile $promoterfile $vertlines $pdfoutput $pngoutput $cialpha $fileargs), messages: $output" unless $? == 0;
+      die "Failed to generate output for $jointkey (arguments $genomecoord $shading $statsfile $ylimlow $ylimhigh $enhancerfile $promoterfile $vertlines $pdfoutput $pngoutput $cialpha $usecairopng $fileargs), messages: $output" unless $? == 0;
 
     }
   }
@@ -101,9 +101,9 @@ sub runallsets {
   
         my $fileargs = "$g1 $signalfile1 $bootstrapfile1 red red 50 $g2 $signalfile2 $bootstrapfile2 blue blue 50 $g3 $signalfile3 $bootstrapfile3 green green 50";
   
-        my $output = `Rscript $basedir/plot-4c-signal.r $genomecoord $shading $statsfile $ylimlow $ylimhigh $enhancerfile $promoterfile $vertlines $pdfoutput $pngoutput $cialpha $fileargs 2>&1`;
+        my $output = `Rscript $basedir/plot-4c-signal.r $genomecoord $shading $statsfile $ylimlow $ylimhigh $enhancerfile $promoterfile $vertlines $pdfoutput $pngoutput $cialpha $usecairopng $fileargs 2>&1`;
 
-        die "Failed to generate output for $jointkey (arguments $genomecoord $shading $statsfile $ylimlow $ylimhigh $enhancerfile $promoterfile $vertlines $pdfoutput $pngoutput $cialpha $fileargs), messages: $output" unless $? == 0;
+        die "Failed to generate output for $jointkey (arguments $genomecoord $shading $statsfile $ylimlow $ylimhigh $enhancerfile $promoterfile $vertlines $pdfoutput $pngoutput $cialpha $usecairopng $fileargs), messages: $output" unless $? == 0;
 
       }
     }
@@ -111,9 +111,10 @@ sub runallsets {
 }
 
 
-die "Arguments: <template file> <multiple sample template file> <organism database> <basedir> <genomic coordinates> <shading> <input dir> <output dir> <ylim low> <ylim high> <enhancer file> <promoter file> <vertlines> <CI alpha>" unless scalar(@ARGV)>=11;
+die "Arguments: <template file> <multiple sample template file> <organism database> <basedir> <genomic coordinates> <shading> <input dir> <output dir> <ylim low> <ylim high> <enhancer file> <promoter file> <vertlines> <CI alpha> <Cairo PNG?>" unless scalar(@ARGV)>=15;
 
-my ($sampletable,$multisampletable,$organismdatabase,$basedir,$genomecoord,$shading,$inputdir,$outputdir,$ylimlow,$ylimhigh,$enhancerfile,$promoterfile,$vertlines,$cialpha) = @ARGV;
+my ($sampletable,$multisampletable,$organismdatabase,$basedir,$genomecoord,$shading,$inputdir,$outputdir,$ylimlow,$ylimhigh,$enhancerfile,$promoterfile,$vertlines,$cialpha,$cairopng) = @ARGV;
+my ($usecairopng) = ($cairopng eq "no" ? "false" : "true");
 
 die "Cannot find $sampletable!" unless -e $sampletable;
 die "Cannot find $multisampletable!" unless (-e $multisampletable || $multisampletable eq "all");
@@ -169,7 +170,7 @@ for( my $i = 0; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
 print "Making plots...\n";
 
 if( $multisampletable eq "all") {
-  runallsets($basedir,$genomecoord,$shading,$inputdir,$outputdir,$ylimlow,$ylimhigh,$enhancerfile,$promoterfile,$vertlines,$cialpha,\%samplegroups);
+  runallsets($basedir,$genomecoord,$shading,$inputdir,$outputdir,$ylimlow,$ylimhigh,$enhancerfile,$promoterfile,$vertlines,$cialpha,$usecairopng\%samplegroups);
 } else {
-  runfromtemplate($multisampletable,$basedir,$genomecoord,$shading,$inputdir,$outputdir,$ylimlow,$ylimhigh,$enhancerfile,$promoterfile,$vertlines,$cialpha,\%samplegroups);
+  runfromtemplate($multisampletable,$basedir,$genomecoord,$shading,$inputdir,$outputdir,$ylimlow,$ylimhigh,$enhancerfile,$promoterfile,$vertlines,$cialpha,$usecairopng,\%samplegroups);
 } 

@@ -5,12 +5,13 @@ use Spreadsheet::Read;
 use FourCOpts::Utils qw(issamplein convertcoordinatestring);
 
 
-die "Arguments: <template file> <organism database> <basedir> <genomic coordinates> <shading> <input dir> <output dir> <group only> <ylim low> <ylim high> <enhancer file> <promoter file> <verticle line coordinates> <CI alpha> <files 1> [files 2...]" unless scalar(@ARGV)>=13;
+die "Arguments: <template file> <organism database> <basedir> <genomic coordinates> <shading> <input dir> <output dir> <group only> <ylim low> <ylim high> <enhancer file> <promoter file> <verticle line coordinates> <CI alpha> <Cairo PNG?> <files 1> [files 2...]" unless scalar(@ARGV)>=16;
 
-my ($sampletable,$organismdatabase,$basedir,$genomecoord, $shading,$inputdir,$outputdir,$grouponly,$ylimlow,$ylimhigh,$enhancerfile,$promoterfile,$vertlines,$cialpha,@files) = @ARGV;
+my ($sampletable,$organismdatabase,$basedir,$genomecoord, $shading,$inputdir,$outputdir,$grouponly,$ylimlow,$ylimhigh,$enhancerfile,$promoterfile,$vertlines,$cialpha,$cairopng,@files) = @ARGV;
 
 ## transfer into adjustable parameters someday
 my ($linecolor,$shadingcolor,$transparencyperc) = ("black","red",50);
+my ($usecairopng) = ($cairopng eq "no" ? "false" : "true");
 
 die "Cannot find $sampletable!" unless -e $sampletable;
 die "Cannot find $organismdatabase" unless -e $organismdatabase;
@@ -84,7 +85,7 @@ for( my $i = 0; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
     my $pdfoutput = "$outputdir/$name.pdf";
     my $pngoutput = "$outputdir/$name.png";
     
-    my $output = `Rscript $basedir/plot-4c-signal.r $genomecoord $shading $statsfile $ylimlow $ylimhigh $enhancerfile $promoterfile $vertlines $pdfoutput $pngoutput $cialpha $name $signalfile $bootstrapfile $linecolor $shadingcolor $transparencyperc 2>&1`;
+    my $output = `Rscript $basedir/plot-4c-signal.r $genomecoord $shading $statsfile $ylimlow $ylimhigh $enhancerfile $promoterfile $vertlines $pdfoutput $pngoutput $cialpha $name $signalfile $bootstrapfile $linecolor $shadingcolor $transparencyperc $usecairopng 2>&1`;
   
     die "Failed to generate output for $name, messages: $output" unless $? == 0;
   }
@@ -103,7 +104,7 @@ for my $skey (keys(%samplegroups)) {
   my $pngoutput = "$outputdir/$skey.png";
   
   print "\tPlotting $skey...\n";
-  my $output = `Rscript $basedir/plot-4c-signal.r $genomecoord $shading $statsfile $ylimlow $ylimhigh $enhancerfile $promoterfile $vertlines $pdfoutput $pngoutput $cialpha $skey $signalfile $bootstrapfile $linecolor $shadingcolor $transparencyperc  2>&1`;
+  my $output = `Rscript $basedir/plot-4c-signal.r $genomecoord $shading $statsfile $ylimlow $ylimhigh $enhancerfile $promoterfile $vertlines $pdfoutput $pngoutput $cialpha $skey $signalfile $bootstrapfile $linecolor $shadingcolor $transparencyperc $usecairopng 2>&1`;
 
   die "Failed to generate output for $skey, messages: $output" unless $? == 0;
 }

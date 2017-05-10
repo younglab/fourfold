@@ -108,7 +108,7 @@ draw.legend <- function(sn,colv) {
 args <- commandArgs(T)
 
 if(length(args)<14) {
-  stop(paste("Arguments: <region> <type> <is stats file> <ylim low> <ylim high> <enhancer file> <promoter file> <verticle line coordinates> <output PDF> <output PNG> <ci alpha> [<signal table> <bootstrap table> <line color> <shading color> <alpha transparency>]x. Saw ",paste(args)))
+  stop(paste("Arguments: <region> <type> <is stats file> <ylim low> <ylim high> <enhancer file> <promoter file> <verticle line coordinates> <output PDF> <output PNG> <ci alpha> <Cairo PNG?> [<signal table> <bootstrap table> <line color> <shading color> <alpha transparency>]x. Saw ",paste(args)))
 }
 
 coord.str <- args[1]
@@ -123,8 +123,9 @@ vertlines <- args[8]
 pdf.file <- args[9]
 png.file <- args[10]
 ci.alpha <- as.numeric(args[11])
+use.cairo.png <- as.logical(args[12])
 
-args <- args[-(1:11)]
+args <- args[-(1:12)]
 
 sample.names <- args[seq(1,length(args),6)]
 st.file <- args[seq(2,length(args),6)]
@@ -174,11 +175,12 @@ draw.lines(vertlines)
 draw.legend(sample.names,l.colors)
 dev.off()
 
-
-CairoPNG(png.file,width=1200,height=600)
-ylim <- make.plot(allpos,signal,ylimlow,ylimhigh,coord.str)
-mapply(draw.sample,allpos,signal,background,as.list(rep(isstatsfile,length(allpos))),as.list(l.colors),as.list(s.colors),as.list(a.trans),as.list(rep(ci.alpha,length(allpos))),SIMPLIFY=F)
-draw.enhancers.promoters(enhancers,prom,ylim)
-draw.lines(vertlines)
-draw.legend(sample.names,l.colors)
-dev.off()
+if( use.cairo.png ) {
+  CairoPNG(png.file,width=1200,height=600)
+  ylim <- make.plot(allpos,signal,ylimlow,ylimhigh,coord.str)
+  mapply(draw.sample,allpos,signal,background,as.list(rep(isstatsfile,length(allpos))),as.list(l.colors),as.list(s.colors),as.list(a.trans),as.list(rep(ci.alpha,length(allpos))),SIMPLIFY=F)
+  draw.enhancers.promoters(enhancers,prom,ylim)
+  draw.lines(vertlines)
+  draw.legend(sample.names,l.colors)
+  dev.off()
+}
