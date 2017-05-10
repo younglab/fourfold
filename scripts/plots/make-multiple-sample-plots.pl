@@ -170,7 +170,7 @@ for( my $i = 0; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
 print "Making plots...\n";
 
 if( $multisampletable eq "all") {
-  runallsets($basedir,$genomecoord,$shading,$inputdir,$outputdir,$ylimlow,$ylimhigh,$enhancerfile,$promoterfile,$vertlines,$cialpha,$usecairopng\%samplegroups);
+  runallsets($basedir,$genomecoord,$shading,$inputdir,$outputdir,$ylimlow,$ylimhigh,$enhancerfile,$promoterfile,$vertlines,$cialpha,$usecairopng,\%samplegroups);
 } else {
   runfromtemplate($multisampletable,$basedir,$genomecoord,$shading,$inputdir,$outputdir,$ylimlow,$ylimhigh,$enhancerfile,$promoterfile,$vertlines,$cialpha,$usecairopng,\%samplegroups);
 } 
