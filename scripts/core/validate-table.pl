@@ -40,6 +40,10 @@ for( my $i = 0; $i < $nr; $i++ ) {
   
   print "\tChecking $name...\n";
   
+  die "The sample identifier ($name) cannot have any whitespace characters within it" if $name =~ /\s/;
+  die "The sample identifier ($name) cannot have any forward or backslash characters within it" if $name =~ /[\/\\]/;
+
+  
   die "$name is duplicated in the table, line " . ($i+1) . "!" if defined($names{$name});
   $names{$name} = 1;
   

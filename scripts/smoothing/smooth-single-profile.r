@@ -47,7 +47,7 @@ args <- commandArgs(T)
 
 
 if(length(args) < 9) {
-  stop("failed")
+  stop("Failure: not enough arguments passed to smooth-single-profile.r")
 }
 
 library.file <- args[1]

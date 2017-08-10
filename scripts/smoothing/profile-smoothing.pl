@@ -2,7 +2,7 @@
 
 use strict;
 use Spreadsheet::Read;
-use FourCOpts::OrganismDatabase qw(loadorgdatabase);
+use FourCOpts::OrganismDatabase qw(loadorgdatabase lookup_organism);
 use FourCOpts::WigFile qw(writewigfile);
 use FourCOpts::Utils qw(issamplein);
 
@@ -62,17 +62,19 @@ for( my $i = 0; $i < $nr; $i++ ) {
   
   push @{$samplegroups{$key}}, ["$inputdir/$name.filtered.rpm.txt", "$inputdir/$name.filtered.rpm.bootstrap.txt"];
   
-  my $chromsizes = $organisms{$organism}->[2];
+  my $chromsizes = lookup_organism(\%organisms,$organism)->[2];
   $sampleorganism{$key} = $chromsizes;
   
   print "\tSmoothing profile $name...\n";
   
   my $outtable = "$outputdir/$name.filtered.rpm.txt";
   my $outtableb = "$outputdir/$name.filtered.rpm.bootstrap.stats.txt";
-
-  my $output = `Rscript $basedir/smooth-single-profile.r $rlib $binsize $stepsize $chromsizes $smoothingmode $inputdir/$name.filtered.rpm.txt $inputdir/$name.filtered.rpm.bootstrap.txt $outtable $outtableb 2>&1`;
   
-  die "Smoothing failed with an error: $output" unless( $? == 0 );
+  my $args = "$rlib $binsize $stepsize $chromsizes $smoothingmode $inputdir/$name.filtered.rpm.txt $inputdir/$name.filtered.rpm.bootstrap.txt $outtable $outtableb";
+
+  my $output = `Rscript $basedir/smooth-single-profile.r $args 2>&1`;
+  
+  die "Smoothing failed with an error (with arguments $args): $output" unless( $? == 0 );
   `gzip $outtableb`; ## compress table since they tend to be large
   ### generate a WIG file
   

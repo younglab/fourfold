@@ -4,7 +4,7 @@ use strict;
 
 use Exporter qw(import);
 
-our @EXPORT_OK = qw(loadorgdatabase);
+our @EXPORT_OK = qw(loadorgdatabase lookup_organism);
 
 sub loadorgdatabase {
   die "Not enough arguments" if(scalar(@_)<1);
@@ -33,6 +33,19 @@ sub loadorgdatabase {
   close(D);
   
   return \%organisms;
+}
+
+sub lookup_organism {
+
+  die "Not enough arguments for lookup_organism (@_)" if scalar(@_) < 2;
+  
+  my ($dbref,$organism) = @_;
+  
+  my $o = lc $organism;
+  
+  die "Cannot find $organism within organism database" if !defined($dbref->{$o});
+  
+  return $dbref->{$o};
 }
 
 1;
