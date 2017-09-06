@@ -45,6 +45,10 @@ for( my $i = 0; $i < $nr; $i++ ) {
   $basicoptions{$key} = $value;
 }
 
+if($basicoptions{"Template Version"} < 2) {
+  makeerror "Error: the pipeline template format just be at least version 2";
+}
+
 $sheet = $database->[2];
 $nr = ${$sheet}{"maxrow"};
 
