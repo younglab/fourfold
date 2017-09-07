@@ -45,6 +45,10 @@ for( my $i = 0; $i < $nr; $i++ ) {
   $basicoptions{$key} = $value;
 }
 
+if($basicoptions{"Template Version"} < 2) {
+  makeerror "Error: the pipeline template format just be at least version 2";
+}
+
 $sheet = $database->[2];
 $nr = ${$sheet}{"maxrow"};
 
@@ -288,6 +292,34 @@ for( my $i = 0; $i < $nr; $i++ ) {
     
     makeerror "error in generating multi profile plots\nSee error messages: $output\n" unless $? == 0; 
   }
+}
+
+print "done\n";
+
+#### quantification
+
+print "Step 6: Generating quantifications... ";
+
+$sheet = $database->[6];
+$nr = ${$sheet}{"maxrow"};
+
+for( my $i = 0; $i < $nr; $i++ ) {
+  my @arr = Spreadsheet::Read::cellrow($sheet,$i+1);
+  
+  my ($groupid,$region) = @arr;
+  
+  next if $groupid =~ /^#/;
+  next if $groupid =~ /^$/;
+  
+  ### need to generalize
+  my $targetdir = "$groupid-quantile-norm";
+  my $targetoutput = "$groupid-quantify-region-$i.txt";
+  
+  makeerror "failed to quantify: cannot find target director $targetdir" unless -d $targetdir;
+  
+  my $output = `$basedir/4c-quantify.sh $targetdir $region $targetoutput`;
+  
+  makeerror "error in generating quantification results\n See error messages: $output\n" unless $? == 0;
 }
 
 print "done\n";
