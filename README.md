@@ -1,6 +1,6 @@
 # Fourfold
 
-
+Fourfold is a 4C-seq processing pipeline. This will handle the processing of 4C-seq reads from FASTQ files on the local disk or the Internet. The output of the pipeline is a set of WIG files, smoothed and unsmoothed, to visualize in a browser like UCSC or IGV as well as PDF plots of selected genomic windows. The PDF plots are a line graph of the signal over the region plus the estimated 95% confidence interval via bootstrap.
 
 The details below are meant to be a brief introduction to the pipeline. Expanded instructions will be available at https://github.com/younglab/fourfold/wiki.
 
@@ -16,11 +16,13 @@ To install:
 
 ## Template Files
 
+The necessary template files are in Excel format under the templates/ folder. Each of these needs to be filled out before running the pipeline. Information on what data is needed for each column can be found at https://github.com/younglab/fourfold/wiki.
+
 ## Running the pipeline
 
 ### Launching
 
-The pipeline is executed by running /path/to/install/directory/4c-pipeline.sh <data-sample-template.xslx> <pipeline-template.xslx>. 
+The pipeline is executed by running /path/to/install/directory/4c-pipeline.sh <data-sample-template.xslx> <pipeline-template.xslx>.
 
 If you are running on a LSF-capable cluster, then you can automatically dispatch the pipeline to the cluster via /path/to/install/directory/4c-pipeline.sh -l <data-sample-template.xslx> <pipeline-template.xslx>.
 
@@ -35,4 +37,4 @@ result.
 
 2. Other general questions/comments
 
-Please e-mail young_computation@wi.mit.edu
+Please file an issue in the tracker on the GitHub page or e-mail young_computation@wi.mit.edu with "[fourfold]" in the subject line.
