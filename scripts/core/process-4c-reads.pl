@@ -94,7 +94,7 @@ for( my $i = 0; $i < $nr; $i++ ) {
   $tmpfilesize{$tmpseqfile} = $tl/4;
 }
   
-
+my %filegroups;
 
 for( my $i = 0; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
 
@@ -110,19 +110,16 @@ for( my $i = 0; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
   die "Somehow cannot find any temporary file for $name" unless defined($tmpfilemap{$name});
   my $tmpseqfile = $tmpfilemap{$name};
   die "Somehow the temporary file $tmpseqfile for $name disappeared" unless -e $tmpseqfile;
-
   
-  open(D,"<","$tmpseqfile") or die "Cannot read $tmpseqfile: $!";
-  open(P,">",".tmp.primer.fq") or die "Cannot write .tmp.primer.fq: $!";
-  if($geo) {
-    open(G,">",".tmp.geo.fq") or die "Cannot write to .tmp.geo.fq: $!";
-  }
-  
+    
   my $test;
   my $barcodetest = qr/INVALID1234/;
   my $trimlength;
   my $geotrimlength;
   my ($nbarcode,$nprimer) = (0,0);
+  my $ofh;
+  my $gfh;
+  
   
   if($barcode ne "NA") {
     $test = qr/^$barcode$primer/i;
@@ -135,52 +132,8 @@ for( my $i = 0; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
     $geotrimlength = 0;
   }
   
-  my @fastqlines = <D>;
-  chomp @fastqlines;
-  
-  while(scalar(@fastqlines)>0) {
-      my $line1 = shift @fastqlines;
-      my $line2 = shift @fastqlines;
-      my $line3 = shift @fastqlines;
-      my $line4 = shift @fastqlines;
-      
-      $nbarcode++ if $line2 =~ $barcodetest;
-      next unless $line2 =~ $test;
-      $nprimer++;
-      
-      my $np2 = substr($line2,$trimlength);
-      my $np4 = substr($line4,$trimlength);
-      
-      print P "$line1\n$np2\n$line3\n$np4\n";
-      
-      if($geo) {
-        $np2 = substr($line2,$geotrimlength);
-        $np4 = substr($line4,$geotrimlength);
-        
-        print G "$line1\n$np2\n$line3\n$np4\n";
-      }
-  }
-  
-  close(P);
-  close(D);
-  close(G) if $geo;
-  
-  ### right now die if a sample had no reads in it -- may want to handle this a bit more
-  ### elegantly in the future to keep processing the other samples in the mean time
-  if( $nprimer == 0 ) {
-    if($nbarcode == 0 ) {
-      die "Sample $name did not have any reads for primer $primer! Additionally, no reads with barcode $barcode were detected in the FASTQ file $fastq as well";
-    } else {
-      die "Sample $name did not have any reads for primer $primer! But the barcode $barcode was found on some reads in the FASTQ file $fastq";
-    }
-  }
-  
-  rename(".tmp.primer.fq","$name.trimmed.fq");
-  if( $geo ) {
-    rename(".tmp.geo.fq","$name.geo.fq");
-    `gzip $name.geo.fq`;
-    `md5sum $name.geo.fq.gz > $name.geo.fq.gz.md5sum`;
-  }
+  open($ofh,">","$name.trimmed.fq") or die "Cannot write $name.trimmed.fq: $!";
+  open($gfh,">","$name.geo.fq") or die "Cannot write to $name.geo.fq: $!" if $geo;
   
   my $bowtieidx = $organisms{lc $organism}->[0];
   my $bowtiecmd = "bowtie -n $bowtien -p 8 -k $bowtiek -m $bowtiem -S --chunkmbs 256 --best --strata $bowtieidx $name.trimmed.fq > bamfiles/$name.sam";
@@ -188,13 +141,88 @@ for( my $i = 0; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
   print S "$bowtiecmd\n";
   close(S);
   
-  open(O,">","stats/$name.txt") or die "Cannot write to stats/$name.out";
-  print O "Sample ID: $name\n";
-  print O "Number of sequenced reads: $tmpfilesize{$tmpseqfile}\n";
-  print O "Number of reads with barcode $barcode: $nbarcode\n";
-  print O "Number of reads with barcode and primer $barcode$primer: $nprimer\n";
-  print O "Bowtie command: $bowtiecmd\n";
-  close(O);
+
+  
+  push @{$filegroups{$tmpseqfile}}, { Name =>$name,
+                                      Barcode => $barcode,
+                                      Primer => $primer,
+                                      Enzyme1Seq => $e1s,
+                                      TestRegex => $test,
+                                      BarcodeRegex => $barcodetest,
+                                      TrimLength => $trimlength,
+                                      GeoTrimLength => $geotrimlength,
+                                      BowtieCmd => $bowtiecmd,
+                                      StatsFile => "stats/$name.txt",
+                                      NBarcode => 0,
+                                      NPrimer => 0,
+                                      OutputFileHandle => \$ofh,
+                                      GeoFileHandle => \$gfh };
+}
+
+for my $tmpseqfile (keys(%filegroups)) {
+  my @samples = @{$filegroups{$tmpseqfile}};
+
+  open(D,"<","$tmpseqfile") or die "Cannot read $tmpseqfile: $!";
+
+
+  while(<D>) {
+    my $line1 = $_;
+    my $line2 = <D>;
+    my $line3 = <D>;
+    my $line4 = <D>;
+
+    for my $sref (@samples) { 
+        $sref->{NBarcode}++ if $line2 =~ $sref->{BarcodeRegex};
+        next unless $line2 =~ $sref->{TestRegex};
+        $sref->{NPrimer}++;
+      
+        my $fh = ${$sref->{OutputFileHandle}};
+        
+        my $np2 = substr($line2,$sref->{TrimLength});
+        my $np4 = substr($line4,$sref->{TrimLength});
+        
+        print $fh "$line1\n$np2\n$line3\n$np4\n";
+        
+        if($geo) {
+          $fh =  ${$sref->{GeoFileHandle}};
+          $np2 = substr($line2,$sref->{GeoTrimLength});
+          $np4 = substr($line4,$sref->{GeoTrimLength});
+          
+          print $fh "$line1\n$np2\n$line3\n$np4\n";
+        }
+    }
+  }
+  
+  close(D);
+
+  
+  for my $sref (@samples) {
+    close($sref->{OutputFileHandle});
+    
+    ### right now die if a sample had no reads in it -- may want to handle this a bit more
+    ### elegantly in the future to keep processing the other samples in the mean time
+    if( $sref->{NPrimer} == 0 ) {
+      if($sref->{NBarcode} == 0 ) {
+        die "Sample $sref->{Name} did not have any reads for primer $sref->{Primer}! Additionally, no reads with barcode $sref->{Barcode} were detected in the FASTQ file $tmpseqfile as well";
+      } else {
+        die "Sample $sref->{Name} did not have any reads for primer $sref->{Primer}! But the barcode $sref->{Barcode} was found on some reads in the FASTQ file $tmpseqfile";
+      }
+    }
+
+    open(O,">",$sref->{StatsFile}) or die "Cannot write to $sref->{StatsFile}";
+    print O "Sample ID: $sref->{Name}\n";
+    print O "Number of sequenced reads: $tmpfilesize{$tmpseqfile}\n";
+    print O "Number of reads with barcode $sref->{Barcode}: $sref->{NBarcode}\n";
+    print O "Number of reads with barcode and primer $sref->{Barcode}$sref->{Primer}: $sref->{NPrimer}\n";
+    print O "Bowtie command: $sref->{BowtieCmd}\n";
+    close(O);
+  
+    if( $geo ) {
+      close($sref->{GeoFileHandle}) if $geo;
+      `gzip $sref->{Name}.geo.fq`;
+      `md5sum $sref->{Name}.geo.fq.gz > $sref->{Name}.geo.fq.gz.md5sum`;
+    }
+  }
 }
 
 ### cleanup tmp files
