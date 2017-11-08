@@ -170,6 +170,12 @@ for my $tmpseqfile (keys(%filegroups)) {
     my $line2 = <D>;
     my $line3 = <D>;
     my $line4 = <D>;
+    
+    chomp $line1;
+    chomp $line2;
+    chomp $line3;
+    chomp $line4;
+
 
     for my $sref (@samples) { 
         $sref->{NBarcode}++ if $line2 =~ $sref->{BarcodeRegex};
@@ -197,7 +203,8 @@ for my $tmpseqfile (keys(%filegroups)) {
 
   
   for my $sref (@samples) {
-    close($sref->{OutputFileHandle});
+    my $fh = ${$sref->{OutputFileHandle}};
+    close($fh);
     
     ### right now die if a sample had no reads in it -- may want to handle this a bit more
     ### elegantly in the future to keep processing the other samples in the mean time
@@ -218,7 +225,8 @@ for my $tmpseqfile (keys(%filegroups)) {
     close(O);
   
     if( $geo ) {
-      close($sref->{GeoFileHandle}) if $geo;
+      $fh = ${$sref->{GeoFileHandle}};
+      close($fh);
       `gzip $sref->{Name}.geo.fq`;
       `md5sum $sref->{Name}.geo.fq.gz > $sref->{Name}.geo.fq.gz.md5sum`;
     }
