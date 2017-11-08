@@ -85,9 +85,9 @@ sub tomegabaserpm {
 }
 
 sub executebootstrap {
-  my ($basedir,$infile,$outfile,$num,$bi) = @_;
+  my ($basedir,$infile,$outfilec,$outfiler,$num,$bi) = @_;
   
-  my $output = `Rscript $basedir/bootstrap.r $infile $outfile $num $bi`;
+  my $output = `Rscript $basedir/bootstrap.r $infile $outfilec $outfiler $num $bi`;
   die "Failed to run bootstrap script: $output" unless $? == 0;
 }
 
@@ -153,14 +153,9 @@ for( my $i = 0; $i < $nr; $i++ ) {
   
   torpm("wigfiles/$name.raw.wig","wigfiles/$name.raw.rpm.wig",$num);
   torpm("wigfiles/$name.filtered.wig","wigfiles/$name.filtered.rpm.wig",$num);
-  
-#  tomegabaserpm("wigfiles/$name.raw.wig","wigfiles/$name.raw.MB.rpm.wig",$viewpointchrom,$viewpointstart,$viewpointend);
-#  tomegabaserpm("wigfiles/$name.filtered.wig","wigfiles/$name.filtered.MB.rpm.wig",$viewpointchrom,$viewpointstart,$viewpointend);
-  
-  executebootstrap($scriptdir,"bootstrap/$name.raw.counts.txt","bootstrap/$name.raw.counts.bootstrap.txt",1,$bootstrapiter);
-  executebootstrap($scriptdir,"bootstrap/$name.filtered.counts.txt","bootstrap/$name.filtered.counts.bootstrap.txt",1,$bootstrapiter);
-  executebootstrap($scriptdir,"bootstrap/$name.raw.counts.txt","bootstrap/$name.raw.rpm.bootstrap.txt",$num,$bootstrapiter);
-  executebootstrap($scriptdir,"bootstrap/$name.filtered.counts.txt", "bootstrap/$name.filtered.rpm.bootstrap.txt",$num,$bootstrapiter);
+
+  executebootstrap($scriptdir,"bootstrap/$name.raw.counts.txt","bootstrap/$name.raw.counts.bootstrap.txt","bootstrap/$name.raw.rpm.bootstrap.txt",$num,$bootstrapiter);
+  executebootstrap($scriptdir,"bootstrap/$name.filtered.counts.txt","bootstrap/$name.filtered.counts.bootstrap.txt","bootstrap/$name.filtered.rpm.bootstrap.txt",$num,$bootstrapiter);
   
   `wigToBigWig wigfiles/$name.raw.wig $chromsizes wigfiles/$name.raw.bw`;
   `wigToBigWig wigfiles/$name.filtered.wig $chromsizes wigfiles/$name.filtered.bw`;

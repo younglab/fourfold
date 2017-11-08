@@ -135,16 +135,14 @@ for( my $i = 0; $i < $nr; $i++ ) { ## row 1 (index 0) is the header line
     $geotrimlength = 0;
   }
   
-  while(<D>) {
-      my $line1 = $_;
-      my $line2 = <D>;
-      my $line3 = <D>;
-      my $line4 = <D>;
-      
-      chomp $line1;
-      chomp $line2;
-      chomp $line3;
-      chomp $line4;
+  my @fastqlines = <D>;
+  chomp @fastqlines;
+  
+  while(scalar(@fastqlines)>0) {
+      my $line1 = shift @fastqlines;
+      my $line2 = shift @fastqlines;
+      my $line3 = shift @fastqlines;
+      my $line4 = shift @fastqlines;
       
       $nbarcode++ if $line2 =~ $barcodetest;
       next unless $line2 =~ $test;
