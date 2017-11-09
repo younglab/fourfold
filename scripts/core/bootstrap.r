@@ -11,11 +11,11 @@ cppFunction('IntegerMatrix numericBootstrap(NumericVector probs, IntegerVector n
 
   for( int i = 0; i < nboot; i++ ) {
     std::vector<double> pv;
-    pv.reserve(nreads);
+    pv.resize(nreads);
+
     for( int x = 0; x < nreads; x++ ) pv[x] = R::runif(0,1);
     std::sort(pv.begin(),pv.end());
     int hit = 0;
-
 
     for( double p : pv ) {
       while( hit < nsites && probs[hit] <= p) hit++;
