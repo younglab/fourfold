@@ -6,13 +6,7 @@ The details below are meant to be a brief introduction to the pipeline. Expanded
 
 ## Installation
 
-The package contains a configure script to perform very basic checking of install packages but to also set up the necessary files. (Use autoconf if configure is not present).
-
-To install:
-
-1. Run ./configure --prefix=/path/to/install/directory
-2. Run make
-3. Run make install
+Please read INSTALL for installation instructions and dependencies
 
 ## Template Files
 

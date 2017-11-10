@@ -1,0 +1,19 @@
+Quick installation instructions
+===============================
+
+0. Run autoconf if configure script is not present
+1. Run ./configure --prefix=/path/to/installation/directory
+2. Run make
+3. Run make install
+
+Dependencies
+============
+
+1. R (version >= 3.0)
+2. Perl (version >= 5.8)
+3. Samtools (version >= 1)
+4. g++ (version >= 4)
+5. R library preprocessCore
+
+
+
